@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "std",
+    "testpost",
+    "pallocator",
+    "postpanic",
+]
