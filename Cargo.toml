@@ -2,7 +2,7 @@
 default-members = ["library/std"]
 members = [
   "library/std",
-  "library/test",
+  # "library/test",
   "pallocator",
   "postpanic",
 ]
