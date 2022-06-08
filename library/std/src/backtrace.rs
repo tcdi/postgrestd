@@ -261,13 +261,14 @@ impl Backtrace {
             1 => return false,
             _ => return true,
         }
-        let enabled = match env::var("RUST_LIB_BACKTRACE") {
-            Ok(s) => s != "0",
-            Err(_) => match env::var("RUST_BACKTRACE") {
-                Ok(s) => s != "0",
-                Err(_) => false,
-            },
-        };
+        // let enabled = match env::var("RUST_LIB_BACKTRACE") {
+        //     Ok(s) => s != "0",
+        //     Err(_) => match env::var("RUST_BACKTRACE") {
+        //         Ok(s) => s != "0",
+        //         Err(_) => false,
+        //     },
+        // };
+        let enabled = true;
         ENABLED.store(enabled as usize + 1, Relaxed);
         enabled
     }
