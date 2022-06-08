@@ -3,10 +3,10 @@
 #![stable(feature = "std_panic", since = "1.9.0")]
 
 use crate::any::Any;
-use crate::collections;
+use alloc_crate::collections;
 use crate::panicking;
 use crate::sync::atomic::{AtomicUsize, Ordering};
-use crate::sync::{Mutex, RwLock};
+// use crate::sync::{Mutex, RwLock};
 use crate::thread::Result;
 
 #[doc(hidden)]
@@ -61,25 +61,25 @@ pub fn panic_any<M: 'static + Any + Send>(msg: M) -> ! {
     crate::panicking::begin_panic(msg);
 }
 
-#[stable(feature = "catch_unwind", since = "1.9.0")]
-impl<T: ?Sized> UnwindSafe for Mutex<T> {}
-#[stable(feature = "catch_unwind", since = "1.9.0")]
-impl<T: ?Sized> UnwindSafe for RwLock<T> {}
+// #[stable(feature = "catch_unwind", since = "1.9.0")]
+// impl<T: ?Sized> UnwindSafe for Mutex<T> {}
+// #[stable(feature = "catch_unwind", since = "1.9.0")]
+// impl<T: ?Sized> UnwindSafe for RwLock<T> {}
 
-#[stable(feature = "unwind_safe_lock_refs", since = "1.12.0")]
-impl<T: ?Sized> RefUnwindSafe for Mutex<T> {}
-#[stable(feature = "unwind_safe_lock_refs", since = "1.12.0")]
-impl<T: ?Sized> RefUnwindSafe for RwLock<T> {}
+// #[stable(feature = "unwind_safe_lock_refs", since = "1.12.0")]
+// impl<T: ?Sized> RefUnwindSafe for Mutex<T> {}
+// #[stable(feature = "unwind_safe_lock_refs", since = "1.12.0")]
+// impl<T: ?Sized> RefUnwindSafe for RwLock<T> {}
 
 // https://github.com/rust-lang/rust/issues/62301
-#[stable(feature = "hashbrown", since = "1.36.0")]
-impl<K, V, S> UnwindSafe for collections::HashMap<K, V, S>
-where
-    K: UnwindSafe,
-    V: UnwindSafe,
-    S: UnwindSafe,
-{
-}
+// #[stable(feature = "hashbrown", since = "1.36.0")]
+// impl<K, V, S> UnwindSafe for collections::HashMap<K, V, S>
+// where
+//     K: UnwindSafe,
+//     V: UnwindSafe,
+//     S: UnwindSafe,
+// {
+// }
 
 /// Invokes a closure, capturing the cause of an unwinding panic if one occurs.
 ///
@@ -297,21 +297,22 @@ pub fn get_backtrace_style() -> Option<BacktraceStyle> {
 
     // Setting environment variables for Fuchsia components isn't a standard
     // or easily supported workflow. For now, display backtraces by default.
-    let format = if cfg!(target_os = "fuchsia") {
-        BacktraceStyle::Full
-    } else {
-        crate::env::var_os("RUST_BACKTRACE")
-            .map(|x| {
-                if &x == "0" {
-                    BacktraceStyle::Off
-                } else if &x == "full" {
-                    BacktraceStyle::Full
-                } else {
-                    BacktraceStyle::Short
-                }
-            })
-            .unwrap_or(BacktraceStyle::Off)
-    };
+    // let format = if cfg!(target_os = "fuchsia") {
+    //     BacktraceStyle::Full
+    // } else {
+    //     crate::env::var_os("RUST_BACKTRACE")
+    //         .map(|x| {
+    //             if &x == "0" {
+    //                 BacktraceStyle::Off
+    //             } else if &x == "full" {
+    //                 BacktraceStyle::Full
+    //             } else {
+    //                 BacktraceStyle::Short
+    //             }
+    //         })
+    //         .unwrap_or(BacktraceStyle::Off)
+    // };
+    let format = BacktraceStyle::Short;
     set_backtrace_style(format);
     Some(format)
 }

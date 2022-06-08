@@ -325,7 +325,7 @@ pub mod panic_count {
     pub const ALWAYS_ABORT_FLAG: usize = 1 << (usize::BITS - 1);
 
     // Panic count for the current thread.
-    thread_local! { static LOCAL_PANIC_COUNT: Cell<usize> = const { Cell::new(0) } }
+    static LOCAL_PANIC_COUNT: AtomicUsize = AtomicUsize::new(0);
 
     // Sum of panic counts from all threads. The purpose of this is to have
     // a fast path in `is_zero` (which is used by `panicking`). In any particular
@@ -347,23 +347,27 @@ pub mod panic_count {
     static GLOBAL_PANIC_COUNT: AtomicUsize = AtomicUsize::new(0);
 
     pub fn increase() -> (bool, usize) {
-        (
-            GLOBAL_PANIC_COUNT.fetch_add(1, Ordering::Relaxed) & ALWAYS_ABORT_FLAG != 0,
-            LOCAL_PANIC_COUNT.with(|c| {
-                let next = c.get() + 1;
-                c.set(next);
-                next
-            }),
-        )
+        // (
+            // GLOBAL_PANIC_COUNT.fetch_add(1, Ordering::Relaxed) & ALWAYS_ABORT_FLAG != 0,
+            // LOCAL_PANIC_COUNT.with(|c| {
+            //     let next = c.get() + 1;
+            //     c.set(next);
+            //     next
+            // }),
+        // )
+        let val = GLOBAL_PANIC_COUNT.fetch_add(1, Ordering::Relaxed);
+        (val & ALWAYS_ABORT_FLAG != 0,
+            val)
     }
 
     pub fn decrease() {
         GLOBAL_PANIC_COUNT.fetch_sub(1, Ordering::Relaxed);
-        LOCAL_PANIC_COUNT.with(|c| {
-            let next = c.get() - 1;
-            c.set(next);
-            next
-        });
+        // LOCAL_PANIC_COUNT.fetch_sub(1, Ordering::Relaxed);
+        // LOCAL_PANIC_COUNT.with(|c| {
+        //     let next = c.get() - 1;
+        //     c.set(next);
+        //     next
+        // });
     }
 
     pub fn set_always_abort() {
@@ -373,7 +377,8 @@ pub mod panic_count {
     // Disregards ALWAYS_ABORT_FLAG
     #[must_use]
     pub fn get_count() -> usize {
-        LOCAL_PANIC_COUNT.with(|c| c.get())
+        GLOBAL_PANIC_COUNT.load(Ordering::Relaxed)
+        // LOCAL_PANIC_COUNT.with(|c| c.get())
     }
 
     // Disregards ALWAYS_ABORT_FLAG
@@ -392,17 +397,18 @@ pub mod panic_count {
             // when using the GD TLS model).
             true
         } else {
-            is_zero_slow_path()
+            // is_zero_slow_path()
+            false
         }
     }
 
-    // Slow path is in a separate function to reduce the amount of code
-    // inlined from `is_zero`.
-    #[inline(never)]
-    #[cold]
-    fn is_zero_slow_path() -> bool {
-        LOCAL_PANIC_COUNT.with(|c| c.get() == 0)
-    }
+    // // Slow path is in a separate function to reduce the amount of code
+    // // inlined from `is_zero`.
+    // #[inline(never)]
+    // #[cold]
+    // fn is_zero_slow_path() -> bool {
+    //     LOCAL_PANIC_COUNT.with(|c| c.get() == 0)
+    // }
 }
 
 #[cfg(test)]
