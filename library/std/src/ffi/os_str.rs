@@ -3,7 +3,7 @@ mod tests;
 
 use crate::borrow::{Borrow, Cow};
 use crate::cmp;
-use alloc_crate::collections::TryReserveError;
+use crate::collections::TryReserveError;
 use crate::fmt;
 use crate::hash::{Hash, Hasher};
 use crate::iter::Extend;

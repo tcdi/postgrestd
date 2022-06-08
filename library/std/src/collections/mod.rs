@@ -415,9 +415,9 @@ pub use alloc_crate::collections::{BTreeMap, BTreeSet, BinaryHeap};
 #[stable(feature = "rust1", since = "1.0.0")]
 pub use alloc_crate::collections::{LinkedList, VecDeque};
 
-#[stable(feature = "rust1", since = "1.0.0")]
+// #[stable(feature = "rust1", since = "1.0.0")]
 //  pub use self::hash_map::HashMap;
-#[stable(feature = "rust1", since = "1.0.0")]
+// #[stable(feature = "rust1", since = "1.0.0")]
 //  pub use self::hash_set::HashSet;
 
 #[stable(feature = "try_reserve", since = "1.57.0")]

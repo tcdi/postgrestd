@@ -496,7 +496,7 @@ pub use core::usize;
 // pub mod thread;
 pub mod ascii;
 pub mod backtrace;
-// pub mod collections;
+pub mod collections;
 // pub mod env;
 pub mod error;
 pub mod ffi;

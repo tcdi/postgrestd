@@ -3,7 +3,7 @@
 #![stable(feature = "std_panic", since = "1.9.0")]
 
 use crate::any::Any;
-use alloc_crate::collections;
+use crate::collections;
 use crate::panicking;
 use crate::sync::atomic::{AtomicUsize, Ordering};
 // use crate::sync::{Mutex, RwLock};
