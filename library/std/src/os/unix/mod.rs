@@ -74,25 +74,25 @@ mod platform {
 }
 
 pub mod ffi;
-pub mod fs;
+// pub mod fs;
 pub mod io;
-pub mod net;
+// pub mod net;
 pub mod process;
 pub mod raw;
-pub mod thread;
+// pub mod thread;
 
-#[unstable(feature = "peer_credentials_unix_socket", issue = "42839", reason = "unstable")]
-#[cfg(any(
-    target_os = "android",
-    target_os = "linux",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "ios",
-    target_os = "macos",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
-pub mod ucred;
+// #[unstable(feature = "peer_credentials_unix_socket", issue = "42839", reason = "unstable")]
+// #[cfg(any(
+//     target_os = "android",
+//     target_os = "linux",
+//     target_os = "dragonfly",
+//     target_os = "freebsd",
+//     target_os = "ios",
+//     target_os = "macos",
+//     target_os = "netbsd",
+//     target_os = "openbsd"
+// ))]
+// pub mod ucred;
 
 /// A prelude for conveniently writing platform-specific code.
 ///
@@ -102,15 +102,15 @@ pub mod prelude {
     #[doc(no_inline)]
     #[stable(feature = "rust1", since = "1.0.0")]
     pub use super::ffi::{OsStrExt, OsStringExt};
-    #[doc(no_inline)]
-    #[stable(feature = "rust1", since = "1.0.0")]
-    pub use super::fs::DirEntryExt;
-    #[doc(no_inline)]
-    #[stable(feature = "file_offset", since = "1.15.0")]
-    pub use super::fs::FileExt;
-    #[doc(no_inline)]
-    #[stable(feature = "rust1", since = "1.0.0")]
-    pub use super::fs::{FileTypeExt, MetadataExt, OpenOptionsExt, PermissionsExt};
+    // #[doc(no_inline)]
+    // #[stable(feature = "rust1", since = "1.0.0")]
+    // pub use super::fs::DirEntryExt;
+    // #[doc(no_inline)]
+    // #[stable(feature = "file_offset", since = "1.15.0")]
+    // pub use super::fs::FileExt;
+    // #[doc(no_inline)]
+    // #[stable(feature = "rust1", since = "1.0.0")]
+    // pub use super::fs::{FileTypeExt, MetadataExt, OpenOptionsExt, PermissionsExt};
     #[doc(no_inline)]
     #[stable(feature = "rust1", since = "1.0.0")]
     pub use super::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};

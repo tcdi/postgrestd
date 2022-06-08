@@ -21,15 +21,15 @@
 mod tests;
 
 pub mod backtrace;
-pub mod condvar;
-pub mod fs;
+// pub mod condvar;
+// pub mod fs;
 pub mod io;
-pub mod lazy_box;
+// pub mod lazy_box;
 pub mod memchr;
-pub mod mutex;
+// pub mod mutex;
 pub mod process;
 pub mod remutex;
-pub mod rwlock;
+// pub mod rwlock;
 pub mod thread;
 pub mod thread_info;
 pub mod thread_local_dtor;
@@ -37,17 +37,17 @@ pub mod thread_local_key;
 pub mod thread_parker;
 pub mod wtf8;
 
-cfg_if::cfg_if! {
-    if #[cfg(any(target_os = "l4re",
-                 target_os = "hermit",
-                 feature = "restricted-std",
-                 all(target_family = "wasm", not(target_os = "emscripten")),
-                 all(target_vendor = "fortanix", target_env = "sgx")))] {
-        pub use crate::sys::net;
-    } else {
-        pub mod net;
-    }
-}
+// cfg_if::cfg_if! {
+//     if #[cfg(any(target_os = "l4re",
+//                  target_os = "hermit",
+//                  feature = "restricted-std",
+//                  all(target_family = "wasm", not(target_os = "emscripten")),
+//                  all(target_vendor = "fortanix", target_env = "sgx")))] {
+//         pub use crate::sys::net;
+//     } else {
+//         pub mod net;
+//     }
+// }
 
 // common error constructors
 
