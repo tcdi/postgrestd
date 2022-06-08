@@ -2016,7 +2016,8 @@ impl Child {
 #[stable(feature = "rust1", since = "1.0.0")]
 pub fn exit(code: i32) -> ! {
     crate::rt::cleanup();
-    crate::sys::os::exit(code)
+    abort();
+    // crate::sys::os::exit(code)
 }
 
 /// Terminates the process in an abnormal fashion.
@@ -2084,7 +2085,8 @@ pub fn exit(code: i32) -> ! {
 #[stable(feature = "process_abort", since = "1.17.0")]
 #[cold]
 pub fn abort() -> ! {
-    crate::sys::abort_internal();
+    // crate::sys::abort_internal();
+    unsafe { core::intrinsics::abort() }
 }
 
 /// Returns the OS-assigned process identifier associated with this process.
