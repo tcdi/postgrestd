@@ -160,13 +160,13 @@ pub use core::sync::atomic;
 // pub use self::barrier::{Barrier, BarrierWaitResult};
 // #[stable(feature = "rust1", since = "1.0.0")]
 // pub use self::condvar::{Condvar, WaitTimeoutResult};
-// #[stable(feature = "rust1", since = "1.0.0")]
-// pub use self::mutex::{Mutex, MutexGuard};
+#[stable(feature = "rust1", since = "1.0.0")]
+pub use self::mutex::{Mutex, MutexGuard};
 #[stable(feature = "rust1", since = "1.0.0")]
 #[allow(deprecated)]
 pub use self::once::{Once, OnceState, ONCE_INIT};
-// #[stable(feature = "rust1", since = "1.0.0")]
-// pub use self::poison::{LockResult, PoisonError, TryLockError, TryLockResult};
+#[stable(feature = "rust1", since = "1.0.0")]
+pub use self::poison::{LockResult, PoisonError, TryLockError, TryLockResult};
 // #[stable(feature = "rust1", since = "1.0.0")]
 // pub use self::rwlock::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
@@ -174,7 +174,7 @@ pub use self::once::{Once, OnceState, ONCE_INIT};
 
 // mod barrier;
 // mod condvar;
-// mod mutex;
+mod mutex;
 mod once;
-// mod poison;
+mod poison;
 // mod rwlock;

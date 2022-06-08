@@ -79,7 +79,7 @@ pub mod io;
 // pub mod net;
 pub mod process;
 pub mod raw;
-// pub mod thread;
+pub mod thread;
 
 // #[unstable(feature = "peer_credentials_unix_socket", issue = "42839", reason = "unstable")]
 // #[cfg(any(
