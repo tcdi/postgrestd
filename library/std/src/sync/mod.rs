@@ -167,8 +167,8 @@ pub use self::mutex::{Mutex, MutexGuard};
 pub use self::once::{Once, OnceState, ONCE_INIT};
 #[stable(feature = "rust1", since = "1.0.0")]
 pub use self::poison::{LockResult, PoisonError, TryLockError, TryLockResult};
-// #[stable(feature = "rust1", since = "1.0.0")]
-// pub use self::rwlock::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+#[stable(feature = "rust1", since = "1.0.0")]
+pub use self::rwlock::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 // pub mod mpsc;
 
@@ -177,4 +177,4 @@ pub use self::poison::{LockResult, PoisonError, TryLockError, TryLockResult};
 mod mutex;
 mod once;
 mod poison;
-// mod rwlock;
+mod rwlock;
