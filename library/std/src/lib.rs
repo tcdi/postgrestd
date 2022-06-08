@@ -331,14 +331,17 @@
 //
 // Only for const-ness:
 #![feature(const_io_structs)]
-#![feature(const_ip)]
-#![feature(const_ipv4)]
-#![feature(const_ipv6)]
+// #![feature(const_ip)]
+// #![feature(const_ipv4)]
+// #![feature(const_ipv6)]
 #![feature(const_option)]
-#![feature(const_socketaddr)]
-#![feature(thread_local_internals)]
+// #![feature(const_socketaddr)]
+// #![feature(thread_local_internals)]
 //
 #![default_lib_allocator]
+
+// Silence some warnings.
+#![allow(ineffective_unstable_trait_impl)]
 
 // Explicitly import the prelude. The compiler uses this same unstable attribute
 // to import the prelude implicitly when building crates that depend on std.
@@ -347,8 +350,8 @@
 use prelude::rust_2021::*;
 
 // Access to Bencher, etc.
-#[cfg(test)]
-extern crate test;
+// #[cfg(test)]
+// extern crate test;
 
 #[allow(unused_imports)] // macros from `alloc` are not used on all platforms
 #[macro_use]
@@ -382,7 +385,7 @@ mod macros;
 
 // The runtime entry point and a few unstable public functions used by the
 // compiler
-#[macro_use]
+// #[macro_use]
 pub mod rt;
 
 // The Rust prelude
@@ -486,30 +489,30 @@ pub use core::u8;
 #[allow(deprecated, deprecated_in_future)]
 pub use core::usize;
 
-pub mod f32;
-pub mod f64;
+// pub mod f32;
+// pub mod f64;
 
 #[macro_use]
-pub mod thread;
+// pub mod thread;
 pub mod ascii;
 pub mod backtrace;
-pub mod collections;
-pub mod env;
+// pub mod collections;
+// pub mod env;
 pub mod error;
 pub mod ffi;
-pub mod fs;
+// pub mod fs;
 pub mod io;
-pub mod net;
+// pub mod net;
 pub mod num;
 pub mod os;
 pub mod panic;
-pub mod path;
+// pub mod path;
 pub mod process;
 pub mod sync;
-pub mod time;
+// pub mod time;
 
-#[unstable(feature = "once_cell", issue = "74465")]
-pub mod lazy;
+// #[unstable(feature = "once_cell", issue = "74465")]
+// pub mod lazy;
 
 // Pull in `std_float` crate  into libstd. The contents of
 // `std_float` are in a different repository: rust-lang/portable-simd.
@@ -541,34 +544,34 @@ pub mod task {
     pub use alloc::task::*;
 }
 
-#[doc = include_str!("../../stdarch/crates/core_arch/src/core_arch_docs.md")]
-#[stable(feature = "simd_arch", since = "1.27.0")]
-pub mod arch {
-    #[stable(feature = "simd_arch", since = "1.27.0")]
-    // The `no_inline`-attribute is required to make the documentation of all
-    // targets available.
-    // See https://github.com/rust-lang/rust/pull/57808#issuecomment-457390549 for
-    // more information.
-    #[doc(no_inline)] // Note (#82861): required for correct documentation
-    pub use core::arch::*;
+// #[doc = include_str!("../../stdarch/crates/core_arch/src/core_arch_docs.md")]
+// #[stable(feature = "simd_arch", since = "1.27.0")]
+// pub mod arch {
+//     #[stable(feature = "simd_arch", since = "1.27.0")]
+//     // The `no_inline`-attribute is required to make the documentation of all
+//     // targets available.
+//     // See https://github.com/rust-lang/rust/pull/57808#issuecomment-457390549 for
+//     // more information.
+//     #[doc(no_inline)] // Note (#82861): required for correct documentation
+//     pub use core::arch::*;
 
-    #[stable(feature = "simd_aarch64", since = "1.60.0")]
-    pub use std_detect::is_aarch64_feature_detected;
-    #[stable(feature = "simd_x86", since = "1.27.0")]
-    pub use std_detect::is_x86_feature_detected;
-    #[unstable(feature = "stdsimd", issue = "48556")]
-    pub use std_detect::{
-        is_arm_feature_detected, is_mips64_feature_detected, is_mips_feature_detected,
-        is_powerpc64_feature_detected, is_powerpc_feature_detected, is_riscv_feature_detected,
-    };
-}
+//     #[stable(feature = "simd_aarch64", since = "1.60.0")]
+//     pub use std_detect::is_aarch64_feature_detected;
+//     #[stable(feature = "simd_x86", since = "1.27.0")]
+//     pub use std_detect::is_x86_feature_detected;
+//     #[unstable(feature = "stdsimd", issue = "48556")]
+//     pub use std_detect::{
+//         is_arm_feature_detected, is_mips64_feature_detected, is_mips_feature_detected,
+//         is_powerpc64_feature_detected, is_powerpc_feature_detected, is_riscv_feature_detected,
+//     };
+// }
 
-// This was stabilized in the crate root so we have to keep it there.
-#[stable(feature = "simd_x86", since = "1.27.0")]
-pub use std_detect::is_x86_feature_detected;
+// // This was stabilized in the crate root so we have to keep it there.
+// #[stable(feature = "simd_x86", since = "1.27.0")]
+// pub use std_detect::is_x86_feature_detected;
 
 // Platform-abstraction modules
-mod sys;
+// mod sys;
 mod sys_common;
 
 pub mod alloc;
