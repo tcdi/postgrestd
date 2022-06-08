@@ -168,7 +168,7 @@ use crate::num;
 use crate::str;
 use crate::string;
 use crate::sync::Arc;
-use crate::time;
+// use crate::time;
 
 /// `Error` is a trait representing the basic expectations for error values,
 /// i.e., values of type `E` in [`Result<T, E>`].
@@ -621,7 +621,7 @@ impl Error for char::TryFromCharError {}
 
 #[unstable(feature = "map_try_insert", issue = "82766")]
 impl<'a, K: Debug + Ord, V: Debug> Error
-    for crate::collections::btree_map::OccupiedError<'a, K, V>
+    for alloc_crate::collections::btree_map::OccupiedError<'a, K, V>
 {
     #[allow(deprecated)]
     fn description(&self) -> &str {
@@ -629,13 +629,13 @@ impl<'a, K: Debug + Ord, V: Debug> Error
     }
 }
 
-#[unstable(feature = "map_try_insert", issue = "82766")]
-impl<'a, K: Debug, V: Debug> Error for crate::collections::hash_map::OccupiedError<'a, K, V> {
-    #[allow(deprecated)]
-    fn description(&self) -> &str {
-        "key already exists"
-    }
-}
+// #[unstable(feature = "map_try_insert", issue = "82766")]
+// impl<'a, K: Debug, V: Debug> Error for alloc_crate::collections::hash_map::OccupiedError<'a, K, V> {
+//     #[allow(deprecated)]
+//     fn description(&self) -> &str {
+//         "key already exists"
+//     }
+// }
 
 #[stable(feature = "box_error", since = "1.8.0")]
 impl<T: Error> Error for Box<T> {
@@ -747,8 +747,8 @@ impl Error for char::ParseCharError {
 #[stable(feature = "try_reserve", since = "1.57.0")]
 impl Error for alloc::collections::TryReserveError {}
 
-#[unstable(feature = "duration_checked_float", issue = "83400")]
-impl Error for time::FromFloatSecsError {}
+// #[unstable(feature = "duration_checked_float", issue = "83400")]
+// impl Error for time::FromFloatSecsError {}
 
 #[stable(feature = "rust1", since = "1.0.0")]
 impl Error for alloc::ffi::NulError {
