@@ -653,3 +653,9 @@ mod sealed {
     #[unstable(feature = "sealed", issue = "none")]
     pub trait Sealed {}
 }
+
+#[cfg(target_os = "postgres")]
+#[lang = "eh_personality"]
+extern "C" fn eh_personality() {
+    crate::intrinsics::abort()
+}
