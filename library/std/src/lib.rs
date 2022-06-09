@@ -385,7 +385,7 @@ mod macros;
 
 // The runtime entry point and a few unstable public functions used by the
 // compiler
-// #[macro_use]
+#[macro_use]
 pub mod rt;
 
 // The Rust prelude
@@ -500,7 +500,7 @@ pub mod collections;
 pub mod env;
 pub mod error;
 pub mod ffi;
-// pub mod fs;
+pub mod fs;
 pub mod io;
 // pub mod net;
 pub mod num;

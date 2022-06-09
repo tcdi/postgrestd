@@ -10,7 +10,7 @@ use crate::io;
 use crate::path::Path;
 use crate::ptr;
 use crate::sys::fd::FileDesc;
-// use crate::sys::fs::File;
+use crate::sys::fs::File;
 use crate::sys::pipe::{self, AnonPipe};
 use crate::sys_common::process::{CommandEnv, CommandEnvs};
 use crate::sys_common::IntoInner;

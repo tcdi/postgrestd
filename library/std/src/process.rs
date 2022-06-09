@@ -109,7 +109,7 @@ use crate::io::prelude::*;
 use crate::convert::Infallible;
 use crate::ffi::OsStr;
 use crate::fmt;
-// use crate::fs;
+use crate::fs;
 use crate::io::{self, IoSlice, IoSliceMut};
 use crate::num::NonZeroI32;
 use crate::path::Path;

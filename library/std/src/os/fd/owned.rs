@@ -241,29 +241,29 @@ impl AsFd for OwnedFd {
     }
 }
 
-// #[unstable(feature = "io_safety", issue = "87074")]
-// impl AsFd for fs::File {
-//     #[inline]
-//     fn as_fd(&self) -> BorrowedFd<'_> {
-//         self.as_inner().as_fd()
-//     }
-// }
+#[unstable(feature = "io_safety", issue = "87074")]
+impl AsFd for fs::File {
+    #[inline]
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        self.as_inner().as_fd()
+    }
+}
 
-// #[unstable(feature = "io_safety", issue = "87074")]
-// impl From<fs::File> for OwnedFd {
-//     #[inline]
-//     fn from(file: fs::File) -> OwnedFd {
-//         file.into_inner().into_inner().into_inner()
-//     }
-// }
+#[unstable(feature = "io_safety", issue = "87074")]
+impl From<fs::File> for OwnedFd {
+    #[inline]
+    fn from(file: fs::File) -> OwnedFd {
+        file.into_inner().into_inner().into_inner()
+    }
+}
 
-// #[unstable(feature = "io_safety", issue = "87074")]
-// impl From<OwnedFd> for fs::File {
-//     #[inline]
-//     fn from(owned_fd: OwnedFd) -> Self {
-//         Self::from_inner(FromInner::from_inner(FromInner::from_inner(owned_fd)))
-//     }
-// }
+#[unstable(feature = "io_safety", issue = "87074")]
+impl From<OwnedFd> for fs::File {
+    #[inline]
+    fn from(owned_fd: OwnedFd) -> Self {
+        Self::from_inner(FromInner::from_inner(FromInner::from_inner(owned_fd)))
+    }
+}
 
 // #[unstable(feature = "io_safety", issue = "87074")]
 // impl AsFd for crate::net::TcpStream {

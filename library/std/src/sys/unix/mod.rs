@@ -16,7 +16,7 @@ pub mod args;
 pub mod cmath;
 pub mod env;
 pub mod fd;
-// pub mod fs;
+pub mod fs;
 pub mod futex;
 pub mod io;
 #[cfg(any(target_os = "linux", target_os = "android"))]
