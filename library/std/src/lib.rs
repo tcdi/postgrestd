@@ -489,8 +489,8 @@ pub use core::u8;
 #[allow(deprecated, deprecated_in_future)]
 pub use core::usize;
 
-// pub mod f32;
-// pub mod f64;
+pub mod f32;
+pub mod f64;
 
 #[macro_use]
 pub mod thread;
@@ -632,4 +632,10 @@ mod sealed {
     /// This allows adding more trait methods in the future.
     #[unstable(feature = "sealed", issue = "none")]
     pub trait Sealed {}
+}
+
+#[cfg(target_os = "postgres")]
+#[lang = "eh_personality"]
+extern "C" fn eh_personality() {
+    crate::intrinsics::abort()
 }
