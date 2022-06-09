@@ -21,10 +21,10 @@
 mod tests;
 
 pub mod backtrace;
-// pub mod condvar;
+pub mod condvar;
 pub mod fs;
 pub mod io;
-// pub mod lazy_box;
+pub mod lazy_box;
 pub mod memchr;
 pub mod mutex;
 pub mod process;

@@ -336,7 +336,7 @@
 // #![feature(const_ipv6)]
 #![feature(const_option)]
 // #![feature(const_socketaddr)]
-// #![feature(thread_local_internals)]
+#![feature(thread_local_internals)]
 //
 #![default_lib_allocator]
 

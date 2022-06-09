@@ -156,10 +156,10 @@ pub use alloc_crate::sync::{Arc, Weak};
 #[stable(feature = "rust1", since = "1.0.0")]
 pub use core::sync::atomic;
 
-// #[stable(feature = "rust1", since = "1.0.0")]
-// pub use self::barrier::{Barrier, BarrierWaitResult};
-// #[stable(feature = "rust1", since = "1.0.0")]
-// pub use self::condvar::{Condvar, WaitTimeoutResult};
+#[stable(feature = "rust1", since = "1.0.0")]
+pub use self::barrier::{Barrier, BarrierWaitResult};
+#[stable(feature = "rust1", since = "1.0.0")]
+pub use self::condvar::{Condvar, WaitTimeoutResult};
 #[stable(feature = "rust1", since = "1.0.0")]
 pub use self::mutex::{Mutex, MutexGuard};
 #[stable(feature = "rust1", since = "1.0.0")]
@@ -172,8 +172,8 @@ pub use self::rwlock::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 // pub mod mpsc;
 
-// mod barrier;
-// mod condvar;
+mod barrier;
+mod condvar;
 mod mutex;
 mod once;
 mod poison;
