@@ -170,7 +170,7 @@ pub use self::poison::{LockResult, PoisonError, TryLockError, TryLockResult};
 #[stable(feature = "rust1", since = "1.0.0")]
 pub use self::rwlock::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-// pub mod mpsc;
+pub mod mpsc;
 
 mod barrier;
 mod condvar;
