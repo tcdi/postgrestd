@@ -16,7 +16,7 @@ use crate::sys_common::process::{CommandEnv, CommandEnvs};
 use crate::sys_common::IntoInner;
 
 #[cfg(not(target_os = "fuchsia"))]
-// use crate::sys::fs::OpenOptions;
+use crate::sys::fs::OpenOptions;
 
 use libc::{c_char, c_int, gid_t, pid_t, uid_t, EXIT_FAILURE, EXIT_SUCCESS};
 
@@ -435,11 +435,11 @@ impl From<AnonPipe> for Stdio {
     }
 }
 
-// impl From<File> for Stdio {
-//     fn from(file: File) -> Stdio {
-//         Stdio::Fd(file.into_inner())
-//     }
-// }
+impl From<File> for Stdio {
+    fn from(file: File) -> Stdio {
+        Stdio::Fd(file.into_inner())
+    }
+}
 
 impl ChildStdio {
     pub fn fd(&self) -> Option<c_int> {

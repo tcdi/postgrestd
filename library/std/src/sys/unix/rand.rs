@@ -22,7 +22,7 @@ pub fn hashmap_random_keys() -> (u64, u64) {
     not(target_os = "vxworks")
 ))]
 mod imp {
-    // use crate::fs::File;
+    use crate::fs::File;
     use crate::io::Read;
 
     #[cfg(any(target_os = "linux", target_os = "android", target_os = "postgres"))]
@@ -121,14 +121,14 @@ mod imp {
         // getrandom failed because it is permanently or temporarily (because
         // of missing entropy) unavailable. Open /dev/urandom, read from it,
         // and close it again.
-        // let mut file = File::open("/dev/urandom").expect("failed to open /dev/urandom");
-        // file.read_exact(v).expect("failed to read /dev/urandom")
+        let mut file = File::open("/dev/urandom").expect("failed to open /dev/urandom");
+        file.read_exact(v).expect("failed to read /dev/urandom")
     }
 }
 
 #[cfg(target_os = "macos")]
 mod imp {
-    // use crate::fs::File;
+    use crate::fs::File;
     use crate::io::Read;
     use crate::sys::os::errno;
     use crate::sys::weak::weak;
@@ -158,8 +158,8 @@ mod imp {
         }
 
         // for older macos which doesn't support getentropy
-        // let mut file = File::open("/dev/urandom").expect("failed to open /dev/urandom");
-        // file.read_exact(v).expect("failed to read /dev/urandom")
+        let mut file = File::open("/dev/urandom").expect("failed to open /dev/urandom");
+        file.read_exact(v).expect("failed to read /dev/urandom")
     }
 }
 

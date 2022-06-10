@@ -52,10 +52,10 @@ use crate::io::{
     Write,
 };
 use crate::mem::ManuallyDrop;
-// use crate::net::TcpStream;
+use crate::net::TcpStream;
 use crate::os::unix::fs::FileTypeExt;
 use crate::os::unix::io::{AsRawFd, FromRawFd, RawFd};
-// use crate::os::unix::net::UnixStream;
+use crate::os::unix::net::UnixStream;
 use crate::process::{ChildStderr, ChildStdin, ChildStdout};
 use crate::ptr;
 use crate::sync::atomic::{AtomicBool, AtomicU8, Ordering};
@@ -304,61 +304,61 @@ impl CopyWrite for &File {
     }
 }
 
-// impl CopyRead for TcpStream {
-//     fn properties(&self) -> CopyParams {
-//         // avoid the stat syscall since we can be fairly sure it's a socket
-//         CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
-//     }
-// }
+impl CopyRead for TcpStream {
+    fn properties(&self) -> CopyParams {
+        // avoid the stat syscall since we can be fairly sure it's a socket
+        CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
+    }
+}
 
-// impl CopyRead for &TcpStream {
-//     fn properties(&self) -> CopyParams {
-//         // avoid the stat syscall since we can be fairly sure it's a socket
-//         CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
-//     }
-// }
+impl CopyRead for &TcpStream {
+    fn properties(&self) -> CopyParams {
+        // avoid the stat syscall since we can be fairly sure it's a socket
+        CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
+    }
+}
 
-// impl CopyWrite for TcpStream {
-//     fn properties(&self) -> CopyParams {
-//         // avoid the stat syscall since we can be fairly sure it's a socket
-//         CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
-//     }
-// }
+impl CopyWrite for TcpStream {
+    fn properties(&self) -> CopyParams {
+        // avoid the stat syscall since we can be fairly sure it's a socket
+        CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
+    }
+}
 
-// impl CopyWrite for &TcpStream {
-//     fn properties(&self) -> CopyParams {
-//         // avoid the stat syscall since we can be fairly sure it's a socket
-//         CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
-//     }
-// }
+impl CopyWrite for &TcpStream {
+    fn properties(&self) -> CopyParams {
+        // avoid the stat syscall since we can be fairly sure it's a socket
+        CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
+    }
+}
 
-// impl CopyRead for UnixStream {
-//     fn properties(&self) -> CopyParams {
-//         // avoid the stat syscall since we can be fairly sure it's a socket
-//         CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
-//     }
-// }
+impl CopyRead for UnixStream {
+    fn properties(&self) -> CopyParams {
+        // avoid the stat syscall since we can be fairly sure it's a socket
+        CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
+    }
+}
 
-// impl CopyRead for &UnixStream {
-//     fn properties(&self) -> CopyParams {
-//         // avoid the stat syscall since we can be fairly sure it's a socket
-//         CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
-//     }
-// }
+impl CopyRead for &UnixStream {
+    fn properties(&self) -> CopyParams {
+        // avoid the stat syscall since we can be fairly sure it's a socket
+        CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
+    }
+}
 
-// impl CopyWrite for UnixStream {
-//     fn properties(&self) -> CopyParams {
-//         // avoid the stat syscall since we can be fairly sure it's a socket
-//         CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
-//     }
-// }
+impl CopyWrite for UnixStream {
+    fn properties(&self) -> CopyParams {
+        // avoid the stat syscall since we can be fairly sure it's a socket
+        CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
+    }
+}
 
-// impl CopyWrite for &UnixStream {
-//     fn properties(&self) -> CopyParams {
-//         // avoid the stat syscall since we can be fairly sure it's a socket
-//         CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
-//     }
-// }
+impl CopyWrite for &UnixStream {
+    fn properties(&self) -> CopyParams {
+        // avoid the stat syscall since we can be fairly sure it's a socket
+        CopyParams(FdMeta::Socket, Some(self.as_raw_fd()))
+    }
+}
 
 impl CopyWrite for ChildStdin {
     fn properties(&self) -> CopyParams {
