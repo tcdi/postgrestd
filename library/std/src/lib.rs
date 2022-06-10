@@ -340,9 +340,6 @@
 //
 #![default_lib_allocator]
 
-// Silence some warnings.
-#![allow(ineffective_unstable_trait_impl)]
-
 // Explicitly import the prelude. The compiler uses this same unstable attribute
 // to import the prelude implicitly when building crates that depend on std.
 #[prelude_import]
@@ -544,31 +541,31 @@ pub mod task {
     pub use alloc::task::*;
 }
 
-// #[doc = include_str!("../../stdarch/crates/core_arch/src/core_arch_docs.md")]
-// #[stable(feature = "simd_arch", since = "1.27.0")]
-// pub mod arch {
-//     #[stable(feature = "simd_arch", since = "1.27.0")]
-//     // The `no_inline`-attribute is required to make the documentation of all
-//     // targets available.
-//     // See https://github.com/rust-lang/rust/pull/57808#issuecomment-457390549 for
-//     // more information.
-//     #[doc(no_inline)] // Note (#82861): required for correct documentation
-//     pub use core::arch::*;
+#[doc = include_str!("../../stdarch/crates/core_arch/src/core_arch_docs.md")]
+#[stable(feature = "simd_arch", since = "1.27.0")]
+pub mod arch {
+    #[stable(feature = "simd_arch", since = "1.27.0")]
+    // The `no_inline`-attribute is required to make the documentation of all
+    // targets available.
+    // See https://github.com/rust-lang/rust/pull/57808#issuecomment-457390549 for
+    // more information.
+    #[doc(no_inline)] // Note (#82861): required for correct documentation
+    pub use core::arch::*;
 
-//     #[stable(feature = "simd_aarch64", since = "1.60.0")]
-//     pub use std_detect::is_aarch64_feature_detected;
-//     #[stable(feature = "simd_x86", since = "1.27.0")]
-//     pub use std_detect::is_x86_feature_detected;
-//     #[unstable(feature = "stdsimd", issue = "48556")]
-//     pub use std_detect::{
-//         is_arm_feature_detected, is_mips64_feature_detected, is_mips_feature_detected,
-//         is_powerpc64_feature_detected, is_powerpc_feature_detected, is_riscv_feature_detected,
-//     };
-// }
+    #[stable(feature = "simd_aarch64", since = "1.60.0")]
+    pub use std_detect::is_aarch64_feature_detected;
+    #[stable(feature = "simd_x86", since = "1.27.0")]
+    pub use std_detect::is_x86_feature_detected;
+    #[unstable(feature = "stdsimd", issue = "48556")]
+    pub use std_detect::{
+        is_arm_feature_detected, is_mips64_feature_detected, is_mips_feature_detected,
+        is_powerpc64_feature_detected, is_powerpc_feature_detected, is_riscv_feature_detected,
+    };
+}
 
-// // This was stabilized in the crate root so we have to keep it there.
-// #[stable(feature = "simd_x86", since = "1.27.0")]
-// pub use std_detect::is_x86_feature_detected;
+// This was stabilized in the crate root so we have to keep it there.
+#[stable(feature = "simd_x86", since = "1.27.0")]
+pub use std_detect::is_x86_feature_detected;
 
 // Platform-abstraction modules
 mod sys;
