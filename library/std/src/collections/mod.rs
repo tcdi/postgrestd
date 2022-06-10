@@ -415,10 +415,10 @@ pub use alloc_crate::collections::{BTreeMap, BTreeSet, BinaryHeap};
 #[stable(feature = "rust1", since = "1.0.0")]
 pub use alloc_crate::collections::{LinkedList, VecDeque};
 
-// #[stable(feature = "rust1", since = "1.0.0")]
-//  pub use self::hash_map::HashMap;
-// #[stable(feature = "rust1", since = "1.0.0")]
-//  pub use self::hash_set::HashSet;
+#[stable(feature = "rust1", since = "1.0.0")]
+ pub use self::hash_map::HashMap;
+#[stable(feature = "rust1", since = "1.0.0")]
+ pub use self::hash_set::HashSet;
 
 #[stable(feature = "try_reserve", since = "1.57.0")]
 pub use alloc_crate::collections::TryReserveError;
@@ -429,18 +429,18 @@ pub use alloc_crate::collections::TryReserveError;
 )]
 pub use alloc_crate::collections::TryReserveErrorKind;
 
-// mod hash;
+mod hash;
 
-// #[stable(feature = "rust1", since = "1.0.0")]
-// pub mod hash_map {
-//     //! A hash map implemented with quadratic probing and SIMD lookup.
-//     #[stable(feature = "rust1", since = "1.0.0")]
-//     pub use super::hash::map::*;
-// }
+#[stable(feature = "rust1", since = "1.0.0")]
+pub mod hash_map {
+    //! A hash map implemented with quadratic probing and SIMD lookup.
+    #[stable(feature = "rust1", since = "1.0.0")]
+    pub use super::hash::map::*;
+}
 
-// #[stable(feature = "rust1", since = "1.0.0")]
-// pub mod hash_set {
-//     //! A hash set implemented as a `HashMap` where the value is `()`.
-//     #[stable(feature = "rust1", since = "1.0.0")]
-//     pub use super::hash::set::*;
-// }
+#[stable(feature = "rust1", since = "1.0.0")]
+pub mod hash_set {
+    //! A hash set implemented as a `HashMap` where the value is `()`.
+    #[stable(feature = "rust1", since = "1.0.0")]
+    pub use super::hash::set::*;
+}

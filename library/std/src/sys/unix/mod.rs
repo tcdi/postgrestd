@@ -25,10 +25,10 @@ pub mod kernel_copy;
 mod l4re;
 pub mod locks;
 pub mod memchr;
-// #[cfg(not(target_os = "l4re"))]
-// pub mod net;
-// #[cfg(target_os = "l4re")]
-// pub use self::l4re::net;
+#[cfg(not(target_os = "l4re"))]
+pub mod net;
+#[cfg(target_os = "l4re")]
+pub use self::l4re::net;
 pub mod os;
 pub mod os_str;
 pub mod path;
@@ -43,7 +43,7 @@ pub mod thread_local_key;
 pub mod thread_parker;
 pub mod time;
 
-#[cfg(target_os = "espidf")]
+#[cfg(any(target_os = "espidf", target_os = "postgres")]
 pub fn init(argc: isize, argv: *const *const u8) {}
 
 #[cfg(not(target_os = "espidf"))]

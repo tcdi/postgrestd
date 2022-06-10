@@ -331,11 +331,11 @@
 //
 // Only for const-ness:
 #![feature(const_io_structs)]
-// #![feature(const_ip)]
-// #![feature(const_ipv4)]
-// #![feature(const_ipv6)]
+#![feature(const_ip)]
+#![feature(const_ipv4)]
+#![feature(const_ipv6)]
 #![feature(const_option)]
-// #![feature(const_socketaddr)]
+#![feature(const_socketaddr)]
 #![feature(thread_local_internals)]
 //
 #![default_lib_allocator]
@@ -350,8 +350,8 @@
 use prelude::rust_2021::*;
 
 // Access to Bencher, etc.
-// #[cfg(test)]
-// extern crate test;
+#[cfg(test)]
+extern crate test;
 
 #[allow(unused_imports)] // macros from `alloc` are not used on all platforms
 #[macro_use]
@@ -502,7 +502,7 @@ pub mod error;
 pub mod ffi;
 pub mod fs;
 pub mod io;
-// pub mod net;
+pub mod net;
 pub mod num;
 pub mod os;
 pub mod panic;
@@ -632,10 +632,4 @@ mod sealed {
     /// This allows adding more trait methods in the future.
     #[unstable(feature = "sealed", issue = "none")]
     pub trait Sealed {}
-}
-
-#[cfg(target_os = "postgres")]
-#[lang = "eh_personality"]
-extern "C" fn eh_personality() {
-    crate::intrinsics::abort()
 }
