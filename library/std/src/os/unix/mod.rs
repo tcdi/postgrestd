@@ -71,12 +71,14 @@ mod platform {
     pub use crate::os::solaris::*;
     #[cfg(target_os = "vxworks")]
     pub use crate::os::vxworks::*;
+    #[cfg(target_os = "postgres")]
+    pub use crate::os::linux::*;
 }
 
 pub mod ffi;
-// pub mod fs;
+pub mod fs;
 pub mod io;
-// pub mod net;
+pub mod net;
 pub mod process;
 pub mod raw;
 pub mod thread;
@@ -90,7 +92,8 @@ pub mod thread;
 //     target_os = "ios",
 //     target_os = "macos",
 //     target_os = "netbsd",
-//     target_os = "openbsd"
+//     target_os = "openbsd",
+//     target_os = "postgres",
 // ))]
 // pub mod ucred;
 
@@ -102,15 +105,15 @@ pub mod prelude {
     #[doc(no_inline)]
     #[stable(feature = "rust1", since = "1.0.0")]
     pub use super::ffi::{OsStrExt, OsStringExt};
-    // #[doc(no_inline)]
-    // #[stable(feature = "rust1", since = "1.0.0")]
-    // pub use super::fs::DirEntryExt;
-    // #[doc(no_inline)]
-    // #[stable(feature = "file_offset", since = "1.15.0")]
-    // pub use super::fs::FileExt;
-    // #[doc(no_inline)]
-    // #[stable(feature = "rust1", since = "1.0.0")]
-    // pub use super::fs::{FileTypeExt, MetadataExt, OpenOptionsExt, PermissionsExt};
+    #[doc(no_inline)]
+    #[stable(feature = "rust1", since = "1.0.0")]
+    pub use super::fs::DirEntryExt;
+    #[doc(no_inline)]
+    #[stable(feature = "file_offset", since = "1.15.0")]
+    pub use super::fs::FileExt;
+    #[doc(no_inline)]
+    #[stable(feature = "rust1", since = "1.0.0")]
+    pub use super::fs::{FileTypeExt, MetadataExt, OpenOptionsExt, PermissionsExt};
     #[doc(no_inline)]
     #[stable(feature = "rust1", since = "1.0.0")]
     pub use super::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};

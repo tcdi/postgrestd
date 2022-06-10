@@ -10,7 +10,7 @@ pub mod raw;
 pub mod owned;
 
 // Implementations for `AsRawFd` etc. for network types.
-// mod net;
+mod net;
 
 #[cfg(test)]
 mod tests;

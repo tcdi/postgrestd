@@ -490,11 +490,11 @@ pub mod f32;
 pub mod f64;
 
 #[macro_use]
-// pub mod thread;
+pub mod thread;
 pub mod ascii;
 pub mod backtrace;
 pub mod collections;
-// pub mod env;
+pub mod env;
 pub mod error;
 pub mod ffi;
 pub mod fs;
@@ -503,10 +503,10 @@ pub mod net;
 pub mod num;
 pub mod os;
 pub mod panic;
-// pub mod path;
+pub mod path;
 pub mod process;
 pub mod sync;
-// pub mod time;
+pub mod time;
 
 #[unstable(feature = "once_cell", issue = "74465")]
 pub mod lazy;
@@ -568,7 +568,7 @@ pub mod arch {
 pub use std_detect::is_x86_feature_detected;
 
 // Platform-abstraction modules
-// mod sys;
+mod sys;
 mod sys_common;
 
 pub mod alloc;

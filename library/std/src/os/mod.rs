@@ -95,7 +95,6 @@ pub mod linux;
 #[cfg(any(target_os = "wasi", doc))]
 pub mod wasi;
 
-#[cfg(target_os = "postgres")]
 #[cfg(not(all(
     doc,
     any(
@@ -103,8 +102,7 @@ pub mod wasi;
         all(target_vendor = "fortanix", target_env = "sgx")
     )
 )))]
-#[cfg(any(target_os = "linux", doc))]
-#[unstable(issue = "none", feature = "std_internals")]
+#[cfg(target_os = "postgres")]
 pub mod linux;
 
 // windows
