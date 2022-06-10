@@ -78,6 +78,7 @@ impl Socket {
                     target_os = "linux",
                     target_os = "netbsd",
                     target_os = "openbsd",
+                    target_os = "postgres",
                 ))] {
                     // On platforms that support it we pass the SOCK_CLOEXEC
                     // flag to atomically create the socket and set it as
@@ -115,6 +116,7 @@ impl Socket {
                     target_os = "linux",
                     target_os = "netbsd",
                     target_os = "openbsd",
+                    target_os = "postgres"
                 ))] {
                     // Like above, set cloexec atomically
                     cvt(libc::socketpair(fam, ty | libc::SOCK_CLOEXEC, 0, fds.as_mut_ptr()))?;
@@ -220,6 +222,7 @@ impl Socket {
                 target_os = "linux",
                 target_os = "netbsd",
                 target_os = "openbsd",
+                target_os = "postgres",
             ))] {
                 unsafe {
                     let fd = cvt_r(|| libc::accept4(self.as_raw_fd(), storage, len, libc::SOCK_CLOEXEC))?;
@@ -289,7 +292,7 @@ impl Socket {
         self.recv_from_with_flags(buf, 0)
     }
 
-    #[cfg(any(target_os = "android", target_os = "linux"))]
+    #[cfg(any(target_os = "android", target_os = "linux", target_os = "postgres"))]
     pub fn recv_msg(&self, msg: &mut libc::msghdr) -> io::Result<usize> {
         let n = cvt(unsafe { libc::recvmsg(self.as_raw_fd(), msg, libc::MSG_CMSG_CLOEXEC) })?;
         Ok(n as usize)
@@ -312,7 +315,7 @@ impl Socket {
         self.0.is_write_vectored()
     }
 
-    #[cfg(any(target_os = "android", target_os = "linux"))]
+    #[cfg(any(target_os = "android", target_os = "linux", target_os = "postgres"))]
     pub fn send_msg(&self, msg: &mut libc::msghdr) -> io::Result<usize> {
         let n = cvt(unsafe { libc::sendmsg(self.as_raw_fd(), msg, 0) })?;
         Ok(n as usize)
@@ -392,12 +395,12 @@ impl Socket {
         Ok(raw != 0)
     }
 
-    #[cfg(any(target_os = "android", target_os = "linux",))]
+    #[cfg(any(target_os = "android", target_os = "linux", target_os = "postgres"))]
     pub fn set_passcred(&self, passcred: bool) -> io::Result<()> {
         setsockopt(self, libc::SOL_SOCKET, libc::SO_PASSCRED, passcred as libc::c_int)
     }
 
-    #[cfg(any(target_os = "android", target_os = "linux",))]
+    #[cfg(any(target_os = "android", target_os = "linux", target_os = "postgres"))]
     pub fn passcred(&self) -> io::Result<bool> {
         let passcred: libc::c_int = getsockopt(self, libc::SOL_SOCKET, libc::SO_PASSCRED)?;
         Ok(passcred != 0)
@@ -496,7 +499,10 @@ impl FromRawFd for Socket {
 // res_init unconditionally, we call it only when we detect we're linking
 // against glibc version < 2.26. (That is, when we both know its needed and
 // believe it's thread-safe).
-#[cfg(all(target_os = "linux", target_env = "gnu"))]
+#[cfg(any(
+    all(target_os = "linux", target_env = "gnu"),
+    all(target_os = "postgres", target_env = "gnu"),
+))]
 fn on_resolver_failure() {
     use crate::sys;
 
@@ -508,5 +514,8 @@ fn on_resolver_failure() {
     }
 }
 
-#[cfg(not(all(target_os = "linux", target_env = "gnu")))]
+#[cfg(not(any(
+    all(target_os = "linux", target_env = "gnu"),
+    all(target_os = "postgres", target_env = "gnu"),
+)))]
 fn on_resolver_failure() {}

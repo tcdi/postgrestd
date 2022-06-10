@@ -19,7 +19,7 @@ pub mod fd;
 pub mod fs;
 pub mod futex;
 pub mod io;
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "postgres"))]
 pub mod kernel_copy;
 #[cfg(target_os = "l4re")]
 mod l4re;
@@ -46,7 +46,7 @@ pub mod time;
 #[cfg(any(target_os = "espidf", target_os = "postgres")]
 pub fn init(argc: isize, argv: *const *const u8) {}
 
-#[cfg(not(target_os = "espidf"))]
+#[cfg(not(target_os = "espidf", target_os = "postgres"))]
 // SAFETY: must be called only once during runtime initialization.
 // NOTE: this is not guaranteed to run, for example when Rust code is called externally.
 pub unsafe fn init(argc: isize, argv: *const *const u8) {
