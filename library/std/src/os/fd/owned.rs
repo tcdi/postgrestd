@@ -5,7 +5,7 @@
 
 use super::raw::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
 use crate::fmt;
-// use crate::fs;
+use crate::fs;
 use crate::marker::PhantomData;
 use crate::mem::forget;
 #[cfg(not(any(target_arch = "wasm32", target_env = "sgx")))]
@@ -265,80 +265,80 @@ impl From<OwnedFd> for fs::File {
     }
 }
 
-// #[unstable(feature = "io_safety", issue = "87074")]
-// impl AsFd for crate::net::TcpStream {
-//     #[inline]
-//     fn as_fd(&self) -> BorrowedFd<'_> {
-//         self.as_inner().socket().as_fd()
-//     }
-// }
+#[unstable(feature = "io_safety", issue = "87074")]
+impl AsFd for crate::net::TcpStream {
+    #[inline]
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        self.as_inner().socket().as_fd()
+    }
+}
 
-// #[unstable(feature = "io_safety", issue = "87074")]
-// impl From<crate::net::TcpStream> for OwnedFd {
-//     #[inline]
-//     fn from(tcp_stream: crate::net::TcpStream) -> OwnedFd {
-//         tcp_stream.into_inner().into_socket().into_inner().into_inner().into()
-//     }
-// }
+#[unstable(feature = "io_safety", issue = "87074")]
+impl From<crate::net::TcpStream> for OwnedFd {
+    #[inline]
+    fn from(tcp_stream: crate::net::TcpStream) -> OwnedFd {
+        tcp_stream.into_inner().into_socket().into_inner().into_inner().into()
+    }
+}
 
-// #[unstable(feature = "io_safety", issue = "87074")]
-// impl From<OwnedFd> for crate::net::TcpStream {
-//     #[inline]
-//     fn from(owned_fd: OwnedFd) -> Self {
-//         Self::from_inner(FromInner::from_inner(FromInner::from_inner(FromInner::from_inner(
-//             owned_fd,
-//         ))))
-//     }
-// }
+#[unstable(feature = "io_safety", issue = "87074")]
+impl From<OwnedFd> for crate::net::TcpStream {
+    #[inline]
+    fn from(owned_fd: OwnedFd) -> Self {
+        Self::from_inner(FromInner::from_inner(FromInner::from_inner(FromInner::from_inner(
+            owned_fd,
+        ))))
+    }
+}
 
-// #[unstable(feature = "io_safety", issue = "87074")]
-// impl AsFd for crate::net::TcpListener {
-//     #[inline]
-//     fn as_fd(&self) -> BorrowedFd<'_> {
-//         self.as_inner().socket().as_fd()
-//     }
-// }
+#[unstable(feature = "io_safety", issue = "87074")]
+impl AsFd for crate::net::TcpListener {
+    #[inline]
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        self.as_inner().socket().as_fd()
+    }
+}
 
-// #[unstable(feature = "io_safety", issue = "87074")]
-// impl From<crate::net::TcpListener> for OwnedFd {
-//     #[inline]
-//     fn from(tcp_listener: crate::net::TcpListener) -> OwnedFd {
-//         tcp_listener.into_inner().into_socket().into_inner().into_inner().into()
-//     }
-// }
+#[unstable(feature = "io_safety", issue = "87074")]
+impl From<crate::net::TcpListener> for OwnedFd {
+    #[inline]
+    fn from(tcp_listener: crate::net::TcpListener) -> OwnedFd {
+        tcp_listener.into_inner().into_socket().into_inner().into_inner().into()
+    }
+}
 
-// #[unstable(feature = "io_safety", issue = "87074")]
-// impl From<OwnedFd> for crate::net::TcpListener {
-//     #[inline]
-//     fn from(owned_fd: OwnedFd) -> Self {
-//         Self::from_inner(FromInner::from_inner(FromInner::from_inner(FromInner::from_inner(
-//             owned_fd,
-//         ))))
-//     }
-// }
+#[unstable(feature = "io_safety", issue = "87074")]
+impl From<OwnedFd> for crate::net::TcpListener {
+    #[inline]
+    fn from(owned_fd: OwnedFd) -> Self {
+        Self::from_inner(FromInner::from_inner(FromInner::from_inner(FromInner::from_inner(
+            owned_fd,
+        ))))
+    }
+}
 
-// #[unstable(feature = "io_safety", issue = "87074")]
-// impl AsFd for crate::net::UdpSocket {
-//     #[inline]
-//     fn as_fd(&self) -> BorrowedFd<'_> {
-//         self.as_inner().socket().as_fd()
-//     }
-// }
+#[unstable(feature = "io_safety", issue = "87074")]
+impl AsFd for crate::net::UdpSocket {
+    #[inline]
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        self.as_inner().socket().as_fd()
+    }
+}
 
-// #[unstable(feature = "io_safety", issue = "87074")]
-// impl From<crate::net::UdpSocket> for OwnedFd {
-//     #[inline]
-//     fn from(udp_socket: crate::net::UdpSocket) -> OwnedFd {
-//         udp_socket.into_inner().into_socket().into_inner().into_inner().into()
-//     }
-// }
+#[unstable(feature = "io_safety", issue = "87074")]
+impl From<crate::net::UdpSocket> for OwnedFd {
+    #[inline]
+    fn from(udp_socket: crate::net::UdpSocket) -> OwnedFd {
+        udp_socket.into_inner().into_socket().into_inner().into_inner().into()
+    }
+}
 
-// #[unstable(feature = "io_safety", issue = "87074")]
-// impl From<OwnedFd> for crate::net::UdpSocket {
-//     #[inline]
-//     fn from(owned_fd: OwnedFd) -> Self {
-//         Self::from_inner(FromInner::from_inner(FromInner::from_inner(FromInner::from_inner(
-//             owned_fd,
-//         ))))
-//     }
-// }
+#[unstable(feature = "io_safety", issue = "87074")]
+impl From<OwnedFd> for crate::net::UdpSocket {
+    #[inline]
+    fn from(owned_fd: OwnedFd) -> Self {
+        Self::from_inner(FromInner::from_inner(FromInner::from_inner(FromInner::from_inner(
+            owned_fd,
+        ))))
+    }
+}

@@ -1377,32 +1377,32 @@ impl From<ChildStderr> for Stdio {
     }
 }
 
-// #[stable(feature = "stdio_from", since = "1.20.0")]
-// impl From<fs::File> for Stdio {
-//     /// Converts a [`File`](fs::File) into a [`Stdio`].
-//     ///
-//     /// # Examples
-//     ///
-//     /// `File` will be converted to `Stdio` using `Stdio::from` under the hood.
-//     ///
-//     /// ```rust,no_run
-//     /// use std::fs::File;
-//     /// use std::process::Command;
-//     ///
-//     /// // With the `foo.txt` file containing `Hello, world!"
-//     /// let file = File::open("foo.txt").unwrap();
-//     ///
-//     /// let reverse = Command::new("rev")
-//     ///     .stdin(file)  // Implicit File conversion into a Stdio
-//     ///     .output()
-//     ///     .expect("failed reverse command");
-//     ///
-//     /// assert_eq!(reverse.stdout, b"!dlrow ,olleH");
-//     /// ```
-//     fn from(file: fs::File) -> Stdio {
-//         Stdio::from_inner(file.into_inner().into())
-//     }
-// }
+#[stable(feature = "stdio_from", since = "1.20.0")]
+impl From<fs::File> for Stdio {
+    /// Converts a [`File`](fs::File) into a [`Stdio`].
+    ///
+    /// # Examples
+    ///
+    /// `File` will be converted to `Stdio` using `Stdio::from` under the hood.
+    ///
+    /// ```rust,no_run
+    /// use std::fs::File;
+    /// use std::process::Command;
+    ///
+    /// // With the `foo.txt` file containing `Hello, world!"
+    /// let file = File::open("foo.txt").unwrap();
+    ///
+    /// let reverse = Command::new("rev")
+    ///     .stdin(file)  // Implicit File conversion into a Stdio
+    ///     .output()
+    ///     .expect("failed reverse command");
+    ///
+    /// assert_eq!(reverse.stdout, b"!dlrow ,olleH");
+    /// ```
+    fn from(file: fs::File) -> Stdio {
+        Stdio::from_inner(file.into_inner().into())
+    }
+}
 
 /// Describes the result of a process after it has terminated.
 ///

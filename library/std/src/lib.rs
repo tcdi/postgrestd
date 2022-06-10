@@ -490,7 +490,7 @@ pub mod f32;
 pub mod f64;
 
 #[macro_use]
-pub mod thread;
+// pub mod thread;
 pub mod ascii;
 pub mod backtrace;
 pub mod collections;
