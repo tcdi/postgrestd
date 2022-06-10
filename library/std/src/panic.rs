@@ -72,14 +72,14 @@ impl<T: ?Sized> RefUnwindSafe for Mutex<T> {}
 impl<T: ?Sized> RefUnwindSafe for RwLock<T> {}
 
 // https://github.com/rust-lang/rust/issues/62301
-// #[stable(feature = "hashbrown", since = "1.36.0")]
-// impl<K, V, S> UnwindSafe for collections::HashMap<K, V, S>
-// where
-//     K: UnwindSafe,
-//     V: UnwindSafe,
-//     S: UnwindSafe,
-// {
-// }
+#[stable(feature = "hashbrown", since = "1.36.0")]
+impl<K, V, S> UnwindSafe for collections::HashMap<K, V, S>
+where
+    K: UnwindSafe,
+    V: UnwindSafe,
+    S: UnwindSafe,
+{
+}
 
 /// Invokes a closure, capturing the cause of an unwinding panic if one occurs.
 ///
@@ -297,22 +297,21 @@ pub fn get_backtrace_style() -> Option<BacktraceStyle> {
 
     // Setting environment variables for Fuchsia components isn't a standard
     // or easily supported workflow. For now, display backtraces by default.
-    // let format = if cfg!(target_os = "fuchsia") {
-    //     BacktraceStyle::Full
-    // } else {
-    //     crate::env::var_os("RUST_BACKTRACE")
-    //         .map(|x| {
-    //             if &x == "0" {
-    //                 BacktraceStyle::Off
-    //             } else if &x == "full" {
-    //                 BacktraceStyle::Full
-    //             } else {
-    //                 BacktraceStyle::Short
-    //             }
-    //         })
-    //         .unwrap_or(BacktraceStyle::Off)
-    // };
-    let format = BacktraceStyle::Short;
+    let format = if cfg!(target_os = "fuchsia") {
+        BacktraceStyle::Full
+    } else {
+        crate::env::var_os("RUST_BACKTRACE")
+            .map(|x| {
+                if &x == "0" {
+                    BacktraceStyle::Off
+                } else if &x == "full" {
+                    BacktraceStyle::Full
+                } else {
+                    BacktraceStyle::Short
+                }
+            })
+            .unwrap_or(BacktraceStyle::Off)
+    };
     set_backtrace_style(format);
     Some(format)
 }
