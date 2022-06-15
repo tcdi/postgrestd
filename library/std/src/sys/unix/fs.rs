@@ -1192,6 +1192,7 @@ pub fn readdir(p: &Path) -> io::Result<ReadDir> {
                 #[cfg(not(any(
                     target_os = "android",
                     target_os = "linux",
+                    target_os = "postgres",
                     target_os = "solaris",
                     target_os = "illumos",
                     target_os = "fuchsia",
@@ -1660,6 +1661,7 @@ mod remove_dir_impl {
                     target_os = "illumos",
                     target_os = "fuchsia",
                     target_os = "redox",
+                    target_os = "postgres",
                 )))]
                 end_of_stream: false,
             },

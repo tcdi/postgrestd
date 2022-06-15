@@ -47,7 +47,7 @@ cfg_if::cfg_if! {
         mod sgx;
         pub use self::sgx::*;
     // } else if #[cfg(target_os = "postgres")] {
-    //     mod postgres;
+    //     mod unsupported;
     //     pub use self::postgres::*;
     } else {
         mod unsupported;

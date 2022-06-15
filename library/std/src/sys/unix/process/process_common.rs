@@ -81,7 +81,7 @@ pub struct Command {
     stdin: Option<Stdio>,
     stdout: Option<Stdio>,
     stderr: Option<Stdio>,
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "postgres"))]
     create_pidfd: bool,
     pgroup: Option<pid_t>,
 }
@@ -129,7 +129,7 @@ pub enum Stdio {
 }
 
 impl Command {
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(any(target_os = "linux", target_os = "postgres")))]
     pub fn new(program: &OsStr) -> Command {
         let mut saw_nul = false;
         let program = os2c(program, &mut saw_nul);
@@ -151,7 +151,7 @@ impl Command {
         }
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "postgres"))]
     pub fn new(program: &OsStr) -> Command {
         let mut saw_nul = false;
         let program = os2c(program, &mut saw_nul);
@@ -210,18 +210,18 @@ impl Command {
         self.pgroup = Some(pgroup);
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "postgres"))]
     pub fn create_pidfd(&mut self, val: bool) {
         self.create_pidfd = val;
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(any(target_os = "linux", target_os = "postgres")))]
     #[allow(dead_code)]
     pub fn get_create_pidfd(&self) -> bool {
         false
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "postgres"))]
     pub fn get_create_pidfd(&self) -> bool {
         self.create_pidfd
     }

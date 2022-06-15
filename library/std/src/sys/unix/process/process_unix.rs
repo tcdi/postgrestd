@@ -8,7 +8,10 @@ use crate::sys::cvt;
 use crate::sys::process::process_common::*;
 use core::ffi::NonZero_c_int;
 
-#[cfg(any(target_os = "linux", target_os = "postgres"))]
+#[cfg(target_os = "linux")]
+use crate::os::linux::process::PidFd;
+
+#[cfg(target_os = "postgres")]
 use crate::os::linux::process::PidFd;
 
 #[cfg(target_os = "linux")]
@@ -146,7 +149,10 @@ target_os = "postgres")))]
     /// No.
     #[cfg(target_os = "postgres")]
     unsafe fn do_fork(&mut self) -> Result<(pid_t, pid_t), io::Error> {
-        Err(io::Error::Unsupported)
+        Err(crate::io::const_io_error!(
+            crate::io::ErrorKind::Unsupported,
+            "lol no",
+        ))
     }
 
     // Attempts to fork the process. If successful, returns Ok((0, -1))
