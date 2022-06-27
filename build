@@ -1,0 +1,20 @@
+BUILD_THIS="x86_64-postgres-linux-gnu"
+
+# RUST_COMPILER_RT_ROOT="$PWD/llvm/compiler-rt" \
+CARGO_PROFILE_RELEASE_DEBUG=0 \
+CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true \
+RUSTC_BOOTSTRAP=1 \
+RUSTFLAGS="-Cforce-unwind-tables=yes -Cembed-bitcode=yes" \
+__CARGO_DEFAULT_LIB_METADATA="nightlystd" \
+cargo build \
+	--target "${BUILD_THIS}" \
+    -Zbinary-dep-depinfo \
+    --release \
+    --features "compiler-builtins-mem" \
+    --manifest-path "library/test/Cargo.toml"
+
+if [[ ${1} == "copy" ]]; then
+    cp target/${BUILD_THIS}/release/deps/*.rlib $(rustc --print sysroot)/lib/rustlib/${BUILD_THIS}
+fi
+# BUILD_THIS="x86_64-postgres-gnu" cp "./${BUILD_THIS}.json" "$(rustc --print sysroot)/lib/rustlib/${BUILD_THIS}/"
+
