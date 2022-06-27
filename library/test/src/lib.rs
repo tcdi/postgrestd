@@ -20,6 +20,7 @@
 #![feature(internal_output_capture)]
 #![feature(staged_api)]
 #![feature(process_exitcode_internals)]
+#![feature(restricted_std)]
 #![feature(test)]
 
 // Public reexports
