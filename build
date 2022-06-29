@@ -9,14 +9,14 @@ CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true \
 RUSTC_BOOTSTRAP=1 \
 RUSTFLAGS="-Cforce-unwind-tables=yes -Cembed-bitcode=yes" \
 __CARGO_DEFAULT_LIB_METADATA="nightlystd" \
-cargo +nightly build \
+cargo build \
 	--target "${BUILD_THIS}" \
     -Zbinary-dep-depinfo \
     --release \
     --features "compiler-builtins-mem" \
     --manifest-path "library/test/Cargo.toml"
 
-if [[ ${1} == "copy" ]]; then
+if [ ${1} = "copy" ]; then
     mkdir -p $(rustc --print sysroot)/lib/rustlib/${BUILD_THIS}/lib
     cp --force --verbose target/${BUILD_THIS}/release/deps/*.rlib $(rustc --print sysroot)/lib/rustlib/${BUILD_THIS}/lib
 fi
