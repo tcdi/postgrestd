@@ -1,3 +1,6 @@
+#! /usr/bin/sh
+set -e
+
 BUILD_THIS="x86_64-postgres-linux-gnu"
 
 # RUST_COMPILER_RT_ROOT="$PWD/llvm/compiler-rt" \
@@ -6,7 +9,7 @@ CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true \
 RUSTC_BOOTSTRAP=1 \
 RUSTFLAGS="-Cforce-unwind-tables=yes -Cembed-bitcode=yes" \
 __CARGO_DEFAULT_LIB_METADATA="nightlystd" \
-cargo build \
+cargo +nightly build \
 	--target "${BUILD_THIS}" \
     -Zbinary-dep-depinfo \
     --release \
@@ -14,7 +17,8 @@ cargo build \
     --manifest-path "library/test/Cargo.toml"
 
 if [[ ${1} == "copy" ]]; then
-    cp target/${BUILD_THIS}/release/deps/*.rlib $(rustc --print sysroot)/lib/rustlib/${BUILD_THIS}
+    mkdir -p $(rustc --print sysroot)/lib/rustlib/${BUILD_THIS}/lib
+    cp --force --verbose target/${BUILD_THIS}/release/deps/*.rlib $(rustc --print sysroot)/lib/rustlib/${BUILD_THIS}/lib
 fi
 # BUILD_THIS="x86_64-postgres-gnu" cp "./${BUILD_THIS}.json" "$(rustc --print sysroot)/lib/rustlib/${BUILD_THIS}/"
 
