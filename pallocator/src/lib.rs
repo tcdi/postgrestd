@@ -1,6 +1,6 @@
 #![no_std]
 use core::alloc::{GlobalAlloc, Layout};
-use pgx::pg_sys;
+use pgx_pg_sys as pg_sys;
 
 struct PostAlloc;
 
