@@ -10,7 +10,7 @@
   "has-thread-local": true,
   "llvm-target": "x86_64-unknown-linux-gnu",
   "max-atomic-width": 64,
-  "os": "postgres",
+  "os": "linux",
   "panic-strategy": "abort",
   "position-independent-executables": true,
   "pre-link-args": {
@@ -32,6 +32,7 @@
     "thread"
   ],
   "target-family": [
-    "unix"
+    "unix",
+    "postgres"
   ]
 }
