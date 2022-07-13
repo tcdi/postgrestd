@@ -26,7 +26,9 @@ mod common;
 
 cfg_if::cfg_if! {
     if #[cfg(target_family = "postgres")] {
+        // mod unix;
         mod postgres;
+        use postgres as unix;
         pub use self::postgres::*;
     } else if #[cfg(unix)] {
         mod unix;
