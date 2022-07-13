@@ -79,3 +79,8 @@ where
 pub fn cvt_nz(error: libc::c_int) -> crate::io::Result<()> {
     if error == 0 { Ok(()) } else { Err(crate::io::Error::from_raw_os_error(error)) }
 }
+
+#[cfg(target_os = "android")]
+pub use crate::sys::android::signal;
+#[cfg(not(target_os = "android"))]
+pub use libc::signal;
