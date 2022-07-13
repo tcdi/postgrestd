@@ -15,12 +15,108 @@ impl Thread {
         // do nothing
     }
 
-    pub fn set_name(_name: &CStr) {
-        // nope
+    #[cfg(any(target_os = "linux", target_os = "android", target_os = "postgres"))]
+    pub fn set_name(name: &CStr) {
+        const PR_SET_NAME: libc::c_int = 15;
+        // pthread wrapper only appeared in glibc 2.12, so we use syscall
+        // directly.
+        unsafe {
+            libc::prctl(
+                PR_SET_NAME,
+                name.as_ptr(),
+                0 as libc::c_ulong,
+                0 as libc::c_ulong,
+                0 as libc::c_ulong,
+            );
+        }
     }
 
-    pub fn sleep(_dur: Duration) {
-        panic!("can't sleep, sql will eat me");
+    #[cfg(any(target_os = "freebsd", target_os = "dragonfly", target_os = "openbsd"))]
+    pub fn set_name(name: &CStr) {
+        unsafe {
+            libc::pthread_set_name_np(libc::pthread_self(), name.as_ptr());
+        }
+    }
+
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    pub fn set_name(name: &CStr) {
+        unsafe {
+            libc::pthread_setname_np(name.as_ptr());
+        }
+    }
+
+    #[cfg(target_os = "netbsd")]
+    pub fn set_name(name: &CStr) {
+        use crate::ffi::CString;
+        let cname = CString::new(&b"%s"[..]).unwrap();
+        unsafe {
+            libc::pthread_setname_np(
+                libc::pthread_self(),
+                cname.as_ptr(),
+                name.as_ptr() as *mut libc::c_void,
+            );
+        }
+    }
+
+    #[cfg(any(target_os = "solaris", target_os = "illumos"))]
+    pub fn set_name(name: &CStr) {
+        weak! {
+            fn pthread_setname_np(
+                libc::pthread_t, *const libc::c_char
+            ) -> libc::c_int
+        }
+
+        if let Some(f) = pthread_setname_np.get() {
+            unsafe {
+                f(libc::pthread_self(), name.as_ptr());
+            }
+        }
+    }
+
+    #[cfg(target_os = "fuchsia")]
+    pub fn set_name(name: &CStr) {
+        use self::zircon::*;
+        unsafe {
+            zx_object_set_property(
+                zx_thread_self(),
+                ZX_PROP_NAME,
+                name.as_ptr() as *const libc::c_void,
+                name.to_bytes().len(),
+            );
+        }
+    }
+
+    #[cfg(target_os = "haiku")]
+    pub fn set_name(name: &CStr) {
+        unsafe {
+            let thread_self = libc::find_thread(ptr::null_mut());
+            libc::rename_thread(thread_self, name.as_ptr());
+        }
+    }
+
+    pub fn sleep(dur: Duration) {
+        let mut secs = dur.as_secs();
+        let mut nsecs = dur.subsec_nanos() as _;
+
+        // If we're awoken with a signal then the return value will be -1 and
+        // nanosleep will fill in `ts` with the remaining time.
+        unsafe {
+            while secs > 0 || nsecs > 0 {
+                let mut ts = libc::timespec {
+                    tv_sec: cmp::min(libc::time_t::MAX as u64, secs) as libc::time_t,
+                    tv_nsec: nsecs,
+                };
+                secs -= ts.tv_sec as u64;
+                let ts_ptr = &mut ts as *mut _;
+                if libc::nanosleep(ts_ptr, ts_ptr) == -1 {
+                    assert_eq!(os::errno(), libc::EINTR);
+                    secs += ts.tv_sec as u64;
+                    nsecs = ts.tv_nsec;
+                } else {
+                    nsecs = 0;
+                }
+            }
+        }
     }
 
     pub fn join(self) {
