@@ -27,7 +27,7 @@ pub struct ReadDir(!);
 pub struct DirEntry(!);
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct FilePermissions(!);
+pub struct FilePermissions{ mode: mode_t, }
 pub struct FileType(!);
 
 pub struct FileAttr(!);
@@ -70,15 +70,14 @@ impl Clone for FileAttr {
 
 impl FilePermissions {
     pub fn readonly(&self) -> bool {
-        self.0
+        false
     }
 
     pub fn set_readonly(&mut self, _readonly: bool) {
-        self.0
     }
 
     pub fn mode(&self) -> u32 {
-        self.0
+        self.mode
     }
 }
 
@@ -330,7 +329,7 @@ pub fn rename(_old: &Path, _new: &Path) -> io::Result<()> {
 }
 
 pub fn set_perm(_p: &Path, perm: FilePermissions) -> io::Result<()> {
-    match perm.0 {}
+    unsupported()
 }
 
 pub fn rmdir(_p: &Path) -> io::Result<()> {
