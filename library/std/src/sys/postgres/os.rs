@@ -5,6 +5,7 @@ use crate::fmt;
 use crate::io;
 use crate::marker::PhantomData;
 use crate::path::{self, PathBuf};
+use libc;
 
 pub fn errno() -> i32 {
     0
@@ -101,5 +102,13 @@ pub fn exit(_code: i32) -> ! {
 }
 
 pub fn getpid() -> u32 {
-    panic!("no pids on this platform")
+    panic!("no pids here")
+}
+
+pub fn getppid() -> u32 {
+    panic!("no pids here")
+}
+
+pub fn page_size() -> usize {
+    unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize }
 }
