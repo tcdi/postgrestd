@@ -1,6 +1,7 @@
 use crate::io::{self, IoSlice, IoSliceMut};
 use crate::mem;
 use crate::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
+use crate::os::unix::prelude::*;
 use crate::sys::fd::FileDesc;
 use crate::sys::{cvt, cvt_r};
 use crate::sys_common::IntoInner;
