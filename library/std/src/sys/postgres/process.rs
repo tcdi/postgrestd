@@ -19,6 +19,11 @@ pub use crate::ffi::OsString as EnvKey;
 
 use libc::{c_int, c_char, pid_t, gid_t, uid_t};
 
+use crate::os::unix::prelude::*;
+
+use crate::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+use crate::sys_common::IntoInner;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Command
 ////////////////////////////////////////////////////////////////////////////////
@@ -276,15 +281,29 @@ impl Command {
 
 impl From<AnonPipe> for Stdio {
     fn from(pipe: AnonPipe) -> Stdio {
-        pipe.diverge()
+        Stdio::Fd(pipe.into_inner())
     }
 }
 
 impl From<File> for Stdio {
-    fn from(_file: File) -> Stdio {
-        panic!("unsupported")
+    fn from(file: File) -> Stdio {
+        Stdio::Fd(file.into_inner())
     }
 }
+
+impl ChildStdio {
+    pub fn fd(&self) -> Option<c_int> {
+        match *self {
+            ChildStdio::Inherit => None,
+            ChildStdio::Explicit(fd) => Some(fd),
+            ChildStdio::Owned(ref fd) => Some(fd.as_raw_fd()),
+
+            #[cfg(target_os = "fuchsia")]
+            ChildStdio::Null => None,
+        }
+    }
+}
+
 
 impl fmt::Debug for Command {
     fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
