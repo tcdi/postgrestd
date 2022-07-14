@@ -1,24 +1,71 @@
 #! /usr/bin/sh
 set -e
 
-BUILD_THIS="x86_64-postgres-linux-gnu"
+sysroot="$(rustc --print sysroot)"
 
-# RUST_COMPILER_RT_ROOT="$PWD/llvm/compiler-rt" \
-CARGO_PROFILE_RELEASE_DEBUG=0 \
-CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true \
-RUSTC_BOOTSTRAP=1 \
-RUSTFLAGS="-Cforce-unwind-tables=yes -Cembed-bitcode=yes" \
-__CARGO_DEFAULT_LIB_METADATA="nightlystd" \
-cargo build \
-	--target "${BUILD_THIS}" \
-    -Zbinary-dep-depinfo \
-    --release \
-    --features "compiler-builtins-mem" \
-    --manifest-path "library/test/Cargo.toml"
-
-if [ ${1} = "copy" ]; then
-    mkdir -p $(rustc --print sysroot)/lib/rustlib/${BUILD_THIS}/lib
-    cp --force --verbose target/${BUILD_THIS}/release/deps/*.rlib $(rustc --print sysroot)/lib/rustlib/${BUILD_THIS}/lib
+if [ -z "${STD_TARGET}" ]; then
+    STD_TARGET="x86_64-unknown-linux-postgres"
 fi
-# BUILD_THIS="x86_64-postgres-gnu" cp "./${BUILD_THIS}.json" "$(rustc --print sysroot)/lib/rustlib/${BUILD_THIS}/"
 
+main() {
+    case "$1" in
+        build)
+            setup_dir
+            run_build
+            ;;
+        install)
+            setup_dir
+            run_build
+            remove_rlibs
+            copy_rlibs
+            ;;
+        clean)
+            cargo clean
+            remove_rlibs
+            ;;
+        help)
+            print_help
+            ;;
+        *)
+            print_help
+            exit 1
+            ;;
+    esac
+}
+
+print_help() {
+    echo "Usage: $0 help | build | clean | install"
+}
+
+setup_dir() {
+    mkdir -p "${sysroot}"/lib/rustlib/"${STD_TARGET}"/lib
+    cp --verbose ./"${STD_TARGET}.json" "${sysroot}"/lib/rustlib/"${STD_TARGET}"/target.json
+}
+
+copy_json() {
+    cp --verbose ./"${STD_TARGET}.json" "${sysroot}"/lib/rustlib/"${STD_TARGET}"/target.json
+}
+
+remove_rlibs() {
+    rm --force --verbose "${sysroot}"/lib/rustlib/"${STD_TARGET}"/lib/*.rlib
+}
+
+copy_rlibs() {
+    cp --force --verbose target/${STD_TARGET}/release/deps/*.rlib "${sysroot}/lib/rustlib/${STD_TARGET}/lib"
+}
+
+run_build() {
+    CARGO_PROFILE_RELEASE_DEBUG=0 \
+    CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true \
+    RUSTC_BOOTSTRAP=1 \
+    RUSTFLAGS="-Cforce-unwind-tables=yes -Cembed-bitcode=yes" \
+    __CARGO_DEFAULT_LIB_METADATA="nightlystd" \
+    cargo build \
+        --target "${STD_TARGET}" \
+        -Zbinary-dep-depinfo \
+        --release \
+        --features "compiler-builtins-mem" \
+        --manifest-path "library/test/Cargo.toml"
+}
+
+main "$@"
