@@ -176,6 +176,7 @@ impl SystemTime {
 }
 
 #[cfg(not(any(target_os = "dragonfly", target_os = "espidf")))]
+#[allow(non_camel_case_types)]
 pub type clock_t = libc::c_int;
 #[cfg(any(target_os = "dragonfly", target_os = "espidf"))]
 pub type clock_t = libc::c_ulong;
