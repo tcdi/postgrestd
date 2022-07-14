@@ -1,4 +1,4 @@
-
+#![allow(unused)]
 #[path = "../unix/weak.rs"]
 #[macro_use]
 pub mod weak;

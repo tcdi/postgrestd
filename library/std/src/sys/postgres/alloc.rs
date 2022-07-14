@@ -1,4 +1,5 @@
 use crate::alloc::{GlobalAlloc, Layout, System};
+#[allow(unused)]
 use crate::ptr;
 use crate::sys::common::alloc::{realloc_fallback, MIN_ALIGN};
 
