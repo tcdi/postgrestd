@@ -67,5 +67,3 @@ bootstrap.debug = 1
 rustc-std-workspace-core = { path = 'library/rustc-std-workspace-core' }
 rustc-std-workspace-alloc = { path = 'library/rustc-std-workspace-alloc' }
 rustc-std-workspace-std = { path = 'library/rustc-std-workspace-std' }
-
-libc = { git = "https://github.com/workingjubilee/libc", branch = "postgres-os" }
