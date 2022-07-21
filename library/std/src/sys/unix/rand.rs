@@ -64,12 +64,22 @@ mod imp {
         unsafe { libc::getrandom(buf.as_mut_ptr().cast(), buf.len(), 0) }
     }
 
-    #[cfg(not(any(target_os = "linux", target_os = "android", target_os = "espidf", target_os = "postgres")))]
+    #[cfg(not(any(
+        target_os = "linux",
+        target_os = "android",
+        target_os = "espidf",
+        target_os = "postgres"
+    )))]
     fn getrandom_fill_bytes(_buf: &mut [u8]) -> bool {
         false
     }
 
-    #[cfg(any(target_os = "linux", target_os = "android", target_os = "espidf", target_os = "postgres"))]
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "android",
+        target_os = "espidf",
+        target_os = "postgres"
+    ))]
     fn getrandom_fill_bytes(v: &mut [u8]) -> bool {
         use crate::sync::atomic::{AtomicBool, Ordering};
         use crate::sys::os::errno;

@@ -3,21 +3,21 @@ use crate::collections::BTreeMap;
 use crate::ffi::{CStr, CString, OsStr, OsString};
 use crate::fmt;
 use crate::io;
-use crate::ptr;
 use crate::marker::PhantomData;
 use crate::num::NonZeroI32;
+#[cfg(target_os = "linux")]
+use crate::os::linux::process::PidFd;
 use crate::path::Path;
-use crate::sys::fs::File;
+use crate::ptr;
 use crate::sys::fd::FileDesc;
+use crate::sys::fs::File;
 use crate::sys::pipe::AnonPipe;
 use crate::sys::{unsupported, unsupported_err};
 use crate::sys_common::process::{CommandEnv, CommandEnvs};
-#[cfg(target_os = "linux")]
-use crate::os::linux::process::PidFd;
 
 pub use crate::ffi::OsString as EnvKey;
 
-use libc::{c_int, c_char, pid_t, gid_t, uid_t};
+use libc::{c_char, c_int, gid_t, pid_t, uid_t};
 
 use crate::os::unix::prelude::*;
 
@@ -30,7 +30,7 @@ use crate::sys_common::IntoInner;
 
 #[derive(Default)]
 pub struct Command {
-        cwd: Option<CString>,
+    cwd: Option<CString>,
 
     env: CommandEnv,
     create_pidfd: bool,
@@ -40,9 +40,8 @@ pub struct Command {
     stderr: Option<Stdio>,
     uid: Option<uid_t>,
     gid: Option<gid_t>,
-        groups: Option<Box<[gid_t]>>,
-            saw_nul: bool,
-
+    groups: Option<Box<[gid_t]>>,
+    saw_nul: bool,
 }
 
 // Helper type to manage ownership of the strings within a C-style array.
@@ -105,7 +104,6 @@ fn construct_envp(env: BTreeMap<OsString, OsString>, saw_nul: &mut bool) -> CStr
 //     closures: Vec<Box<dyn FnMut() -> io::Result<()> + Send + Sync>>,
 // }
 
-
 // passed back to std::process with the pipes connected to the child, if any
 // were requested
 pub struct StdioPipes {
@@ -147,9 +145,7 @@ impl Command {
 
     pub fn arg(&mut self, _arg: &OsStr) {}
 
-
-    pub fn set_arg_0(&mut self, arg: &OsStr) {
-    }
+    pub fn set_arg_0(&mut self, arg: &OsStr) {}
 
     pub fn env_mut(&mut self) -> &mut CommandEnv {
         &mut self.env
@@ -199,9 +195,7 @@ impl Command {
     }
 
     #[allow(dead_code)]
-    pub fn create_pidfd(&mut self, val: bool) {
-
-    }
+    pub fn create_pidfd(&mut self, val: bool) {}
 
     #[allow(dead_code)]
     pub fn get_create_pidfd(&self) -> bool {
@@ -241,8 +235,7 @@ impl Command {
         self.pgroup
     }
 
-    pub unsafe fn pre_exec(&mut self, f: Box<dyn FnMut() -> io::Result<()> + Send + Sync>) {
-    }
+    pub unsafe fn pre_exec(&mut self, f: Box<dyn FnMut() -> io::Result<()> + Send + Sync>) {}
 
     pub fn stdin(&mut self, stdin: Stdio) {
         self.stdin = Some(stdin);
@@ -304,13 +297,11 @@ impl ChildStdio {
     }
 }
 
-
 impl fmt::Debug for Command {
     fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
         Ok(())
     }
 }
-
 
 impl Clone for ExitStatus {
     fn clone(&self) -> ExitStatus {
@@ -439,8 +430,6 @@ impl ExitStatus {
         0
     }
 }
-
-
 
 /// Converts a raw `c_int` to a type-safe `ExitStatus` by wrapping it without copying.
 impl From<c_int> for ExitStatus {
@@ -574,4 +563,3 @@ impl crate::os::linux::process::ChildExt for crate::process::Child {
         unsupported()
     }
 }
-

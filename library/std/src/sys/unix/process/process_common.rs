@@ -1,4 +1,5 @@
 #[cfg(all(test, not(target_os = "emscripten")))]
+#[path = "../process/process_common/tests.rs"]
 mod tests;
 
 use crate::os::unix::prelude::*;

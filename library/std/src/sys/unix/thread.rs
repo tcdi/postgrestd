@@ -590,9 +590,7 @@ pub mod guard {
         let page_size = os::page_size();
         PAGE_SIZE.store(page_size, Ordering::Relaxed);
 
-        if cfg!(any(
-            all(target_os = "linux", not(target_env = "musl")),
-            target_os = "postgres")) {
+        if cfg!(any(all(target_os = "linux", not(target_env = "musl")), target_os = "postgres")) {
             // Linux doesn't allocate the whole stack right away, and
             // the kernel has its own stack-guard mechanism to fault
             // when growing too close to an existing mapping.  If we map
@@ -706,11 +704,9 @@ pub mod guard {
             } else if cfg!(all(target_os = "linux", target_env = "musl")) {
                 Some(stackaddr - guardsize..stackaddr)
             } else if cfg!(any(
-                all(target_os = "linux", any(target_env = "gnu", target_env = "uclibc")
-            ),
-            target_os = "postgres",
-        ))
-            {
+                all(target_os = "linux", any(target_env = "gnu", target_env = "uclibc")),
+                target_os = "postgres",
+            )) {
                 // glibc used to include the guard area within the stack, as noted in the BUGS
                 // section of `man pthread_attr_getguardsize`.  This has been corrected starting
                 // with glibc 2.27, and in some distro backports, so the guard is now placed at the
@@ -734,10 +730,7 @@ pub mod guard {
 // We need that information to avoid blowing up when a small stack
 // is created in an application with big thread-local storage requirements.
 // See #6233 for rationale and details.
-#[cfg(any(
-    all(target_os = "linux", target_env = "gnu"),
-    target_os = "postgres",
-))]
+#[cfg(any(all(target_os = "linux", target_env = "gnu"), target_os = "postgres",))]
 fn min_stack_size(attr: *const libc::pthread_attr_t) -> usize {
     // We use dlsym to avoid an ELF version dependency on GLIBC_PRIVATE. (#23628)
     // We shouldn't really be using such an internal symbol, but there's currently
@@ -751,9 +744,11 @@ fn min_stack_size(attr: *const libc::pthread_attr_t) -> usize {
 }
 
 // No point in looking up __pthread_get_minstack() on non-glibc platforms.
-#[cfg(all(not(all(target_os = "linux", target_env = "gnu")), 
+#[cfg(all(
+    not(all(target_os = "linux", target_env = "gnu")),
     not(target_os = "postgres"),
-not(target_os = "netbsd")))]
+    not(target_os = "netbsd")
+))]
 fn min_stack_size(_: *const libc::pthread_attr_t) -> usize {
     libc::PTHREAD_STACK_MIN
 }

@@ -71,8 +71,6 @@ mod platform {
     pub use crate::os::solaris::*;
     #[cfg(target_os = "vxworks")]
     pub use crate::os::vxworks::*;
-    #[cfg(target_os = "postgres")]
-    pub use crate::os::linux::*;
 }
 
 pub mod ffi;

@@ -18,9 +18,9 @@ use crate::sys_common::{AsInner, FromInner, IntoInner};
 use crate::time::{Duration, Instant};
 
 pub extern crate libc as netc;
-use netc::{MSG_PEEK, sockaddr, socklen_t};
-use netc::c_int;
 use core::ffi::c_void;
+use netc::c_int;
+use netc::{sockaddr, socklen_t, MSG_PEEK};
 
 pub type wrlen_t = netc::size_t;
 

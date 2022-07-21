@@ -20,7 +20,6 @@ pub mod os {
     pub const EXE_EXTENSION: &str = "";
 }
 
-
 #[cfg(target_os = "macos")]
 pub mod os {
     pub const FAMILY: &str = "unix";
