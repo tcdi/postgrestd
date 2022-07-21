@@ -139,25 +139,20 @@ impl Command {
 
     // Attempts to fork the process. If successful, returns Ok((0, -1))
     // in the child, and Ok((child_pid, -1)) in the parent.
-    #[cfg(not(any(target_os = "linux",
-target_os = "postgres")))]
+    #[cfg(not(any(target_os = "linux", target_os = "postgres")))]
     unsafe fn do_fork(&mut self) -> Result<(pid_t, pid_t), io::Error> {
         cvt(libc::fork()).map(|res| (res, -1))
     }
 
-
     /// No.
     #[cfg(target_os = "postgres")]
     unsafe fn do_fork(&mut self) -> Result<(pid_t, pid_t), io::Error> {
-        Err(crate::io::const_io_error!(
-            crate::io::ErrorKind::Unsupported,
-            "lol no",
-        ))
+        Err(crate::io::const_io_error!(crate::io::ErrorKind::Unsupported, "lol no",))
     }
 
     // Attempts to fork the process. If successful, returns Ok((0, -1))
     // in the child, and Ok((child_pid, child_pidfd)) in the parent.
-    #[cfg(target_os = "linux",)]
+    #[cfg(target_os = "linux")]
     unsafe fn do_fork(&mut self) -> Result<(pid_t, pid_t), io::Error> {
         use crate::sync::atomic::{AtomicBool, Ordering};
 
@@ -441,9 +436,7 @@ target_os = "postgres")))]
         }
 
         // Only glibc 2.24+ posix_spawn() supports returning ENOENT directly.
-        #[cfg(any(all(target_os = "linux", target_env = "gnu"),
-        target_os = "postgres",
-    ))]
+        #[cfg(any(all(target_os = "linux", target_env = "gnu"), target_os = "postgres",))]
         {
             if let Some(version) = sys::os::glibc_version() {
                 if version < (2, 24) {
@@ -850,5 +843,5 @@ impl crate::os::linux::process::ChildExt for crate::process::Child {
 }
 
 #[cfg(test)]
-#[path = "process_unix/tests.rs"]
+#[path = "../process/process_unix/tests.rs"]
 mod tests;

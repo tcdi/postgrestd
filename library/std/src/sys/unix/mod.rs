@@ -21,22 +21,13 @@ pub mod futex;
 pub mod io;
 #[cfg(any(target_os = "linux", target_os = "android", target_os = "postgres"))]
 pub mod kernel_copy;
-#[cfg(any(
-    target_os = "l4re",
-    target_os = "postgres"
-))]
+#[cfg(any(target_os = "l4re", target_os = "postgres"))]
 mod l4re;
 pub mod locks;
 pub mod memchr;
-#[cfg(not(any(
-    target_os = "l4re",
-    target_os = "postgres"
-)))]
+#[cfg(not(any(target_os = "l4re", target_os = "postgres")))]
 pub mod net;
-#[cfg(any(
-    target_os = "l4re",
-    target_os = "postgres"
-))]
+#[cfg(any(target_os = "l4re", target_os = "postgres"))]
 pub use self::l4re::net;
 pub mod os;
 pub mod os_str;

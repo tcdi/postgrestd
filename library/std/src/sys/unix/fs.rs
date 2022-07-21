@@ -32,7 +32,12 @@ use libc::{c_int, mode_t};
     all(target_os = "postgres", target_env = "gnu"),
 ))]
 use libc::c_char;
-#[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "android", target_os = "postgres"))]
+#[cfg(any(
+    target_os = "linux",
+    target_os = "emscripten",
+    target_os = "android",
+    target_os = "postgres"
+))]
 use libc::dirfd;
 #[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "postgres"))]
 use libc::fstatat64;
@@ -78,7 +83,12 @@ use libc::{
     dirent as dirent64, fstat as fstat64, ftruncate as ftruncate64, lseek as lseek64,
     lstat as lstat64, off_t as off64_t, open as open64, stat as stat64,
 };
-#[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "l4re", target_os = "postgres"))]
+#[cfg(any(
+    target_os = "linux",
+    target_os = "emscripten",
+    target_os = "l4re",
+    target_os = "postgres"
+))]
 use libc::{dirent64, fstat64, ftruncate64, lseek64, lstat64, off64_t, open64, stat64};
 
 pub use crate::sys_common::fs::try_exists;
@@ -651,7 +661,12 @@ impl DirEntry {
         self.file_name_os_str().to_os_string()
     }
 
-    #[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "android",     target_os = "postgres"))]
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "emscripten",
+        target_os = "android",
+        target_os = "postgres"
+    ))]
     pub fn metadata(&self) -> io::Result<FileAttr> {
         let fd = cvt(unsafe { dirfd(self.dir.dirp.0) })?;
         let name = self.name_cstr().as_ptr();
@@ -672,7 +687,12 @@ impl DirEntry {
         Ok(FileAttr::from_stat64(stat))
     }
 
-    #[cfg(not(any(target_os = "linux", target_os = "emscripten", target_os = "android",     target_os = "postgres",)))]
+    #[cfg(not(any(
+        target_os = "linux",
+        target_os = "emscripten",
+        target_os = "android",
+        target_os = "postgres",
+    )))]
     pub fn metadata(&self) -> io::Result<FileAttr> {
         lstat(&self.path())
     }
