@@ -57,8 +57,7 @@ impl DoubleEndedIterator for Args {
 #[cfg(any(
     target_os = "linux",
     target_os = "android",
-    target_os = "postgres",
-    target_os = "freebsd",
+        target_os = "freebsd",
     target_os = "dragonfly",
     target_os = "netbsd",
     target_os = "openbsd",

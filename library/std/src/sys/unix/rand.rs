@@ -25,10 +25,10 @@ mod imp {
     use crate::fs::File;
     use crate::io::Read;
 
-    #[cfg(any(target_os = "linux", target_os = "android", target_os = "postgres"))]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     use crate::sys::weak::syscall;
 
-    #[cfg(any(target_os = "linux", target_os = "android", target_os = "postgres"))]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     fn getrandom(buf: &mut [u8]) -> libc::ssize_t {
         use crate::sync::atomic::{AtomicBool, Ordering};
         use crate::sys::os::errno;
@@ -64,12 +64,12 @@ mod imp {
         unsafe { libc::getrandom(buf.as_mut_ptr().cast(), buf.len(), 0) }
     }
 
-    #[cfg(not(any(target_os = "linux", target_os = "android", target_os = "espidf", target_os = "postgres")))]
+    #[cfg(not(any(target_os = "linux", target_os = "android", target_os = "espidf")))]
     fn getrandom_fill_bytes(_buf: &mut [u8]) -> bool {
         false
     }
 
-    #[cfg(any(target_os = "linux", target_os = "android", target_os = "espidf", target_os = "postgres"))]
+    #[cfg(any(target_os = "linux", target_os = "android", target_os = "espidf"))]
     fn getrandom_fill_bytes(v: &mut [u8]) -> bool {
         use crate::sync::atomic::{AtomicBool, Ordering};
         use crate::sys::os::errno;

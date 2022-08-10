@@ -43,8 +43,7 @@ extern "C" {
     #[cfg_attr(
         any(
             target_os = "linux",
-            target_os = "postgres",
-            target_os = "emscripten",
+                        target_os = "emscripten",
             target_os = "fuchsia",
             target_os = "l4re"
         ),
@@ -351,7 +350,7 @@ pub fn current_exe() -> io::Result<PathBuf> {
     }
 }
 
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "emscripten", target_os = "postgres"))]
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "emscripten"))]
 pub fn current_exe() -> io::Result<PathBuf> {
     match crate::fs::read_link("/proc/self/exe") {
         Err(ref e) if e.kind() == io::ErrorKind::NotFound => Err(io::const_io_error!(
@@ -654,8 +653,7 @@ pub fn getppid() -> u32 {
 
 #[cfg(any(
     all(target_os = "linux", target_env = "gnu"),
-    target_os = "postgres",
-))]
+    ))]
 pub fn glibc_version() -> Option<(usize, usize)> {
     extern "C" {
         fn gnu_get_libc_version() -> *const libc::c_char;
@@ -671,7 +669,7 @@ pub fn glibc_version() -> Option<(usize, usize)> {
 // Returns Some((major, minor)) if the string is a valid "x.y" version,
 // ignoring any extra dot-separated parts. Otherwise return None.
 #[cfg(any(all(target_os = "linux", target_env = "gnu"),
-all(target_os = "postgres", target_env = "gnu"),
+
 ))]
 fn parse_glibc_version(version: &str) -> Option<(usize, usize)> {
     let mut parsed_ints = version.split('.').map(str::parse::<usize>).fuse();
