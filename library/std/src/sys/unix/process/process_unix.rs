@@ -11,8 +11,7 @@ use core::ffi::NonZero_c_int;
 #[cfg(target_os = "linux")]
 use crate::os::linux::process::PidFd;
 
-#[cfg(target_os = "postgres")]
-use crate::os::linux::process::PidFd;
+
 
 #[cfg(target_os = "linux")]
 use crate::sys::weak::raw_syscall;
@@ -22,8 +21,7 @@ use crate::sys::weak::raw_syscall;
     target_os = "freebsd",
     all(target_os = "linux", target_env = "gnu"),
     all(target_os = "linux", target_env = "musl"),
-    target_os = "postgres",
-))]
+    ))]
 use crate::sys::weak::weak;
 
 #[cfg(target_os = "vxworks")]
@@ -139,20 +137,9 @@ impl Command {
 
     // Attempts to fork the process. If successful, returns Ok((0, -1))
     // in the child, and Ok((child_pid, -1)) in the parent.
-    #[cfg(not(any(target_os = "linux",
-target_os = "postgres")))]
+    #[cfg(not(target_os = "linux"))]
     unsafe fn do_fork(&mut self) -> Result<(pid_t, pid_t), io::Error> {
         cvt(libc::fork()).map(|res| (res, -1))
-    }
-
-
-    /// No.
-    #[cfg(target_os = "postgres")]
-    unsafe fn do_fork(&mut self) -> Result<(pid_t, pid_t), io::Error> {
-        Err(crate::io::const_io_error!(
-            crate::io::ErrorKind::Unsupported,
-            "lol no",
-        ))
     }
 
     // Attempts to fork the process. If successful, returns Ok((0, -1))
@@ -402,7 +389,7 @@ target_os = "postgres")))]
         target_os = "macos",
         target_os = "freebsd",
         all(target_os = "linux", target_env = "gnu"),
-        all(target_os = "postgres", target_env = "gnu"),
+        
         all(target_os = "linux", target_env = "musl"),
     )))]
     fn posix_spawn(
@@ -419,7 +406,6 @@ target_os = "postgres")))]
         target_os = "macos",
         target_os = "freebsd",
         all(target_os = "linux", target_env = "gnu"),
-        all(target_os = "postgres", target_env = "gnu"),
         all(target_os = "linux", target_env = "musl"),
     ))]
     fn posix_spawn(
@@ -441,9 +427,7 @@ target_os = "postgres")))]
         }
 
         // Only glibc 2.24+ posix_spawn() supports returning ENOENT directly.
-        #[cfg(any(all(target_os = "linux", target_env = "gnu"),
-        target_os = "postgres",
-    ))]
+        #[cfg(all(target_os = "linux", target_env = "gnu"))]
         {
             if let Some(version) = sys::os::glibc_version() {
                 if version < (2, 24) {
@@ -585,12 +569,12 @@ pub struct Process {
     // This is None if the user did not request pidfd creation,
     // or if the pidfd could not be created for some reason
     // (e.g. the `clone3` syscall was not available).
-    #[cfg(any(target_os = "linux", target_os = "postgres"))]
+    #[cfg(target_os = "linux")]
     pidfd: Option<PidFd>,
 }
 
 impl Process {
-    #[cfg(any(target_os = "linux", target_os = "postgres"))]
+    #[cfg(target_os = "linux")]
     unsafe fn new(pid: pid_t, pidfd: pid_t) -> Self {
         use crate::os::unix::io::FromRawFd;
         use crate::sys_common::FromInner;
@@ -599,7 +583,7 @@ impl Process {
         Process { pid, status: None, pidfd }
     }
 
-    #[cfg(not(any(target_os = "linux", target_os = "postgres")))]
+    #[cfg(not(target_os = "linux"))]
     unsafe fn new(pid: pid_t, _pidfd: pid_t) -> Self {
         Process { pid, status: None }
     }
@@ -762,7 +746,7 @@ fn signal_string(signal: i32) -> &'static str {
             )
         ))]
         libc::SIGSTKFLT => " (SIGSTKFLT)",
-        #[cfg(any(target_os = "linux", target_os = "postgres"))]
+        #[cfg(target_os = "linux")]
         libc::SIGPWR => " (SIGPWR)",
         #[cfg(any(
             target_os = "macos",
@@ -831,7 +815,7 @@ impl ExitStatusError {
     }
 }
 
-#[cfg(any(target_os = "linux", target_os = "postgres"))]
+#[cfg(target_os = "linux")]
 #[unstable(feature = "linux_pidfd", issue = "82971")]
 impl crate::os::linux::process::ChildExt for crate::process::Child {
     fn pidfd(&self) -> io::Result<&PidFd> {

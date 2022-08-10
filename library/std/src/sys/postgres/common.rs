@@ -10,7 +10,7 @@ pub mod memchr {
 }
 
 
-#[cfg(not(any(target_os = "espidf", target_os = "postgres")))]
+#[cfg(not(target_os = "espidf"))]
 // SAFETY: must be called only once during runtime initialization.
 // NOTE: this is not guaranteed to run, for example when Rust code is called externally.
 pub unsafe fn init(argc: isize, argv: *const *const u8) {

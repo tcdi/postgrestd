@@ -376,7 +376,7 @@ pub fn copy(_from: &Path, _to: &Path) -> io::Result<u64> {
 
 #[cfg(any(
     all(target_os = "linux", target_env = "gnu"),
-    all(target_os = "postgres", target_env = "gnu"),
+    
     target_os = "macos",
     target_os = "ios",
 ))]
@@ -390,12 +390,12 @@ use libc::{c_int, mode_t};
     target_os = "macos",
     target_os = "ios",
     all(target_os = "linux", target_env = "gnu"),
-    all(target_os = "postgres", target_env = "gnu"),
+    
 ))]
 use libc::c_char;
-#[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "android", target_os = "postgres"))]
+#[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "android"))]
 use libc::dirfd;
-#[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "postgres"))]
+#[cfg(any(target_os = "linux", target_os = "emscripten"))]
 use libc::fstatat64;
 #[cfg(any(
     target_os = "android",
@@ -407,8 +407,7 @@ use libc::fstatat64;
 use libc::readdir as readdir64;
 #[cfg(target_os = "linux")]
 use libc::readdir64;
-#[cfg(target_os = "postgres")]
-use libc::readdir64;
+
 #[cfg(any(target_os = "emscripten", target_os = "l4re"))]
 use libc::readdir64_r;
 #[cfg(not(any(
@@ -420,8 +419,7 @@ use libc::readdir64_r;
     target_os = "l4re",
     target_os = "fuchsia",
     target_os = "redox",
-    target_os = "postgres",
-)))]
+    )))]
 use libc::readdir_r as readdir64_r;
 #[cfg(target_os = "android")]
 use libc::{
@@ -430,8 +428,7 @@ use libc::{
 };
 #[cfg(not(any(
     target_os = "linux",
-    target_os = "postgres",
-    target_os = "emscripten",
+        target_os = "emscripten",
     target_os = "l4re",
     target_os = "android"
 )))]
@@ -439,7 +436,7 @@ use libc::{
     dirent as dirent64, fstat as fstat64, ftruncate as ftruncate64, lseek as lseek64,
     lstat as lstat64, off_t as off64_t, open as open64, stat as stat64,
 };
-#[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "l4re", target_os = "postgres"))]
+#[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "l4re"))]
 use libc::{dirent64, fstat64, ftruncate64, lseek64, lstat64, off64_t, open64, stat64};
 
 pub struct File(FileDesc);
@@ -456,7 +453,6 @@ unsafe impl Sync for Dir {}
 //     target_os = "illumos",
 //     target_os = "fuchsia",
 //     target_os = "redox",
-//     target_os = "postgres",
 // ))]
 // pub struct DirEntry {
 //     dir: Arc<InnerReadDir>,
@@ -473,7 +469,6 @@ unsafe impl Sync for Dir {}
 // #[cfg(any(
 //     target_os = "android",
 //     target_os = "linux",
-//     target_os = "postgres",
 //     target_os = "solaris",
 //     target_os = "illumos",
 //     target_os = "fuchsia",
@@ -492,7 +487,6 @@ unsafe impl Sync for Dir {}
 //     target_os = "illumos",
 //     target_os = "fuchsia",
 //     target_os = "redox",
-//     target_os = "postgres",
 // )))]
 // pub struct DirEntry {
 //     dir: Arc<InnerReadDir>,

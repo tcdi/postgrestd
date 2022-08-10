@@ -627,8 +627,7 @@ fn sendfile_splice(mode: SpliceMode, reader: RawFd, writer: RawFd, len: u64) -> 
         ) -> libc::ssize_t
     }
 
-    #[cfg(any(target_os = "linux",
-    target_os = "postgres",))]
+    #[cfg(target_os = "linux")]
     use libc::splice;
 
     match mode {

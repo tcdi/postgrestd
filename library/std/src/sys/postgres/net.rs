@@ -400,8 +400,7 @@ impl Socket {
                     target_os = "linux",
                     target_os = "netbsd",
                     target_os = "openbsd",
-                    target_os = "postgres",
-                ))] {
+                                    ))] {
                     // On platforms that support it we pass the SOCK_CLOEXEC
                     // flag to atomically create the socket and set it as
                     // CLOEXEC. On Linux this was added in 2.6.27.
@@ -438,7 +437,7 @@ impl Socket {
                     target_os = "linux",
                     target_os = "netbsd",
                     target_os = "openbsd",
-                    target_os = "postgres"
+                    
                 ))] {
                     // Like above, set cloexec atomically
                     cvt(netc::socketpair(fam, ty | netc::SOCK_CLOEXEC, 0, fds.as_mut_ptr()))?;
@@ -544,8 +543,7 @@ impl Socket {
                 target_os = "linux",
                 target_os = "netbsd",
                 target_os = "openbsd",
-                target_os = "postgres",
-            ))] {
+                            ))] {
                 unsafe {
                     let fd = cvt_r(|| netc::accept4(self.as_raw_fd(), storage, len, netc::SOCK_CLOEXEC))?;
                     Ok(Socket(FileDesc::from_raw_fd(fd)))
@@ -614,7 +612,7 @@ impl Socket {
         self.recv_from_with_flags(buf, 0)
     }
 
-    #[cfg(any(target_os = "android", target_os = "linux", target_os = "postgres"))]
+    #[cfg(any(target_os = "android", target_os = "linux"))]
     pub fn recv_msg(&self, msg: &mut netc::msghdr) -> io::Result<usize> {
         let n = cvt(unsafe { netc::recvmsg(self.as_raw_fd(), msg, netc::MSG_CMSG_CLOEXEC) })?;
         Ok(n as usize)
@@ -637,7 +635,7 @@ impl Socket {
         self.0.is_write_vectored()
     }
 
-    #[cfg(any(target_os = "android", target_os = "linux", target_os = "postgres"))]
+    #[cfg(any(target_os = "android", target_os = "linux"))]
     pub fn send_msg(&self, msg: &mut netc::msghdr) -> io::Result<usize> {
         let n = cvt(unsafe { netc::sendmsg(self.as_raw_fd(), msg, 0) })?;
         Ok(n as usize)
@@ -717,12 +715,12 @@ impl Socket {
         Ok(raw != 0)
     }
 
-    #[cfg(any(target_os = "android", target_os = "linux", target_os = "postgres"))]
+    #[cfg(any(target_os = "android", target_os = "linux"))]
     pub fn set_passcred(&self, passcred: bool) -> io::Result<()> {
         setsockopt(self, netc::SOL_SOCKET, netc::SO_PASSCRED, passcred as netc::c_int)
     }
 
-    #[cfg(any(target_os = "android", target_os = "linux", target_os = "postgres"))]
+    #[cfg(any(target_os = "android", target_os = "linux"))]
     pub fn passcred(&self) -> io::Result<bool> {
         let passcred: netc::c_int = getsockopt(self, netc::SOL_SOCKET, netc::SO_PASSCRED)?;
         Ok(passcred != 0)

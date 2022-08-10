@@ -15,7 +15,7 @@ use crate::sys_common::{AsInner, AsInnerMut, FromInner, IntoInner};
 
 #[cfg(any(
     all(target_os = "linux", target_env = "gnu"),
-    all(target_os = "postgres", target_env = "gnu"),
+    
     target_os = "macos",
     target_os = "ios",
 ))]
@@ -29,12 +29,12 @@ use libc::{c_int, mode_t};
     target_os = "macos",
     target_os = "ios",
     all(target_os = "linux", target_env = "gnu"),
-    all(target_os = "postgres", target_env = "gnu"),
+    
 ))]
 use libc::c_char;
-#[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "android", target_os = "postgres"))]
+#[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "android"))]
 use libc::dirfd;
-#[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "postgres"))]
+#[cfg(any(target_os = "linux", target_os = "emscripten"))]
 use libc::fstatat64;
 #[cfg(any(
     target_os = "android",
@@ -46,8 +46,7 @@ use libc::fstatat64;
 use libc::readdir as readdir64;
 #[cfg(target_os = "linux")]
 use libc::readdir64;
-#[cfg(target_os = "postgres")]
-use libc::readdir64;
+
 #[cfg(any(target_os = "emscripten", target_os = "l4re"))]
 use libc::readdir64_r;
 #[cfg(not(any(
@@ -59,8 +58,7 @@ use libc::readdir64_r;
     target_os = "l4re",
     target_os = "fuchsia",
     target_os = "redox",
-    target_os = "postgres",
-)))]
+    )))]
 use libc::readdir_r as readdir64_r;
 #[cfg(target_os = "android")]
 use libc::{
@@ -69,8 +67,7 @@ use libc::{
 };
 #[cfg(not(any(
     target_os = "linux",
-    target_os = "postgres",
-    target_os = "emscripten",
+        target_os = "emscripten",
     target_os = "l4re",
     target_os = "android"
 )))]
@@ -78,7 +75,7 @@ use libc::{
     dirent as dirent64, fstat as fstat64, ftruncate as ftruncate64, lseek as lseek64,
     lstat as lstat64, off_t as off64_t, open as open64, stat as stat64,
 };
-#[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "l4re", target_os = "postgres"))]
+#[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "l4re"))]
 use libc::{dirent64, fstat64, ftruncate64, lseek64, lstat64, off64_t, open64, stat64};
 
 pub use crate::sys_common::fs::try_exists;
@@ -241,8 +238,7 @@ pub struct ReadDir {
         target_os = "illumos",
         target_os = "fuchsia",
         target_os = "redox",
-        target_os = "postgres",
-    )))]
+            )))]
     end_of_stream: bool,
 }
 
@@ -258,8 +254,7 @@ unsafe impl Sync for Dir {}
     target_os = "illumos",
     target_os = "fuchsia",
     target_os = "redox",
-    target_os = "postgres",
-))]
+    ))]
 pub struct DirEntry {
     dir: Arc<InnerReadDir>,
     entry: dirent64_min,
@@ -275,8 +270,7 @@ pub struct DirEntry {
 #[cfg(any(
     target_os = "android",
     target_os = "linux",
-    target_os = "postgres",
-    target_os = "solaris",
+        target_os = "solaris",
     target_os = "illumos",
     target_os = "fuchsia",
     target_os = "redox"
@@ -294,8 +288,7 @@ struct dirent64_min {
     target_os = "illumos",
     target_os = "fuchsia",
     target_os = "redox",
-    target_os = "postgres",
-)))]
+    )))]
 pub struct DirEntry {
     dir: Arc<InnerReadDir>,
     // The full entry includes a fixed-length `d_name`.
@@ -543,8 +536,7 @@ impl Iterator for ReadDir {
         target_os = "fuchsia",
         target_os = "redox",
         target_os = "illumos",
-        target_os = "postgres",
-    ))]
+            ))]
     fn next(&mut self) -> Option<io::Result<DirEntry>> {
         unsafe {
             loop {
@@ -602,8 +594,7 @@ impl Iterator for ReadDir {
         target_os = "fuchsia",
         target_os = "redox",
         target_os = "illumos",
-        target_os = "postgres",
-    )))]
+            )))]
     fn next(&mut self) -> Option<io::Result<DirEntry>> {
         if self.end_of_stream {
             return None;
@@ -651,7 +642,7 @@ impl DirEntry {
         self.file_name_os_str().to_os_string()
     }
 
-    #[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "android",     target_os = "postgres"))]
+    #[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "android",     ))]
     pub fn metadata(&self) -> io::Result<FileAttr> {
         let fd = cvt(unsafe { dirfd(self.dir.dirp.0) })?;
         let name = self.name_cstr().as_ptr();
@@ -672,7 +663,7 @@ impl DirEntry {
         Ok(FileAttr::from_stat64(stat))
     }
 
-    #[cfg(not(any(target_os = "linux", target_os = "emscripten", target_os = "android",     target_os = "postgres",)))]
+    #[cfg(not(any(target_os = "linux", target_os = "emscripten", target_os = "android",     )))]
     pub fn metadata(&self) -> io::Result<FileAttr> {
         lstat(&self.path())
     }
@@ -709,8 +700,7 @@ impl DirEntry {
     #[cfg(any(
         target_os = "macos",
         target_os = "ios",
-        target_os = "postgres",
-        target_os = "linux",
+                target_os = "linux",
         target_os = "emscripten",
         target_os = "android",
         target_os = "solaris",
@@ -768,8 +758,7 @@ impl DirEntry {
     #[cfg(not(any(
         target_os = "android",
         target_os = "linux",
-        target_os = "postgres",
-        target_os = "solaris",
+                target_os = "solaris",
         target_os = "illumos",
         target_os = "fuchsia",
         target_os = "redox"
@@ -780,8 +769,7 @@ impl DirEntry {
     #[cfg(any(
         target_os = "android",
         target_os = "linux",
-        target_os = "postgres",
-        target_os = "solaris",
+                target_os = "solaris",
         target_os = "illumos",
         target_os = "fuchsia",
         target_os = "redox"
@@ -1192,8 +1180,7 @@ pub fn readdir(p: &Path) -> io::Result<ReadDir> {
                 #[cfg(not(any(
                     target_os = "android",
                     target_os = "linux",
-                    target_os = "postgres",
-                    target_os = "solaris",
+                                        target_os = "solaris",
                     target_os = "illumos",
                     target_os = "fuchsia",
                     target_os = "redox",
@@ -1661,8 +1648,7 @@ mod remove_dir_impl {
                     target_os = "illumos",
                     target_os = "fuchsia",
                     target_os = "redox",
-                    target_os = "postgres",
-                )))]
+                                    )))]
                 end_of_stream: false,
             },
             new_parent_fd,

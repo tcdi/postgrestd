@@ -32,8 +32,7 @@ cfg_if::cfg_if! {
 cfg_if::cfg_if! {
     if #[cfg(any(
         target_os = "linux", target_os = "android",
-        target_os = "postgres",
-        target_os = "dragonfly", target_os = "freebsd",
+                target_os = "dragonfly", target_os = "freebsd",
         target_os = "openbsd", target_os = "netbsd",
         target_os = "haiku"))] {
         use libc::MSG_NOSIGNAL;
