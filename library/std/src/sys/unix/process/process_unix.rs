@@ -11,8 +11,6 @@ use core::ffi::NonZero_c_int;
 #[cfg(target_os = "linux")]
 use crate::os::linux::process::PidFd;
 
-
-
 #[cfg(target_os = "linux")]
 use crate::sys::weak::raw_syscall;
 
@@ -21,7 +19,7 @@ use crate::sys::weak::raw_syscall;
     target_os = "freebsd",
     all(target_os = "linux", target_env = "gnu"),
     all(target_os = "linux", target_env = "musl"),
-    ))]
+))]
 use crate::sys::weak::weak;
 
 #[cfg(target_os = "vxworks")]
@@ -144,7 +142,7 @@ impl Command {
 
     // Attempts to fork the process. If successful, returns Ok((0, -1))
     // in the child, and Ok((child_pid, child_pidfd)) in the parent.
-    #[cfg(target_os = "linux",)]
+    #[cfg(target_os = "linux")]
     unsafe fn do_fork(&mut self) -> Result<(pid_t, pid_t), io::Error> {
         use crate::sync::atomic::{AtomicBool, Ordering};
 
@@ -389,7 +387,6 @@ impl Command {
         target_os = "macos",
         target_os = "freebsd",
         all(target_os = "linux", target_env = "gnu"),
-        
         all(target_os = "linux", target_env = "musl"),
     )))]
     fn posix_spawn(

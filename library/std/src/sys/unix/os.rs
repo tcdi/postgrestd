@@ -43,7 +43,7 @@ extern "C" {
     #[cfg_attr(
         any(
             target_os = "linux",
-                        target_os = "emscripten",
+            target_os = "emscripten",
             target_os = "fuchsia",
             target_os = "l4re"
         ),
@@ -651,9 +651,7 @@ pub fn getppid() -> u32 {
     unsafe { libc::getppid() as u32 }
 }
 
-#[cfg(any(
-    all(target_os = "linux", target_env = "gnu"),
-    ))]
+#[cfg(any(all(target_os = "linux", target_env = "gnu"),))]
 pub fn glibc_version() -> Option<(usize, usize)> {
     extern "C" {
         fn gnu_get_libc_version() -> *const libc::c_char;
@@ -668,9 +666,7 @@ pub fn glibc_version() -> Option<(usize, usize)> {
 
 // Returns Some((major, minor)) if the string is a valid "x.y" version,
 // ignoring any extra dot-separated parts. Otherwise return None.
-#[cfg(any(all(target_os = "linux", target_env = "gnu"),
-
-))]
+#[cfg(any(all(target_os = "linux", target_env = "gnu"),))]
 fn parse_glibc_version(version: &str) -> Option<(usize, usize)> {
     let mut parsed_ints = version.split('.').map(str::parse::<usize>).fuse();
     match (parsed_ints.next(), parsed_ints.next()) {

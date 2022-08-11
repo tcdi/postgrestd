@@ -4,17 +4,17 @@ use crate::path::{Path, PathBuf};
 use crate::sys::time::SystemTime;
 use crate::sys::unsupported;
 
-use crate::os::unix::prelude::*;
+use crate::default::Default;
 use crate::ffi::{CStr, CString, OsStr, OsString};
-use crate::mem;
 use crate::io::{self, Error, IoSlice, IoSliceMut, ReadBuf, SeekFrom};
+use crate::mem;
 use crate::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd};
+use crate::os::unix::prelude::*;
 use crate::ptr;
 use crate::sync::Arc;
 use crate::sys::fd::FileDesc;
 use crate::sys::{cvt, cvt_r};
 use crate::sys_common::{AsInner, AsInnerMut, FromInner, IntoInner};
-use crate::default::Default;
 
 impl AsInner<stat64> for FileAttr {
     fn as_inner(&self) -> &stat64 {
@@ -27,11 +27,12 @@ pub struct ReadDir(!);
 pub struct DirEntry(!);
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct FilePermissions{ mode: mode_t, }
+pub struct FilePermissions {
+    mode: mode_t,
+}
 pub struct FileType(!);
 
 pub struct FileAttr(!);
-
 
 #[derive(Debug)]
 pub struct DirBuilder {}
@@ -73,8 +74,7 @@ impl FilePermissions {
         false
     }
 
-    pub fn set_readonly(&mut self, _readonly: bool) {
-    }
+    pub fn set_readonly(&mut self, _readonly: bool) {}
 
     pub fn mode(&self) -> u32 {
         self.mode
@@ -182,9 +182,7 @@ impl OpenOptions {
     pub fn custom_flags(&mut self, flags: i32) {
         self.custom_flags = flags;
     }
-    pub fn mode(&mut self, mode: u32) {
-
-    }
+    pub fn mode(&mut self, mode: u32) {}
 
     fn get_access_mode(&self) -> io::Result<c_int> {
         match (self.read, self.write, self.append) {
@@ -294,7 +292,6 @@ impl File {
     pub fn write_at(&self, buf: &[u8], offset: u64) -> io::Result<usize> {
         unsupported()
     }
-
 }
 
 impl DirBuilder {
@@ -306,8 +303,7 @@ impl DirBuilder {
         unsupported()
     }
 
-    pub fn set_mode(&mut self, _mode: u32) {
-    }
+    pub fn set_mode(&mut self, _mode: u32) {}
 }
 
 impl fmt::Debug for File {
@@ -372,11 +368,8 @@ pub fn copy(_from: &Path, _to: &Path) -> io::Result<u64> {
     unsupported()
 }
 
-
-
 #[cfg(any(
     all(target_os = "linux", target_env = "gnu"),
-    
     target_os = "macos",
     target_os = "ios",
 ))]
@@ -390,7 +383,6 @@ use libc::{c_int, mode_t};
     target_os = "macos",
     target_os = "ios",
     all(target_os = "linux", target_env = "gnu"),
-    
 ))]
 use libc::c_char;
 #[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "android"))]
@@ -419,7 +411,7 @@ use libc::readdir64_r;
     target_os = "l4re",
     target_os = "fuchsia",
     target_os = "redox",
-    )))]
+)))]
 use libc::readdir_r as readdir64_r;
 #[cfg(target_os = "android")]
 use libc::{
@@ -428,7 +420,7 @@ use libc::{
 };
 #[cfg(not(any(
     target_os = "linux",
-        target_os = "emscripten",
+    target_os = "emscripten",
     target_os = "l4re",
     target_os = "android"
 )))]

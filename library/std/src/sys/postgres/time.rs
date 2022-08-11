@@ -1,7 +1,7 @@
-use crate::time::Duration;
-use crate::sys::cvt;
 use crate::fmt;
 use crate::mem::MaybeUninit;
+use crate::sys::cvt;
+use crate::time::Duration;
 
 const NSEC_PER_SEC: u64 = 1_000_000_000;
 
@@ -16,7 +16,7 @@ pub(in crate::sys) struct Timespec {
     tv_nsec: i64,
 }
 
-pub const UNIX_EPOCH: SystemTime = SystemTime{ t: Timespec::zero() };
+pub const UNIX_EPOCH: SystemTime = SystemTime { t: Timespec::zero() };
 
 impl SystemTime {
     pub fn new(tv_sec: i64, tv_nsec: i64) -> SystemTime {
@@ -134,8 +134,6 @@ impl fmt::Debug for SystemTime {
             .finish()
     }
 }
-
-
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Instant {
