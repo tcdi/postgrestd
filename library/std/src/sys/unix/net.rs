@@ -115,7 +115,7 @@ impl Socket {
                     target_os = "linux",
                     target_os = "netbsd",
                     target_os = "openbsd",
-                    
+
                 ))] {
                     // Like above, set cloexec atomically
                     cvt(libc::socketpair(fam, ty | libc::SOCK_CLOEXEC, 0, fds.as_mut_ptr()))?;
@@ -497,10 +497,7 @@ impl FromRawFd for Socket {
 // res_init unconditionally, we call it only when we detect we're linking
 // against glibc version < 2.26. (That is, when we both know its needed and
 // believe it's thread-safe).
-#[cfg(any(
-    all(target_os = "linux", target_env = "gnu"),
-    
-))]
+#[cfg(any(all(target_os = "linux", target_env = "gnu"),))]
 fn on_resolver_failure() {
     use crate::sys;
 
@@ -512,8 +509,5 @@ fn on_resolver_failure() {
     }
 }
 
-#[cfg(not(any(
-    all(target_os = "linux", target_env = "gnu"),
-    
-)))]
+#[cfg(not(any(all(target_os = "linux", target_env = "gnu"),)))]
 fn on_resolver_failure() {}

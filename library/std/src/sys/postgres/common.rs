@@ -1,14 +1,13 @@
-use crate::io as std_io;
 use super::signal;
 use crate::ffi::CStr;
-use crate::sys::thread;
+use crate::io as std_io;
 use crate::sys::stack_overflow;
+use crate::sys::thread;
 use std_io::ErrorKind;
 
 pub mod memchr {
     pub use core::slice::memchr::{memchr, memrchr};
 }
-
 
 #[cfg(not(target_os = "espidf"))]
 // SAFETY: must be called only once during runtime initialization.
@@ -101,7 +100,6 @@ pub unsafe fn init(argc: isize, argv: *const *const u8) {
 pub unsafe fn cleanup() {
     stack_overflow::cleanup();
 }
-
 
 pub fn unsupported<T>() -> std_io::Result<T> {
     Err(unsupported_err())

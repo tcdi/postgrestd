@@ -461,7 +461,6 @@ fn cgroup2_quota() -> usize {
 
 #[cfg(all(
     not(target_os = "linux"),
-    
     not(target_os = "freebsd"),
     not(target_os = "macos"),
     not(target_os = "netbsd"),
@@ -487,7 +486,7 @@ pub mod guard {
     target_os = "netbsd",
     target_os = "openbsd",
     target_os = "solaris",
-    ))]
+))]
 #[cfg_attr(test, allow(dead_code))]
 pub mod guard {
     use libc::{mmap, mprotect};
@@ -537,7 +536,7 @@ pub mod guard {
         target_os = "android",
         target_os = "freebsd",
         target_os = "linux",
-                target_os = "netbsd",
+        target_os = "netbsd",
         target_os = "l4re"
     ))]
     unsafe fn get_stack_start() -> Option<*mut libc::c_void> {
@@ -586,8 +585,7 @@ pub mod guard {
         let page_size = os::page_size();
         PAGE_SIZE.store(page_size, Ordering::Relaxed);
 
-        if cfg!(
-            all(target_os = "linux", not(target_env = "musl"))) {
+        if cfg!(all(target_os = "linux", not(target_env = "musl"))) {
             // Linux doesn't allocate the whole stack right away, and
             // the kernel has its own stack-guard mechanism to fault
             // when growing too close to an existing mapping.  If we map
@@ -665,7 +663,7 @@ pub mod guard {
         target_os = "android",
         target_os = "freebsd",
         target_os = "linux",
-                target_os = "netbsd",
+        target_os = "netbsd",
         target_os = "l4re"
     ))]
     pub unsafe fn current() -> Option<Guard> {
@@ -699,10 +697,7 @@ pub mod guard {
                 Some(stackaddr - guardsize..stackaddr)
             } else if cfg!(all(target_os = "linux", target_env = "musl")) {
                 Some(stackaddr - guardsize..stackaddr)
-            } else if cfg!(
-                all(target_os = "linux", any(target_env = "gnu", target_env = "uclibc")
-            ),
-        )
+            } else if cfg!(all(target_os = "linux", any(target_env = "gnu", target_env = "uclibc")),)
             {
                 // glibc used to include the guard area within the stack, as noted in the BUGS
                 // section of `man pthread_attr_getguardsize`.  This has been corrected starting
@@ -727,9 +722,7 @@ pub mod guard {
 // We need that information to avoid blowing up when a small stack
 // is created in an application with big thread-local storage requirements.
 // See #6233 for rationale and details.
-#[cfg(
-    all(target_os = "linux", target_env = "gnu")
-)]
+#[cfg(all(target_os = "linux", target_env = "gnu"))]
 fn min_stack_size(attr: *const libc::pthread_attr_t) -> usize {
     // We use dlsym to avoid an ELF version dependency on GLIBC_PRIVATE. (#23628)
     // We shouldn't really be using such an internal symbol, but there's currently
@@ -743,9 +736,7 @@ fn min_stack_size(attr: *const libc::pthread_attr_t) -> usize {
 }
 
 // No point in looking up __pthread_get_minstack() on non-glibc platforms.
-#[cfg(all(not(all(target_os = "linux", target_env = "gnu")), 
-    
-not(target_os = "netbsd")))]
+#[cfg(all(not(all(target_os = "linux", target_env = "gnu")), not(target_os = "netbsd")))]
 fn min_stack_size(_: *const libc::pthread_attr_t) -> usize {
     libc::PTHREAD_STACK_MIN
 }

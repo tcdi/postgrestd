@@ -71,7 +71,6 @@ mod platform {
     pub use crate::os::solaris::*;
     #[cfg(target_os = "vxworks")]
     pub use crate::os::vxworks::*;
-    
 }
 
 pub mod ffi;
@@ -92,7 +91,6 @@ pub mod thread;
     target_os = "macos",
     target_os = "netbsd",
     target_os = "openbsd",
-    
 ))]
 pub mod ucred;
 
