@@ -11,7 +11,7 @@
   "llvm-target": "x86_64-unknown-linux-gnu",
   "max-atomic-width": 64,
   "os": "linux",
-  "panic-strategy": "abort",
+  "panic-strategy": "unwind",
   "position-independent-executables": true,
   "pre-link-args": {
     "gcc": [
