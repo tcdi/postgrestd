@@ -28,7 +28,7 @@ In addition to [TCDI](https://www.tcdi.com), the project is maintained by the [p
 
 We are most definitely open to contributions of any kind. Bug Reports, Feature Requests, Documentation, and even sponsorships.
 
-If you'd like to contribute code via a Pull Request, please make it against our develop branch. The master branch is meant to represent what is currently released.
+If you'd like to contribute code via a Pull Request, please make it against our main branch.
 
 ## License
 
