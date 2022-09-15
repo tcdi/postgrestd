@@ -1,4 +1,5 @@
 #![unstable(feature = "postgrestd", issue = "none")]
+use crate::prelude::rust_2021::*;
 use crate::collections::BTreeMap;
 use crate::ffi::{CStr, CString, OsStr, OsString};
 use crate::fmt;

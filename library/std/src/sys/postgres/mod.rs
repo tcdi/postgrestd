@@ -11,7 +11,7 @@ pub mod env;
 pub mod fs;
 pub mod io;
 pub mod locks;
-// pub mod net;
+pub mod net;
 pub mod os;
 #[path = "../unix/os_str.rs"]
 pub mod os_str;
@@ -84,3 +84,4 @@ pub fn cvt_nz(error: libc::c_int) -> crate::io::Result<()> {
 pub use crate::sys::android::signal;
 #[cfg(not(target_os = "android"))]
 pub use libc::signal;
+pub use libc::strlen;
