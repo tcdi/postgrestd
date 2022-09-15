@@ -1,5 +1,6 @@
 #![allow(non_camel_case_types)]
 use crate::fmt;
+use crate::prelude::rust_2021::*;
 use crate::io::{self, IoSlice, IoSliceMut};
 use crate::net::{Ipv4Addr, Ipv6Addr, Shutdown, SocketAddr};
 use crate::sys::unsupported;
