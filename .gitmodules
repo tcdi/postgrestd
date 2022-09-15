@@ -1,6 +1,6 @@
 [submodule "library/stdarch"]
-	path = library/stdarch
+	path = old-library/stdarch
 	url = https://github.com/rust-lang/stdarch
 [submodule "library/backtrace"]
-	path = library/backtrace
+	path = old-library/backtrace
 	url = https://github.com/rust-lang/backtrace-rs.git
