@@ -4,7 +4,7 @@
 
 ## Key Features
 
-The goal of the library is to prevent code from accessing 
+The goal of this fork is to prevent Safe Rust code from accessing 
 
   * file handle operations
   * internals of the postgres process 
