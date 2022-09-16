@@ -32,7 +32,7 @@ We are most definitely open to contributions of any kind. Bug Reports, Feature R
 
 ## License
 
-`postgrestd` is primarily distributed under the terms of both the MIT license and the Apache License (Version 2.0), with portions covered by various BSD-like licenses.
+`postgrestd` is distributed under the same terms that apply to the Rust standard library. This means it is primarily distributed under the terms of both the MIT license and the Apache License (Version 2.0), with portions covered by various BSD-like licenses. By contributing to this repository you accept that contributions to this repository may be upstreamed to the [rustc repo](https://github.com/rust-lang/rust) to be redistributed with the Rust standard library.
 
 See [LICENSE-APACHE](LICENSE-APACHE), [LICENSE-MIT](LICENSE-MIT), and
 [COPYRIGHT](COPYRIGHT) for details.
