@@ -10,7 +10,7 @@ The goal of this fork is to prevent Safe Rust code from accessing
   * internals of the postgres process 
   * the OS with the permissions of the server process
   
-The library exposes certain calls into the environment, in the pattern of libc, instead of directly interfacing with the C standard library, the `postgrestd` equivalent functions are called. When it is not applicable we deny the code access, avoiding errors. Code that relies on having access to the environment will panic and abort the transaction.  
+In the typical implementation of the Rust standard library, it uses a module, `std::sys`, that defines various system-specific bindings which either address platform-specific datatype compatibility concerns or directly bind against the host's system library (which is usually the C standard library, AKA libc). Instead of directly interfacing with the C standard library, `postgrestd::sys` calls functions from the Postgres C API instead that implement similar functionality. When the functionality is not applicable or not desired, `Result::Err` that indicate unsupported functionality is returned, allowing Rust code that handles it appropriately to continue functioning. Code that relies on having access to the environment will panic, which is converted into raising an error that aborts the transaction.
 
 The key to managing this is replacing the allocator so that all memory allocations are inside the Postgres context, ensuring that data is torn down properly.
 
