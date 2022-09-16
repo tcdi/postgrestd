@@ -1,6 +1,6 @@
 # The Postgres Standard Library
 
-`Postgrestd` is a custom variant to the Rust Standard Library. This is the main source code repository for `postgrestd`. 
+`postgrestd` is a fork of the Rust standard library that implements a variant on the internal-only `std::sys` module plus additional targets that use this module. It replaces many of the bindings to the operating system with bindings to PostgreSQL's interfaces or to no-op functions, restricting what Rust code compiled with it can access through Safe Rust.
 
 ## Key Features
 
