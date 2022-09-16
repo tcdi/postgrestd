@@ -12,7 +12,7 @@ The goal of this fork is to prevent Safe Rust code from accessing
   
 In the typical implementation of the Rust standard library, it uses a module, `std::sys`, that defines various system-specific bindings which either address platform-specific datatype compatibility concerns or directly bind against the host's system library (which is usually the C standard library, AKA libc). Instead of directly interfacing with the C standard library, `postgrestd::sys` calls functions from the Postgres C API instead that implement similar functionality. When the functionality is not applicable or not desired, `Result::Err` that indicate unsupported functionality is returned, allowing Rust code that handles it appropriately to continue functioning. Code that relies on having access to the environment will panic, which is converted into raising an error that aborts the transaction.
 
-The key to managing this is replacing the allocator so that all memory allocations are inside the Postgres context, ensuring that data is torn down properly.
+Aborting a Rust runtime may be done at any point without being considered an unsafe operation, even if this means Drop implementations are not run. However, by replacing the Rust global allocator with one that uses Postgres memory contexts, aborted transactions do not actually leak memory: Postgres does the teardown of the aborted transaction's memory contexts, in a similar way that an operating system reaps a terminated process and reclaims its resources. It is possible for non-memory resources to leak, and handling those is not currently addressed, except by making it impossible to claim irrelevant resources such as e.g. file handles or threads.
 
 
 ## Get Started
