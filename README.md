@@ -21,7 +21,7 @@ The key to managing this is replacing the allocator so that all memory allocatio
 
 ## Getting Help
 
-Join the [Postgres Rust Extension][pgx] (pgx) community on [Discord](https://discord.gg/kwsy38x5Kh).
+This is a part of the PL/Rust project. Join the [pgx] (Postgres Extensions in Rust) community on [Discord](https://discord.gg/kwsy38x5Kh) and ask for help in [plrust-#general](https://discord.com/channels/561648697805504526/835595007791726704)!
 
 ## Contributing
 
