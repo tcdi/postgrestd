@@ -17,6 +17,7 @@ The key to managing this is replacing the allocator so that all memory allocatio
 
 ## Get Started
 
+`postgrestd` is intended to be used as part of [PL/Rust](https://github.com/tcdi/plrust).
 
 ## Getting Help
 
