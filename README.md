@@ -14,9 +14,7 @@ The primary functions reimplemented through Postgres are a global allocator usin
 
 Code that relies on having access to the environment (i.e. doesn't handle an `Err` gracefully) will panic, which is converted via the `pgx` panic handler into raising an error that aborts the transaction.
 
-Aborting a Rust runtime may be done at any point without being considered an `unsafe` operation, even if this means Drop implementations are not run. However, by replacing the Rust global allocator with one that uses Postgres memory contexts, aborted transactions do not actually leak memory: Postgres does the teardown of the aborted transaction's memory contexts, in a similar way that an operating system reaps a terminated process and reclaims its resources. It is possible for non-memory resources to leak, and handling those is not currently addressed, except by making it impossible to claim irrelevant resources such as e.g. file handles or threads.
-
-As long as the transaction is terminated and Rust fully leaves the code behind, any broken invariants that may have been created as a result of failing to run Drop implementations are not witnessed and Rust's soundness is preserved. Implementing full and proper unwinding while still interfacing with Postgres error handling routines is expected to be plausible, which would prevent unnecessary resource leaks entirely and improve debugging, but is not presently done as it is currently considered a secondary goal and the implementation is expected to be "rather cursed".
+Further documentation must reassess how `impl Drop` and unwinding account for Postgres.
 
 ## Get Started
 
