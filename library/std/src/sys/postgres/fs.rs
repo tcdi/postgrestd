@@ -7,7 +7,8 @@ use crate::sys::unsupported;
 use crate::os::unix::prelude::*;
 use crate::ffi::{CStr, CString, OsStr, OsString};
 use crate::mem;
-use crate::io::{self, Error, IoSlice, IoSliceMut, ReadBuf, SeekFrom};
+use crate::io::{BorrowedBuf, BorrowedCursor};
+use crate::io::{self, Error, IoSlice, IoSliceMut, SeekFrom};
 use crate::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd};
 use crate::ptr;
 use crate::sync::Arc;
@@ -255,8 +256,8 @@ impl File {
         false
     }
 
-    pub fn read_buf(&self, _buf: &mut ReadBuf<'_>) -> io::Result<()> {
-        unsupported()
+    pub fn read_buf(&self, cursor: BorrowedCursor<'_>) -> io::Result<()> {
+        self.0.read_buf(cursor)
     }
 
     pub fn write(&self, _buf: &[u8]) -> io::Result<usize> {
