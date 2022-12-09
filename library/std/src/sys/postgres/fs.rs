@@ -23,6 +23,14 @@ impl AsInner<stat64> for FileAttr {
     }
 }
 
+#[derive(Clone, Copy, Debug, Default)]
+pub struct FileTimes();
+
+impl FileTimes {
+    pub fn set_accessed(&mut self, _t: SystemTime) {}
+    pub fn set_modified(&mut self, _t: SystemTime) {}
+}
+
 pub struct ReadDir(!);
 
 pub struct DirEntry(!);
@@ -285,6 +293,10 @@ impl File {
     }
 
     pub fn set_permissions(&self, _perm: FilePermissions) -> io::Result<()> {
+        unsupported()
+    }
+
+    pub fn set_times(&self, _times: FileTimes) -> io::Result<()> {
         unsupported()
     }
 
