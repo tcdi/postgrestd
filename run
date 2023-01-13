@@ -5,7 +5,7 @@ sysroot="$(rustc --print sysroot)"
 machine="$(uname -m)"
 
 if [ -z "${STD_TARGET}" ]; then
-    STD_TARGET="$machine-unknown-linux-postgres"
+    STD_TARGET="$machine-postgres-linux-gnu"
 fi
 
 main() {
