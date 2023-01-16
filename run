@@ -1,11 +1,13 @@
-#! /usr/bin/sh
+#!/usr/bin/env bash
 set -e
 
 sysroot="$(rustc --print sysroot)"
-machine="$(uname -m)"
 
-if [ -z "${STD_TARGET}" ]; then
-    STD_TARGET="$machine-postgres-linux-gnu"
+postgres_targets=("x86_64-postgres-linux-gnu" "aarch64-postgres-linux-gnu")
+
+if [ -n "${STD_TARGETS}" ]; then
+    # Split on spaces or commas
+    IFS=', ' read -r -a postgres_targets <<< "${STD_TARGETS}"
 fi
 
 main() {
@@ -39,34 +41,44 @@ print_help() {
 }
 
 setup_dir() {
-    mkdir -p "${sysroot}"/lib/rustlib/"${STD_TARGET}"/lib
-    cp --verbose ./"${STD_TARGET}.json" "${sysroot}"/lib/rustlib/"${STD_TARGET}"/target.json
+    for target in "${postgres_targets[@]}"; do
+        mkdir -p "${sysroot}"/lib/rustlib/"${target}"/lib
+        cp --verbose ./"${target}.json" "${sysroot}"/lib/rustlib/"${target}"/target.json
+    done
 }
 
 copy_json() {
-    cp --verbose ./"${STD_TARGET}.json" "${sysroot}"/lib/rustlib/"${STD_TARGET}"/target.json
+    for target in "${postgres_targets[@]}"; do
+        cp --verbose ./"${target}.json" "${sysroot}"/lib/rustlib/"${target}"/target.json
+    done
 }
 
 remove_rlibs() {
-    rm --force --verbose "${sysroot}"/lib/rustlib/"${STD_TARGET}"/lib/*.rlib
+    for target in "${postgres_targets[@]}"; do
+        rm --force --verbose "${sysroot}"/lib/rustlib/"${target}"/lib/*.rlib
+    done
 }
 
 copy_rlibs() {
-    cp --force --verbose target/${STD_TARGET}/release/deps/*.rlib "${sysroot}/lib/rustlib/${STD_TARGET}/lib"
+    for target in "${postgres_targets[@]}"; do
+        cp --force --verbose target/"${target}"/release/deps/*.rlib "${sysroot}/lib/rustlib/${target}/lib"
+    done
 }
 
 run_build() {
-    CARGO_PROFILE_RELEASE_DEBUG=0 \
-    CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true \
-    RUSTC_BOOTSTRAP=1 \
-    RUSTFLAGS="-Cforce-unwind-tables=yes -Cembed-bitcode=yes -Aunused-unsafe" \
-    __CARGO_DEFAULT_LIB_METADATA="nightlystd" \
-    cargo build \
-        --target "${STD_TARGET}" \
-        -Zbinary-dep-depinfo \
-        --release \
-        --features "compiler-builtins-mem" \
-        --manifest-path "library/test/Cargo.toml"
+    for target in "${postgres_targets[@]}"; do
+        CARGO_PROFILE_RELEASE_DEBUG=0 \
+        CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true \
+        RUSTC_BOOTSTRAP=1 \
+        RUSTFLAGS="-Cforce-unwind-tables=yes -Cembed-bitcode=yes -Aunused-unsafe" \
+        __CARGO_DEFAULT_LIB_METADATA="nightlystd" \
+        cargo build \
+            --target "${target}" \
+            -Zbinary-dep-depinfo \
+            --release \
+            --features "compiler-builtins-mem" \
+            --manifest-path "library/test/Cargo.toml"
+    done
 }
 
 main "$@"
