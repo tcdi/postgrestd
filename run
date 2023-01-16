@@ -61,7 +61,7 @@ remove_rlibs() {
 
 copy_rlibs() {
     for target in "${postgres_targets[@]}"; do
-        cp --force --verbose "target/${target}/release/deps/*.rlib" "${sysroot}/lib/rustlib/${target}/lib"
+        cp --force --verbose target/"${target}"/release/deps/*.rlib "${sysroot}/lib/rustlib/${target}/lib"
     done
 }
 
