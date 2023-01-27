@@ -1218,9 +1218,9 @@ pub(crate) mod builtin {
     #[macro_export]
     #[cfg_attr(not(test), rustc_diagnostic_item = "include_str_macro")]
     macro_rules! include_str {
-        ($file:expr $(,)?) => {{
+        ($file:expr $(,)?) => {
             "no file access in postgrestd"
-        }};
+        };
     }
 
     /// Includes a file as a reference to a byte array.
@@ -1259,9 +1259,9 @@ pub(crate) mod builtin {
     #[macro_export]
     #[cfg_attr(not(test), rustc_diagnostic_item = "include_bytes_macro")]
     macro_rules! include_bytes {
-        ($file:expr $(,)?) => {{
+        ($file:expr $(,)?) => {
             b"no file access in postgrestd"
-        }};
+        };
     }
 
     /// Expands to a string that represents the current module path.
