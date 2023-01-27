@@ -1206,7 +1206,6 @@ pub(crate) mod builtin {
     /// File 'main.rs':
     ///
     /// ```ignore (cannot-doctest-external-file-dependency)
-    /// #![feature(include_macros)]
     /// fn main() {
     ///     let my_str = include_str!("spanish.in");
     ///     assert_eq!(my_str, "adiós\n");
@@ -1215,12 +1214,13 @@ pub(crate) mod builtin {
     /// ```
     ///
     /// Compiling 'main.rs' and running the resulting binary will print "adiós".
-    #[unstable(feature = "include_macros", issue = "none", reason = "no file access in postgrestd")]
-    #[rustc_builtin_macro]
+    #[stable(feature = "rust1", since = "1.0.0")]
     #[macro_export]
     #[cfg_attr(not(test), rustc_diagnostic_item = "include_str_macro")]
     macro_rules! include_str {
-        ($file:expr $(,)?) => {{ /* compiler built-in */ }};
+        ($file:expr $(,)?) => {{
+            "no file access in postgrestd"
+        }};
     }
 
     /// Includes a file as a reference to a byte array.
@@ -1247,7 +1247,6 @@ pub(crate) mod builtin {
     /// File 'main.rs':
     ///
     /// ```ignore (cannot-doctest-external-file-dependency)
-    /// #![feature(include_macros)]
     /// fn main() {
     ///     let bytes = include_bytes!("spanish.in");
     ///     assert_eq!(bytes, b"adi\xc3\xb3s\n");
@@ -1256,12 +1255,13 @@ pub(crate) mod builtin {
     /// ```
     ///
     /// Compiling 'main.rs' and running the resulting binary will print "adiós".
-    #[unstable(feature = "include_macros", issue = "none", reason = "no file access in postgrestd")]
-    #[rustc_builtin_macro]
+    #[stable(feature = "rust1", since = "1.0.0")]
     #[macro_export]
     #[cfg_attr(not(test), rustc_diagnostic_item = "include_bytes_macro")]
     macro_rules! include_bytes {
-        ($file:expr $(,)?) => {{ /* compiler built-in */ }};
+        ($file:expr $(,)?) => {{
+            b"no file access in postgrestd"
+        }};
     }
 
     /// Expands to a string that represents the current module path.

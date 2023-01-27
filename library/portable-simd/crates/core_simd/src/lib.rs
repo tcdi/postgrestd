@@ -7,8 +7,7 @@
     repr_simd,
     simd_ffi,
     staged_api,
-    stdsimd,
-    include_macros
+    stdsimd
 )]
 #![cfg_attr(feature = "generic_const_exprs", feature(generic_const_exprs))]
 #![cfg_attr(feature = "generic_const_exprs", allow(incomplete_features))]
