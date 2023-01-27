@@ -1357,7 +1357,6 @@ pub(crate) mod builtin {
     /// File 'main.rs':
     ///
     /// ```ignore (cannot-doctest-external-file-dependency)
-    /// #![feature(include_macros)]
     /// fn main() {
     ///     let my_string = include!("monkeys.in");
     ///     assert_eq!("🙈🙊🙉🙈🙊🙉", my_string);
@@ -1367,7 +1366,7 @@ pub(crate) mod builtin {
     ///
     /// Compiling 'main.rs' and running the resulting binary will print
     /// "🙈🙊🙉🙈🙊🙉".
-    #[unstable(feature = "include_macros", issue = "none", reason = "no file access in postgrestd")]
+    #[stable(feature = "rust1", since = "1.0.0")]
     #[rustc_builtin_macro]
     #[macro_export]
     #[cfg_attr(not(test), rustc_diagnostic_item = "include_macro")]
