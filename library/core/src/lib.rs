@@ -211,7 +211,6 @@
 #![feature(unboxed_closures)]
 #![feature(unsized_fn_params)]
 #![feature(asm_const)]
-#![feature(include_macros)]
 //
 // Target features:
 #![feature(arm_target_feature)]

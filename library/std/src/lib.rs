@@ -315,7 +315,6 @@
 #![feature(strict_provenance)]
 #![feature(maybe_uninit_uninit_array)]
 #![feature(const_maybe_uninit_uninit_array)]
-#![feature(include_macros)]
 //
 // Library features (alloc):
 #![feature(alloc_layout_extra)]
