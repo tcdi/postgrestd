@@ -533,7 +533,7 @@ impl Span {
         other.resolved_at(*self)
     }
 
-    /// Compares to spans to see if they're equal.
+    /// Compares two spans to see if they're equal.
     #[unstable(feature = "proc_macro_span", issue = "54725")]
     pub fn eq(&self, other: &Span) -> bool {
         self.0 == other.0
@@ -546,7 +546,7 @@ impl Span {
     /// Note: The observable result of a macro should only rely on the tokens and
     /// not on this source text. The result of this function is a best effort to
     /// be used for diagnostics only.
-    #[unstable(feature = "proc_macro_span", issue = "54725")]
+    #[stable(feature = "proc_macro_source_text", since = "1.66.0")]
     pub fn source_text(&self) -> Option<String> {
         self.0.source_text()
     }

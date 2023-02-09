@@ -405,6 +405,7 @@ impl<T> Cell<T> {
     /// assert_eq!(cell.replace(10), 5);
     /// assert_eq!(cell.get(), 10);
     /// ```
+    #[inline]
     #[stable(feature = "move_cell", since = "1.17.0")]
     pub fn replace(&self, val: T) -> T {
         // SAFETY: This can cause data races if called from a separate thread,
@@ -614,6 +615,7 @@ impl<T, const N: usize> Cell<[T; N]> {
 /// A mutable memory location with dynamically checked borrow rules
 ///
 /// See the [module-level documentation](self) for more.
+#[cfg_attr(not(test), rustc_diagnostic_item = "RefCell")]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct RefCell<T: ?Sized> {
     borrow: Cell<BorrowFlag>,
@@ -1021,15 +1023,18 @@ impl<T: ?Sized> RefCell<T> {
 
     /// Returns a mutable reference to the underlying data.
     ///
-    /// This call borrows `RefCell` mutably (at compile-time) so there is no
-    /// need for dynamic checks.
+    /// Since this method borrows `RefCell` mutably, it is statically guaranteed
+    /// that no borrows to the underlying data exist. The dynamic checks inherent
+    /// in [`borrow_mut`] and most other methods of `RefCell` are therefore
+    /// unnecessary.
     ///
-    /// However be cautious: this method expects `self` to be mutable, which is
-    /// generally not the case when using a `RefCell`. Take a look at the
-    /// [`borrow_mut`] method instead if `self` isn't mutable.
+    /// This method can only be called if `RefCell` can be mutably borrowed,
+    /// which in general is only the case directly after the `RefCell` has
+    /// been created. In these situations, skipping the aforementioned dynamic
+    /// borrowing checks may yield better ergonomics and runtime-performance.
     ///
-    /// Also, please be aware that this method is only for special circumstances and is usually
-    /// not what you want. In case of doubt, use [`borrow_mut`] instead.
+    /// In most situations where `RefCell` is used, it can't be borrowed mutably.
+    /// Use [`borrow_mut`] to get mutable access to the underlying data then.
     ///
     /// [`borrow_mut`]: RefCell::borrow_mut()
     ///
@@ -1811,6 +1816,61 @@ impl<T: ?Sized + fmt::Display> fmt::Display for RefMut<'_, T> {
 ///
 /// [`.get_mut()`]: `UnsafeCell::get_mut`
 ///
+/// # Memory layout
+///
+/// `UnsafeCell<T>` has the same in-memory representation as its inner type `T`. A consequence
+/// of this guarantee is that it is possible to convert between `T` and `UnsafeCell<T>`.
+/// Special care has to be taken when converting a nested `T` inside of an `Outer<T>` type
+/// to an `Outer<UnsafeCell<T>>` type: this is not sound when the `Outer<T>` type enables [niche]
+/// optimizations. For example, the type `Option<NonNull<u8>>` is typically 8 bytes large on
+/// 64-bit platforms, but the type `Option<UnsafeCell<NonNull<u8>>>` takes up 16 bytes of space.
+/// Therefore this is not a valid conversion, despite `NonNull<u8>` and `UnsafeCell<NonNull<u8>>>`
+/// having the same memory layout. This is because `UnsafeCell` disables niche optimizations in
+/// order to avoid its interior mutability property from spreading from `T` into the `Outer` type,
+/// thus this can cause distortions in the type size in these cases.
+///
+/// Note that the only valid way to obtain a `*mut T` pointer to the contents of a
+/// _shared_ `UnsafeCell<T>` is through [`.get()`]  or [`.raw_get()`]. A `&mut T` reference
+/// can be obtained by either dereferencing this pointer or by calling [`.get_mut()`]
+/// on an _exclusive_ `UnsafeCell<T>`. Even though `T` and `UnsafeCell<T>` have the
+/// same memory layout, the following is not allowed and undefined behavior:
+///
+/// ```rust,no_run
+/// # use std::cell::UnsafeCell;
+/// unsafe fn not_allowed<T>(ptr: &UnsafeCell<T>) -> &mut T {
+///   let t = ptr as *const UnsafeCell<T> as *mut T;
+///   // This is undefined behavior, because the `*mut T` pointer
+///   // was not obtained through `.get()` nor `.raw_get()`:
+///   unsafe { &mut *t }
+/// }
+/// ```
+///
+/// Instead, do this:
+///
+/// ```rust
+/// # use std::cell::UnsafeCell;
+/// // Safety: the caller must ensure that there are no references that
+/// // point to the *contents* of the `UnsafeCell`.
+/// unsafe fn get_mut<T>(ptr: &UnsafeCell<T>) -> &mut T {
+///   unsafe { &mut *ptr.get() }
+/// }
+/// ```
+///
+/// Converting in the other direction from a `&mut T`
+/// to an `&UnsafeCell<T>` is allowed:
+///
+/// ```rust
+/// # use std::cell::UnsafeCell;
+/// fn get_shared<T>(ptr: &mut T) -> &UnsafeCell<T> {
+///   let t = ptr as *mut T as *const UnsafeCell<T>;
+///   // SAFETY: `T` and `UnsafeCell<T>` have the same memory layout
+///   unsafe { &*t }
+/// }
+/// ```
+///
+/// [niche]: https://rust-lang.github.io/unsafe-code-guidelines/glossary.html#niche
+/// [`.raw_get()`]: `UnsafeCell::raw_get`
+///
 /// # Examples
 ///
 /// Here is an example showcasing how to soundly mutate the contents of an `UnsafeCell<_>` despite
@@ -1876,7 +1936,7 @@ impl<T> UnsafeCell<T> {
     /// Constructs a new instance of `UnsafeCell` which will wrap the specified
     /// value.
     ///
-    /// All access to the inner value through methods is `unsafe`.
+    /// All access to the inner value through `&UnsafeCell<T>` requires `unsafe` code.
     ///
     /// # Examples
     ///
