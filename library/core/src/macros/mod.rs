@@ -1216,11 +1216,10 @@ pub(crate) mod builtin {
     /// Compiling 'main.rs' and running the resulting binary will print "adiós".
     #[stable(feature = "rust1", since = "1.0.0")]
     #[macro_export]
+    #[rustc_builtin_macro]
     #[cfg_attr(not(test), rustc_diagnostic_item = "include_str_macro")]
     macro_rules! include_str {
-        ($file:expr $(,)?) => {
-            ""
-        };
+        ($file:expr $(,)?) => {{ /* compiler built-in */ }};
     }
 
     /// Includes a file as a reference to a byte array.
@@ -1257,11 +1256,10 @@ pub(crate) mod builtin {
     /// Compiling 'main.rs' and running the resulting binary will print "adiós".
     #[stable(feature = "rust1", since = "1.0.0")]
     #[macro_export]
+    #[rustc_builtin_macro]
     #[cfg_attr(not(test), rustc_diagnostic_item = "include_bytes_macro")]
     macro_rules! include_bytes {
-        ($file:expr $(,)?) => {
-            b""
-        };
+        ($file:expr $(,)?) => {{ /* compiler built-in */ }};
     }
 
     /// Expands to a string that represents the current module path.
