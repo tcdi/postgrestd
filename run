@@ -71,7 +71,7 @@ run_build() {
         CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true \
         RUSTC_BOOTSTRAP=1 \
         RUSTFLAGS="-Cforce-unwind-tables=yes -Cembed-bitcode=yes -Aunused-unsafe" \
-        __CARGO_DEFAULT_LIB_METADATA="nightlystd" \
+        __CARGO_DEFAULT_LIB_METADATA="postgrestd" \
         cargo build \
             --target "${target}" \
             -Zbinary-dep-depinfo \
