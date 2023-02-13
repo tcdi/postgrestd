@@ -1,4 +1,5 @@
 #![no_std]
+#![cfg(any())]
 use core::alloc::{GlobalAlloc, Layout};
 use pgx_pg_sys as pg_sys;
 

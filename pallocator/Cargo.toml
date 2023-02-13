@@ -4,12 +4,3 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies.pgx-pg-sys]
-# pallocator only expects to be included in a graph which already features a pgx crate with:
-# - a crate version
-# - a "{PG_VERSION}" feature (which will probably be pg14)
-# Thus, we only need to make sure we enable the postgrestd feature for pgx-pg-sys,
-# and ask only for a version of pgx-pg-sys where that is possible.
-version = ">=0.6.0-alpha.1"
-features = ["postgrestd"]
