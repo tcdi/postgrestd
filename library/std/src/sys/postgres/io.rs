@@ -1,4 +1,5 @@
 use crate::mem;
+use crate::os::fd::AsFd;
 
 #[derive(Copy, Clone)]
 pub struct IoSlice<'a>(&'a [u8]);
@@ -44,4 +45,9 @@ impl<'a> IoSliceMut<'a> {
     pub fn as_mut_slice(&mut self) -> &mut [u8] {
         self.0
     }
+}
+
+pub fn is_terminal(fd: &impl AsFd) -> bool {
+    // No? I mean, I guess we could answer yes if we detect psql?
+    false
 }

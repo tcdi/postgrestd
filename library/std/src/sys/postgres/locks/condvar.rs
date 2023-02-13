@@ -10,11 +10,13 @@ impl Condvar {
         Condvar {}
     }
 
+    // No-ops can be safe, it's fine.
     #[inline]
-    pub unsafe fn notify_one(&self) {}
+    pub fn notify_one(&self) {}
 
+    // No-ops can be safe, it's fine.
     #[inline]
-    pub unsafe fn notify_all(&self) {}
+    pub fn notify_all(&self) {}
 
     pub unsafe fn wait(&self, _mutex: &Mutex) {
         panic!("condvar wait not supported")
