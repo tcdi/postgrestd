@@ -67,8 +67,6 @@ copy_rlibs() {
 
 run_build() {
     for target in "${postgres_targets[@]}"; do
-        CARGO_PROFILE_RELEASE_DEBUG=0 \
-        CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true \
         RUSTC_BOOTSTRAP=1 \
         RUSTFLAGS="-Cforce-unwind-tables=yes -Cembed-bitcode=yes -Aunused-unsafe" \
         __CARGO_DEFAULT_LIB_METADATA="postgrestd" \
