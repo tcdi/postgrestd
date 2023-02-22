@@ -62,6 +62,9 @@ jobs:
     - name: Show kernel info
       run: uname -a
 
+    - name: Show user
+      run: whoami
+
     - name: Install system dependencies
       run: |
         sudo apt-get install -y \
