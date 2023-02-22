@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - $default-branch
+      - brady/add-aarch64-ci
   pull_request:
     branches:
       - $default-branch
+      - brady/add-aarch64-ci
 
 jobs:
   test_x86_84:
