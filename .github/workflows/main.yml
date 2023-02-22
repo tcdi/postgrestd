@@ -1,0 +1,49 @@
+name: Build and test Postgres Standard Library
+
+on:
+  push:
+    branches:
+      - $default-branch
+  pull_request:
+    branches:
+      - $default-branch
+
+jobs:
+  test_x86_84:
+    name: x86_64 build & test
+    runs-on: ubuntu-latest
+
+    env:
+      STD_TARGETS: x86_64-postgres-linux-gnu
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get install -y \
+          clang-11 \
+          llvm-11 \
+          clang \
+          gcc \
+          make \
+          build-essential \
+          libz-dev \
+          zlib1g-dev \
+          strace \
+          libssl-dev \
+          pkg-config
+
+    - name: Install rust
+      run: |
+        export RUSTUP_HOME="$HOME/.rustup"
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source "$HOME/.cargo/env"
+        cargo --version
+
+    - name: Update postgrestd git submodules
+      run: git submodule update --init --recursive
+
+    - name: Build postgrestd
+      run: ./run install
+
