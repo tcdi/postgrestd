@@ -65,6 +65,9 @@ jobs:
     - name: Show user
       run: whoami
 
+    - name: Print env
+      run: env
+
     - name: Install system dependencies
       run: |
         sudo apt-get install -y \
