@@ -62,9 +62,6 @@ jobs:
     - name: Show kernel info
       run: uname -a
 
-    - name: Show user
-      run: whoami
-
     - name: Print env
       run: env
 
@@ -91,8 +88,6 @@ jobs:
         cargo --version
         echo "RUSTUP_HOME=$HOME/.rustup" >> $GITHUB_ENV
         echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
-        env
-        which rustc
 
     - name: Update postgrestd git submodules
       run: git submodule update --init --recursive
