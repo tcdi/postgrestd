@@ -941,11 +941,14 @@ pub(crate) mod builtin {
     /// error: what's that?!
     /// ```
     #[stable(feature = "rust1", since = "1.0.0")]
-    #[rustc_builtin_macro]
     #[macro_export]
     macro_rules! env {
-        ($name:expr $(,)?) => {{ /* compiler built-in */ }};
-        ($name:expr, $error_msg:expr $(,)?) => {{ /* compiler built-in */ }};
+        ($name:expr $(,)?) => {{
+            ""
+        }};
+        ($name:expr, $error_msg:expr $(,)?) => {{
+            ""
+        }};
     }
 
     /// Optionally inspects an environment variable at compile time.
@@ -969,10 +972,11 @@ pub(crate) mod builtin {
     /// println!("the secret key might be: {key:?}");
     /// ```
     #[stable(feature = "rust1", since = "1.0.0")]
-    #[rustc_builtin_macro]
     #[macro_export]
     macro_rules! option_env {
-        ($name:expr $(,)?) => {{ /* compiler built-in */ }};
+        ($name:expr $(,)?) => {{
+            None
+        }};
     }
 
     /// Concatenates identifiers into one identifier.
