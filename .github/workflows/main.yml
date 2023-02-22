@@ -46,3 +46,6 @@ jobs:
     - name: Update postgrestd git submodules
       run: git submodule update --init --recursive
 
+    - name: Build postgrestd
+      run: ./run install
+
