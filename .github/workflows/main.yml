@@ -90,6 +90,8 @@ jobs:
         source "$HOME/.cargo/env"
         cargo --version
         echo "RUSTUP_HOME=$HOME/.rustup" >> $GITHUB_ENV
+        env
+        which rustc
 
     - name: Update postgrestd git submodules
       run: git submodule update --init --recursive
