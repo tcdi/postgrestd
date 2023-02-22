@@ -47,3 +47,43 @@ jobs:
     - name: Build postgrestd
       run: ./run install
 
+  test_aarch64:
+    name: aarch64 build & test
+    runs-on: [self-hosted, linux, ARM64, postgrestd]
+
+    env:
+      STD_TARGETS: aarch64-postgres-linux-gnu
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Show kernel info
+      run: uname -a
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get install -y \
+          clang-11 \
+          llvm-11 \
+          clang \
+          gcc \
+          make \
+          build-essential \
+          libz-dev \
+          zlib1g-dev \
+          strace \
+          libssl-dev \
+          pkg-config
+
+    - name: Install rust
+      run: |
+        export RUSTUP_HOME="$HOME/.rustup"
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source "$HOME/.cargo/env"
+        cargo --version
+
+    - name: Update postgrestd git submodules
+      run: git submodule update --init --recursive
+
+    - name: Build postgrestd
+      run: ./run install
