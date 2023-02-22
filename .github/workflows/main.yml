@@ -89,6 +89,7 @@ jobs:
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         source "$HOME/.cargo/env"
         cargo --version
+        echo "RUSTUP_HOME=$HOME/.rustup" >> $GITHUB_ENV
 
     - name: Update postgrestd git submodules
       run: git submodule update --init --recursive
