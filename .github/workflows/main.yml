@@ -50,7 +50,7 @@ jobs:
         CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: cc
 
   test_aarch64:
-    name: "aarch64 (cross: x86_64) build & test"
+    name: aarch64 build & test
     runs-on: [self-hosted, linux, ARM64, postgrestd]
 
     # env:
@@ -78,8 +78,7 @@ jobs:
           zlib1g-dev \
           strace \
           libssl-dev \
-          pkg-config \
-          crossbuild-essential-amd64
+          pkg-config
 
     - name: Install rust
       run: |
@@ -95,8 +94,10 @@ jobs:
 
     - name: Build postgrestd
       # run: STD_TARGETS=aarch64-postgres-linux-gnu ./run install
-      run: CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER=cc ./run install
-      # env:
+      run: ./run install
+      env:
+        STD_TARGETS: aarch64-postgres-linux-gnu
+
       #   CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
       #   CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
       #   CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: cc
