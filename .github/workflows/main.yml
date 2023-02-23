@@ -95,8 +95,8 @@ jobs:
 
     - name: Build postgrestd
       # run: STD_TARGETS=aarch64-postgres-linux-gnu ./run install
-      run: ./run install
-      env:
-        CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
-        CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
-        CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: cc
+      run: CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER=cc ./run install
+      # env:
+      #   CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+      #   CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+      #   CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: cc
