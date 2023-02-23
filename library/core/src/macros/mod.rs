@@ -860,7 +860,7 @@ pub(crate) mod builtin {
     /// [`format!`]: ../std/macro.format.html
     /// [`println!`]: ../std/macro.println.html
     ///
-    /// # Examples
+    /// # Examples:
     ///
     /// ```
     /// use std::fmt;
