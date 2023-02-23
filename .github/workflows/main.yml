@@ -10,11 +10,8 @@ on:
 
 jobs:
   test_x86_84:
-    name: x86_64 build & test
+    name: x86_64 x aarch64 build & test
     runs-on: ubuntu-latest
-
-    env:
-      STD_TARGETS: x86_64-postgres-linux-gnu
 
     steps:
     - uses: actions/checkout@v3
@@ -32,7 +29,8 @@ jobs:
           zlib1g-dev \
           strace \
           libssl-dev \
-          pkg-config
+          pkg-config \
+          crossbuild-essential-arm64
 
     - name: Install rust
       run: |
@@ -45,7 +43,11 @@ jobs:
       run: git submodule update --init --recursive
 
     - name: Build postgrestd
-      run: STD_TARGETS=x86_64-postgres-linux-gnu ./run install
+      run: ./run install
+      env:
+        CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: cc
 
   test_aarch64:
     name: aarch64 build & test
