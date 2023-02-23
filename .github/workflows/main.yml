@@ -91,7 +91,7 @@ jobs:
       run: git submodule update --init --recursive
 
     - name: Build postgrestd
-      run: CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER=x86_64-linux-gnu-gcc CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=x86_64-linux-gnu-gcc CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER=cc ./run install
+      run: STD_TARGETS=aarch64-postgres-linux-gnu,x86_64-postgres-linux-gnu CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER=x86_64-linux-gnu-gcc CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=x86_64-linux-gnu-gcc CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER=cc ./run install
       # run: ./run install
       # env:
       #   STD_TARGETS: aarch64-postgres-linux-gnu
