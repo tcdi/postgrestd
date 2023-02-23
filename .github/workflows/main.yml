@@ -45,7 +45,7 @@ jobs:
       run: git submodule update --init --recursive
 
     - name: Build postgrestd
-      run: ./run install
+      run: STD_TARGETS=x86_64-postgres-linux-gnu ./run install
 
   test_aarch64:
     name: aarch64 build & test
