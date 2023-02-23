@@ -79,7 +79,7 @@ jobs:
           strace \
           libssl-dev \
           pkg-config \
-          crossbuild-essential-arm64
+          crossbuild-essential-amd64
 
     - name: Install rust
       run: |
