@@ -3,10 +3,10 @@ name: Build and test Postgres Standard Library
 on:
   push:
     branches:
-      - $default-branch
+      - 1.67.1
   pull_request:
     branches:
-      - $default-branch
+      - 1.67.1
 
 jobs:
   test_x86_84:
@@ -47,3 +47,48 @@ jobs:
     - name: Build postgrestd
       run: ./run install
 
+  test_aarch64:
+    name: aarch64 build & test
+    runs-on: [self-hosted, linux, ARM64, postgrestd]
+
+    env:
+      STD_TARGETS: aarch64-postgres-linux-gnu
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Show kernel info
+      run: uname -a
+
+    - name: Print env
+      run: env
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get install -y \
+          clang-11 \
+          llvm-11 \
+          clang \
+          gcc \
+          make \
+          build-essential \
+          libz-dev \
+          zlib1g-dev \
+          strace \
+          libssl-dev \
+          pkg-config
+
+    - name: Install rust
+      run: |
+        export RUSTUP_HOME="$HOME/.rustup"
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source "$HOME/.cargo/env"
+        cargo --version
+        echo "RUSTUP_HOME=$HOME/.rustup" >> $GITHUB_ENV
+        echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
+
+    - name: Update postgrestd git submodules
+      run: git submodule update --init --recursive
+
+    - name: Build postgrestd
+      run: ./run install
