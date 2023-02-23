@@ -3,12 +3,10 @@ name: Build and test Postgres Standard Library
 on:
   push:
     branches:
-      - $default-branch
-      - brady/add-aarch64-ci
+      - 1.67.1
   pull_request:
     branches:
-      - $default-branch
-      - brady/add-aarch64-ci
+      - 1.67.1
 
 jobs:
   test_x86_84:
