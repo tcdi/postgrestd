@@ -10,11 +10,8 @@ on:
 
 jobs:
   test_x86_84:
-    name: x86_64 build & test
+    name: "x86_64 (cross: aarch64) build & test"
     runs-on: ubuntu-latest
-
-    env:
-      STD_TARGETS: x86_64-postgres-linux-gnu
 
     steps:
     - uses: actions/checkout@v3
@@ -32,7 +29,8 @@ jobs:
           zlib1g-dev \
           strace \
           libssl-dev \
-          pkg-config
+          pkg-config \
+          crossbuild-essential-arm64
 
     - name: Install rust
       run: |
@@ -46,13 +44,14 @@ jobs:
 
     - name: Build postgrestd
       run: ./run install
+      env:
+        CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: cc
 
   test_aarch64:
     name: aarch64 build & test
     runs-on: [self-hosted, linux, ARM64, postgrestd]
-
-    env:
-      STD_TARGETS: aarch64-postgres-linux-gnu
 
     steps:
     - uses: actions/checkout@v3
@@ -83,12 +82,17 @@ jobs:
         export RUSTUP_HOME="$HOME/.rustup"
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         source "$HOME/.cargo/env"
-        cargo --version
         echo "RUSTUP_HOME=$HOME/.rustup" >> $GITHUB_ENV
         echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
+        cargo --version
 
     - name: Update postgrestd git submodules
       run: git submodule update --init --recursive
 
     - name: Build postgrestd
       run: ./run install
+      env:
+        STD_TARGETS: aarch64-postgres-linux-gnu
+      # Apparently GHA custom runners have a hard time with declaring env: variables at the top of the job
+      # declaration to be used by all steps, but declaring them inline with the step itself seems to work OK. This
+      # might be an issue with the way the custom GHA runners are built, so we will have to look at this another day.
