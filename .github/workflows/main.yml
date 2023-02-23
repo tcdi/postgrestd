@@ -75,7 +75,8 @@ jobs:
           zlib1g-dev \
           strace \
           libssl-dev \
-          pkg-config
+          pkg-config \
+          crossbuild-essential-amd64
 
     - name: Install rust
       run: |
