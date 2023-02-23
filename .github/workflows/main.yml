@@ -91,4 +91,4 @@ jobs:
       run: git submodule update --init --recursive
 
     - name: Build postgrestd
-      run: ./run install
+      run: STD_TARGETS=aarch64-postgres-linux-gnu ./run install
