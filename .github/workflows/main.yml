@@ -90,9 +90,10 @@ jobs:
       run: git submodule update --init --recursive
 
     - name: Build postgrestd
-      run: ./run install
-      env:
-        STD_TARGETS: aarch64-postgres-linux-gnu
-      # Apparently GHA custom runners have a hard time with declaring env: variables at the top of the job
-      # declaration to be used by all steps, but declaring them inline with the step itself seems to work OK. This
-      # might be an issue with the way the custom GHA runners are built, so we will have to look at this another day.
+      run: CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER=x86_64-linux-gnu-gcc CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=x86_64-linux-gnu-gcc CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER=cc ./run install
+      # run: ./run install
+      # env:
+      #   STD_TARGETS: aarch64-postgres-linux-gnu
+      # # Apparently GHA custom runners have a hard time with declaring env: variables at the top of the job
+      # # declaration to be used by all steps, but declaring them inline with the step itself seems to work OK. This
+      # # might be an issue with the way the custom GHA runners are built, so we will have to look at this another day.
