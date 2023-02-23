@@ -1361,6 +1361,7 @@ pub(crate) mod builtin {
     #[stable(feature = "rust1", since = "1.0.0")]
     #[rustc_builtin_macro]
     #[macro_export]
+    #[cfg_attr(not(test), rustc_diagnostic_item = "include_macro")]
     macro_rules! include {
         ($file:expr $(,)?) => {{ /* compiler built-in */ }};
     }
