@@ -87,8 +87,9 @@ jobs:
 
         git submodule update --init --recursive
 
-        CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER=x86_64-linux-gnu-gcc \
-          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=x86_64-linux-gnu-gcc \
-          CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER=cc \
-          ./run install
+        ./run install
+      env:
+        CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: x86_64-linux-gnu-gcc
+        CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER: x86_64-linux-gnu-gcc
+        CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER: cc
 
