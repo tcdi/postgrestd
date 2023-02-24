@@ -18,7 +18,7 @@ jobs:
 
     - name: Install system dependencies
       run: |
-        sudo apt-get install -y \
+        sudo apt-get -y update && sudo apt-get install -y \
           clang-11 \
           llvm-11 \
           clang \
@@ -42,7 +42,7 @@ jobs:
     - name: Update postgrestd git submodules
       run: git submodule update --init --recursive
 
-    - name: Build postgrestd
+    - name: Build postgrestd for both x86_64 and aarch64
       run: ./run install
       env:
         CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
@@ -50,7 +50,7 @@ jobs:
         CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: cc
 
   test_aarch64:
-    name: aarch64 build & test
+    name: "aarch64 (cross: x86_64) build & test"
     runs-on: [self-hosted, linux, ARM64, postgrestd]
 
     steps:
@@ -62,9 +62,9 @@ jobs:
     - name: Print env
       run: env
 
-    - name: Build postgrestd
+    - name: Install system dependencies
       run: |
-        sudo apt-get install -y \
+        sudo apt-get -y update && sudo apt-get install -y \
           clang-11 \
           llvm-11 \
           clang \
@@ -78,6 +78,8 @@ jobs:
           pkg-config \
           crossbuild-essential-amd64
 
+    - name: Build postgrestd for both aarch64 and x86_64
+      run: |
         export RUSTUP_HOME="$HOME/.rustup"
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         source "$HOME/.cargo/env"
