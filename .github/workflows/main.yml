@@ -55,6 +55,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
 
     - name: Show kernel info
       run: uname -a
@@ -78,7 +80,7 @@ jobs:
           pkg-config \
           crossbuild-essential-amd64
 
-    - name: Build postgrestd for both aarch64 and x86_64
+    - name: Install rust
       run: |
         export RUSTUP_HOME="$HOME/.rustup"
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -87,9 +89,8 @@ jobs:
         echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
         cargo --version
 
-        git submodule update --init --recursive
-
-        ./run install
+    - name: Build postgrestd for both aarch64 and x86_64
+      run: ./run install
       env:
         CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: x86_64-linux-gnu-gcc
         CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER: x86_64-linux-gnu-gcc
