@@ -187,9 +187,10 @@ pub fn decode_error_kind(errno: i32) -> ErrorKind {
 }
 
 pub fn abort_internal() -> ! {
-    core::intrinsics::abort();
+    panic!("not allowed to abort");
 }
 
 pub fn hashmap_random_keys() -> (u64, u64) {
+    // FIXME: Can this lead to HashDOS?
     (1, 2)
 }
