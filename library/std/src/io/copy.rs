@@ -55,13 +55,7 @@ where
     R: Read,
     W: Write,
 {
-    cfg_if::cfg_if! {
-        if #[cfg(any(target_os = "linux", target_os = "android"))] {
-            crate::sys::kernel_copy::copy_spec(reader, writer)
-        } else {
-            generic_copy(reader, writer)
-        }
-    }
+    generic_copy(reader, writer)
 }
 
 /// The userspace read-write-loop implementation of `io::copy` that is used when

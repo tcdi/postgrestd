@@ -98,7 +98,7 @@ pub fn home_dir() -> Option<PathBuf> {
 }
 
 pub fn exit(_code: i32) -> ! {
-    crate::intrinsics::abort()
+    panic!("not allowed to exit")
 }
 
 pub fn getpid() -> u32 {
