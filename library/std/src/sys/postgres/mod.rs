@@ -37,9 +37,6 @@ pub mod futex;
 #[path = "../unix/stack_overflow.rs"]
 pub mod stack_overflow;
 
-#[path = "../unix/kernel_copy.rs"]
-pub mod kernel_copy;
-
 use crate::ffi::CStr;
 use crate::io::ErrorKind;
 
