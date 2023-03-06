@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
-set -e
+set -ev
 
 sysroot="$(rustc --print sysroot)"
 
+uname="$(uname -s)"
 postgres_targets=("x86_64-postgres-linux-gnu" "aarch64-postgres-linux-gnu")
+
+if [ "Darwin" = "$uname" ]; then
+    postgres_targets=("x86_64-apple-darwin-postgres" "aarch64-apple-darwin-postgres")
+fi
 
 if [ -n "${STD_TARGETS}" ]; then
     # Split on spaces or commas
@@ -43,25 +48,25 @@ print_help() {
 setup_dir() {
     for target in "${postgres_targets[@]}"; do
         mkdir -p "${sysroot}"/lib/rustlib/"${target}"/lib
-        cp --verbose ./"${target}.json" "${sysroot}"/lib/rustlib/"${target}"/target.json
+        cp -f -v ./"${target}.json" "${sysroot}"/lib/rustlib/"${target}"/target.json
     done
 }
 
 copy_json() {
     for target in "${postgres_targets[@]}"; do
-        cp --verbose ./"${target}.json" "${sysroot}"/lib/rustlib/"${target}"/target.json
+        cp -f -v ./"${target}.json" "${sysroot}"/lib/rustlib/"${target}"/target.json
     done
 }
 
 remove_rlibs() {
     for target in "${postgres_targets[@]}"; do
-        rm --force --verbose "${sysroot}"/lib/rustlib/"${target}"/lib/*.rlib
+        rm -f -v "${sysroot}"/lib/rustlib/"${target}"/lib/*.rlib
     done
 }
 
 copy_rlibs() {
     for target in "${postgres_targets[@]}"; do
-        cp --force --verbose target/"${target}"/release/deps/*.rlib "${sysroot}/lib/rustlib/${target}/lib"
+        cp -f -v target/"${target}"/release/deps/*.rlib "${sysroot}/lib/rustlib/${target}/lib"
     done
 }
 
