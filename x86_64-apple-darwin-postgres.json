@@ -70,7 +70,8 @@
         "off"
     ],
     "target-family": [
-        "unix"
+        "unix",
+        "postgres"
     ],
     "target-mcount": "\u0001mcount",
     "target-pointer-width": "64",

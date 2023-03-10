@@ -60,8 +60,8 @@
         "off"
     ],
     "target-family": [
-        "postgres",
-        "unix"
+        "unix",
+        "postgres"
     ],
     "target-mcount": "\u0001mcount",
     "target-pointer-width": "64",

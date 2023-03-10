@@ -20,7 +20,8 @@ proc_macro = { path = "../proc_macro" }
 
 # Forward features to the `std` crate as necessary
 [features]
-default = ["std_detect_file_io", "std_detect_dlsym_getauxval", "panic-unwind"]
+default = ["panic-unwind"]
+# default = ["std_detect_file_io", "std_detect_dlsym_getauxval", "panic-unwind"]
 backtrace = ["std/backtrace"]
 compiler-builtins-c = ["std/compiler-builtins-c"]
 compiler-builtins-mem = ["std/compiler-builtins-mem"]

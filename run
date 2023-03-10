@@ -6,13 +6,26 @@ sysroot="$(rustc --print sysroot)"
 uname="$(uname -s)"
 postgres_targets=("x86_64-postgres-linux-gnu" "aarch64-postgres-linux-gnu")
 
+# Experimental support for apple targets. Note that cross-compiling to one
+# target from the other is generally supported without extra work.
 if [ "Darwin" = "$uname" ]; then
+    echo "warning: macOS support is still experimental" >&2
     postgres_targets=("x86_64-apple-darwin-postgres" "aarch64-apple-darwin-postgres")
 fi
 
 if [ -n "${STD_TARGETS}" ]; then
     # Split on spaces or commas
     IFS=', ' read -r -a postgres_targets <<< "${STD_TARGETS}"
+fi
+
+# If you have `cargo zigbuild` installed and want to attempt using it for cross
+# compiling postgrestd (It seems to be able to go from macOS to linux pretty
+# well, and probably between linuxes without further config, but other things
+# are untested).
+CARGO_CMD="build"
+if [ "${CROSS_WITH_CARGO_ZIGBUILD}" = "1" ]; then
+    echo "warning: 'cargo zigbuild' support is still experimental" >&2
+    CARGO_CMD="zigbuild"
 fi
 
 main() {
@@ -73,9 +86,9 @@ copy_rlibs() {
 run_build() {
     for target in "${postgres_targets[@]}"; do
         RUSTC_BOOTSTRAP=1 \
-        RUSTFLAGS="-Cforce-unwind-tables=yes -Cembed-bitcode=yes -Aunused-unsafe" \
+        RUSTFLAGS="-Cforce-unwind-tables=yes -Cembed-bitcode=yes -Aunused-unsafe -Aunused-imports" \
         __CARGO_DEFAULT_LIB_METADATA="postgrestd" \
-        cargo build \
+        cargo "${CARGO_CMD}" \
             --target "${target}" \
             -Zbinary-dep-depinfo \
             --release \

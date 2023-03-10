@@ -80,12 +80,14 @@ mod platform {
 pub mod ffi;
 pub mod fs;
 pub mod io;
+#[cfg(not(target_family = "postgres"))]
 pub mod net;
 pub mod process;
 pub mod raw;
 pub mod thread;
 
 #[unstable(feature = "peer_credentials_unix_socket", issue = "42839", reason = "unstable")]
+#[cfg(not(target_family = "postgres"))]
 #[cfg(any(
     target_os = "android",
     target_os = "linux",

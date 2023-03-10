@@ -10,6 +10,7 @@ members = [
 exclude = [
   # stdarch has its own Cargo workspace
   "library/stdarch",
+  # "postbuild",
 ]
 
 [profile.release]

@@ -1,8 +1,8 @@
-use crate::prelude::rust_2021::*;
-use crate::time::Duration;
-use crate::sys::cvt;
 use crate::fmt;
 use crate::mem::MaybeUninit;
+use crate::prelude::rust_2021::*;
+use crate::sys::cvt_unsup;
+use crate::time::Duration;
 
 const NSEC_PER_SEC: u64 = 1_000_000_000;
 
@@ -17,7 +17,7 @@ pub(in crate::sys) struct Timespec {
     tv_nsec: i64,
 }
 
-pub const UNIX_EPOCH: SystemTime = SystemTime{ t: Timespec::zero() };
+pub const UNIX_EPOCH: SystemTime = SystemTime { t: Timespec::zero() };
 
 impl SystemTime {
     pub fn new(tv_sec: i64, tv_nsec: i64) -> SystemTime {
@@ -136,8 +136,6 @@ impl fmt::Debug for SystemTime {
     }
 }
 
-
-
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Instant {
     t: Timespec,
@@ -176,14 +174,8 @@ impl SystemTime {
     }
 }
 
-#[cfg(not(any(target_os = "dragonfly", target_os = "espidf")))]
-#[allow(non_camel_case_types)]
-pub type clock_t = libc::c_int;
-#[cfg(any(target_os = "dragonfly", target_os = "espidf"))]
-pub type clock_t = libc::c_ulong;
-
 impl Timespec {
-    pub fn now(clock: clock_t) -> Timespec {
+    pub fn now(clock: libc::clockid_t) -> Timespec {
         // Try to use 64-bit time in preparation for Y2038.
         #[cfg(all(target_os = "linux", target_env = "gnu", target_pointer_width = "32"))]
         {
@@ -204,15 +196,15 @@ impl Timespec {
             }
 
             if let Some(clock_gettime64) = __clock_gettime64.get() {
-                let mut t = MaybeUninit::uninit();
-                cvt(unsafe { clock_gettime64(clock, t.as_mut_ptr()) }).unwrap();
+                let mut t = MaybeUninit::zeroed();
+                cvt_unsup(unsafe { clock_gettime64(clock, t.as_mut_ptr()) }).unwrap();
                 let t = unsafe { t.assume_init() };
                 return Timespec { tv_sec: t.tv_sec, tv_nsec: t.tv_nsec as i64 };
             }
         }
 
-        let mut t = MaybeUninit::uninit();
-        cvt(unsafe { libc::clock_gettime(clock, t.as_mut_ptr()) }).unwrap();
+        let mut t = MaybeUninit::zeroed();
+        cvt_unsup(unsafe { libc::clock_gettime(clock, t.as_mut_ptr()) }).unwrap();
         Timespec::from(unsafe { t.assume_init() })
     }
 }

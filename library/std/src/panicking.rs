@@ -232,6 +232,7 @@ where
     *hook = Hook::Custom(Box::new(move |info| hook_fn(&prev, info)));
 }
 
+#[cfg(not(target_family = "postgres"))]
 fn default_hook(info: &PanicInfo<'_>) {
     // If this is a double panic, make sure that we print a backtrace
     // for this panic. Otherwise only print it if logging is enabled.
@@ -286,6 +287,9 @@ fn default_hook(info: &PanicInfo<'_>) {
         write(&mut out);
     }
 }
+
+#[cfg(target_family = "postgres")]
+fn default_hook(_: &PanicInfo<'_>) {}
 
 #[cfg(not(test))]
 #[doc(hidden)]
