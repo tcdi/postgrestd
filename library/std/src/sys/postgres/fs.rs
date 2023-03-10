@@ -17,7 +17,7 @@ use crate::sys::fd::FileDesc;
 use crate::sys_common::{AsInner, AsInnerMut, FromInner, IntoInner};
 
 impl AsInner<stat64> for FileAttr {
-    fn as_inner(&self) -> &libc::stat64 {
+    fn as_inner(&self) -> &stat64 {
         // Should be impossible, but things transmute the return value of this
         // to a raw libc type.
         unimplemented!();
