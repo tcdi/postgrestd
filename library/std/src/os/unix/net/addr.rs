@@ -26,6 +26,7 @@ fn sun_path_offset(addr: &libc::sockaddr_un) -> usize {
 }
 
 pub(super) fn sockaddr_un(path: &Path) -> io::Result<(libc::sockaddr_un, libc::socklen_t)> {
+    super::bail_if_postgres!();
     // SAFETY: All zeros is a valid representation for `sockaddr_un`.
     let mut addr: libc::sockaddr_un = unsafe { mem::zeroed() };
     addr.sun_family = libc::AF_UNIX as libc::sa_family_t;
@@ -95,6 +96,7 @@ impl SocketAddr {
     where
         F: FnOnce(*mut libc::sockaddr, *mut libc::socklen_t) -> libc::c_int,
     {
+        super::bail_if_postgres!();
         unsafe {
             let mut addr: libc::sockaddr_un = mem::zeroed();
             let mut len = mem::size_of::<libc::sockaddr_un>() as libc::socklen_t;
@@ -107,6 +109,7 @@ impl SocketAddr {
         addr: libc::sockaddr_un,
         mut len: libc::socklen_t,
     ) -> io::Result<SocketAddr> {
+        super::bail_if_postgres!();
         if len == 0 {
             // When there is a datagram from unnamed unix socket
             // linux returns zero bytes of address
@@ -224,7 +227,11 @@ impl SocketAddr {
     #[stable(feature = "unix_socket", since = "1.10.0")]
     #[must_use]
     pub fn as_pathname(&self) -> Option<&Path> {
-        if let AddressKind::Pathname(path) = self.address() { Some(path) } else { None }
+        if let AddressKind::Pathname(path) = self.address() {
+            Some(path)
+        } else {
+            None
+        }
     }
 
     fn address(&self) -> AddressKind<'_> {
@@ -253,13 +260,18 @@ impl Sealed for SocketAddr {}
 #[unstable(feature = "unix_socket_abstract", issue = "85410")]
 impl linux_ext::addr::SocketAddrExt for SocketAddr {
     fn as_abstract_name(&self) -> Option<&[u8]> {
-        if let AddressKind::Abstract(name) = self.address() { Some(name) } else { None }
+        if let AddressKind::Abstract(name) = self.address() {
+            Some(name)
+        } else {
+            None
+        }
     }
 
     fn from_abstract_name<N>(name: &N) -> crate::io::Result<Self>
     where
         N: AsRef<[u8]>,
     {
+        super::bail_if_postgres!();
         let name = name.as_ref();
         unsafe {
             let mut addr: libc::sockaddr_un = mem::zeroed();

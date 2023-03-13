@@ -498,7 +498,7 @@ fn signal_string(signal: i32) -> &'static str {
             )
         ))]
         libc::SIGSTKFLT => " (SIGSTKFLT)",
-        #[cfg(any(target_os = "linux", target_os = "postgres"))]
+        #[cfg(all(target_os = "linux", target_family = "postgres"))]
         libc::SIGPWR => " (SIGPWR)",
         #[cfg(any(
             target_os = "macos",
@@ -564,7 +564,7 @@ impl From<ExitStatus> for c_int {
     }
 }
 
-#[cfg(any(target_os = "linux", target_os = "postgres"))]
+#[cfg(all(target_os = "linux", target_family = "postgres"))]
 #[unstable(feature = "linux_pidfd", issue = "82971")]
 impl crate::os::linux::process::ChildExt for crate::process::Child {
     fn pidfd(&self) -> io::Result<&PidFd> {

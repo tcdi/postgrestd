@@ -8,6 +8,10 @@
 
 use libc::{gid_t, pid_t, uid_t};
 
+#[cfg(target_family = "postgres")]
+#[allow(unused)]
+use super::bail_if_postgres;
+
 /// Credentials for a UNIX process for credentials passing.
 #[unstable(feature = "peer_credentials_unix_socket", issue = "42839", reason = "unstable")]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -25,7 +29,21 @@ pub struct UCred {
     pub pid: Option<pid_t>,
 }
 
+#[cfg(target_family = "postgres")]
+pub mod impl_postgres {
+    use super::UCred;
+    use crate::os::unix::net::UnixStream;
+    use crate::{io, sys::unsupported};
+    pub fn peer_cred(_: &UnixStream) -> io::Result<UCred> {
+        unsupported()
+    }
+}
+
+#[cfg(target_family = "postgres")]
+pub use self::impl_postgres::peer_cred;
+
 #[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(not(target_family = "postgres"))]
 pub use self::impl_linux::peer_cred;
 
 #[cfg(any(
@@ -34,12 +52,15 @@ pub use self::impl_linux::peer_cred;
     target_os = "openbsd",
     target_os = "netbsd"
 ))]
+#[cfg(not(target_family = "postgres"))]
 pub use self::impl_bsd::peer_cred;
 
 #[cfg(any(target_os = "macos", target_os = "ios", target_os = "watchos"))]
+#[cfg(not(target_family = "postgres"))]
 pub use self::impl_mac::peer_cred;
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(not(target_family = "postgres"))]
 pub mod impl_linux {
     use super::UCred;
     use crate::os::unix::io::AsRawFd;
@@ -81,6 +102,7 @@ pub mod impl_linux {
     target_os = "openbsd",
     target_os = "netbsd"
 ))]
+#[cfg(not(target_family = "postgres"))]
 pub mod impl_bsd {
     use super::UCred;
     use crate::io;
@@ -92,12 +114,17 @@ pub mod impl_bsd {
         unsafe {
             let ret = libc::getpeereid(socket.as_raw_fd(), &mut cred.uid, &mut cred.gid);
 
-            if ret == 0 { Ok(cred) } else { Err(io::Error::last_os_error()) }
+            if ret == 0 {
+                Ok(cred)
+            } else {
+                Err(io::Error::last_os_error())
+            }
         }
     }
 }
 
 #[cfg(any(target_os = "macos", target_os = "ios", target_os = "watchos"))]
+#[cfg(not(target_family = "postgres"))]
 pub mod impl_mac {
     use super::UCred;
     use crate::os::unix::io::AsRawFd;

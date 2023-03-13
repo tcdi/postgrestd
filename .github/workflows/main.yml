@@ -95,3 +95,24 @@ jobs:
         CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER: x86_64-linux-gnu-gcc
         CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER: cc
 
+  test_macos:
+    name: "macos build & test (experimental)"
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+
+    - name: Install rust
+      run: |
+        export RUSTUP_HOME="$HOME/.rustup"
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source "$HOME/.cargo/env"
+        rustup toolchain install 1.67.1
+        cargo --version
+
+    - name: Print env
+      run: env
+
+    - name: Build/install both apple targets
+      run: ./run install

@@ -1,0 +1,79 @@
+{
+    "abi-return-struct-as-int": true,
+    "arch": "x86_64",
+    "archive-format": "darwin",
+    "cpu": "core2",
+    "data-layout": "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128",
+    "debuginfo-kind": "dwarf-dsym",
+    "default-dwarf-version": 2,
+    "dll-suffix": ".dylib",
+    "dynamic-linking": true,
+    "eh-frame-header": false,
+    "emit-debug-gdb-scripts": false,
+    "frame-pointer": "always",
+    "function-sections": false,
+    "has-rpath": true,
+    "has-thread-local": true,
+    "is-like-osx": true,
+    "link-env": [
+        "ZERO_AR_DATE=1"
+    ],
+    "link-env-remove": [
+        "IPHONEOS_DEPLOYMENT_TARGET"
+    ],
+    "linker-is-gnu": false,
+    "lld-flavor": "darwin",
+    "llvm-target": "x86_64-apple-macosx10.12.0",
+    "max-atomic-width": 128,
+    "os": "macos",
+    "pre-link-args": {
+        "gcc": [
+            "-arch",
+            "x86_64",
+            "-m64"
+        ],
+        "ld": [
+            "-arch",
+            "x86_64",
+            "-platform_version",
+            "macos",
+            "10.12",
+            "10.12"
+        ],
+        "ld64.lld": [
+            "-arch",
+            "x86_64",
+            "-platform_version",
+            "macos",
+            "10.12",
+            "10.12"
+        ]
+    },
+    "split-debuginfo": "packed",
+    "stack-probes": {
+        "kind": "inline-or-call",
+        "min-llvm-version-for-inline": [
+            16,
+            0,
+            0
+        ]
+    },
+    "supported-sanitizers": [
+        "address",
+        "cfi",
+        "leak",
+        "thread"
+    ],
+    "supported-split-debuginfo": [
+        "packed",
+        "unpacked",
+        "off"
+    ],
+    "target-family": [
+        "unix",
+        "postgres"
+    ],
+    "target-mcount": "\u0001mcount",
+    "target-pointer-width": "64",
+    "vendor": "apple"
+}

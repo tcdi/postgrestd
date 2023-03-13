@@ -130,6 +130,9 @@ pub fn scope<'env, F, T>(f: F) -> T
 where
     F: for<'scope> FnOnce(&'scope Scope<'scope, 'env>) -> T,
 {
+    if cfg!(target_family = "postgres") {
+        panic!("threads are not supported in postgrestd");
+    }
     // We put the `ScopeData` into an `Arc` so that other threads can finish their
     // `decrement_num_running_threads` even after this function returns.
     let scope = Scope {

@@ -516,6 +516,8 @@ pub mod f64;
 #[macro_use]
 pub mod thread;
 pub mod ascii;
+#[cfg_attr(target_family = "postgres", path = "backtrace/unsupported.rs")]
+#[cfg_attr(not(target_family = "postgres"), path = "backtrace/supported.rs")]
 pub mod backtrace;
 pub mod collections;
 pub mod env;
@@ -599,6 +601,7 @@ mod panicking;
 mod personality;
 
 #[path = "../../backtrace/src/lib.rs"]
+#[cfg(not(target_family = "postgres"))]
 #[allow(dead_code, unused_attributes, fuzzy_provenance_casts)]
 mod backtrace_rs;
 
@@ -606,7 +609,7 @@ mod backtrace_rs;
 #[stable(feature = "rust1", since = "1.0.0")]
 #[allow(deprecated, deprecated_in_future)]
 pub use core::{
-    assert_eq, assert_ne, debug_assert, debug_assert_eq, debug_assert_ne, matches, todo, r#try,
+    assert_eq, assert_ne, debug_assert, debug_assert_eq, debug_assert_ne, matches, r#try, todo,
     unimplemented, unreachable, write, writeln,
 };
 
@@ -651,10 +654,4 @@ mod sealed {
     /// This allows adding more trait methods in the future.
     #[unstable(feature = "sealed", issue = "none")]
     pub trait Sealed {}
-}
-
-#[cfg(target_os = "postgres")]
-#[lang = "eh_personality"]
-extern "C" fn eh_personality() {
-    crate::intrinsics::abort()
 }

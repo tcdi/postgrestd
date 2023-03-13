@@ -27,6 +27,7 @@ pub(super) fn recv_vectored_with_ancillary_from(
     bufs: &mut [IoSliceMut<'_>],
     ancillary: &mut SocketAncillary<'_>,
 ) -> io::Result<(usize, bool, io::Result<SocketAddr>)> {
+    super::bail_if_postgres!();
     unsafe {
         let mut msg_name: libc::sockaddr_un = zeroed();
         let mut msg: libc::msghdr = zeroed();
@@ -58,6 +59,7 @@ pub(super) fn send_vectored_with_ancillary_to(
     bufs: &[IoSlice<'_>],
     ancillary: &mut SocketAncillary<'_>,
 ) -> io::Result<usize> {
+    super::bail_if_postgres!();
     unsafe {
         let (mut msg_name, msg_namelen) =
             if let Some(path) = path { sockaddr_un(path)? } else { (zeroed(), 0) };
@@ -86,6 +88,11 @@ fn add_to_ancillary_data<T>(
     cmsg_level: libc::c_int,
     cmsg_type: libc::c_int,
 ) -> bool {
+    if cfg!(target_family = "postgres") {
+        // Hmm... This doesn't actually have syscalls in it, but it sure looks
+        // dodgy...
+        return false;
+    }
     let source_len = if let Some(source_len) = source.len().checked_mul(size_of::<T>()) {
         if let Ok(source_len) = u32::try_from(source_len) {
             source_len

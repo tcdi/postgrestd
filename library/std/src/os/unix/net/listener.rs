@@ -70,6 +70,7 @@ impl UnixListener {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn bind<P: AsRef<Path>>(path: P) -> io::Result<UnixListener> {
+        super::bail_if_postgres!();
         unsafe {
             let inner = Socket::new_raw(libc::AF_UNIX, libc::SOCK_STREAM)?;
             let (addr, len) = sockaddr_un(path.as_ref())?;
@@ -109,6 +110,7 @@ impl UnixListener {
     /// ```
     #[unstable(feature = "unix_socket_abstract", issue = "85410")]
     pub fn bind_addr(socket_addr: &SocketAddr) -> io::Result<UnixListener> {
+        super::bail_if_postgres!();
         unsafe {
             let inner = Socket::new_raw(libc::AF_UNIX, libc::SOCK_STREAM)?;
             #[cfg(target_os = "linux")]
@@ -150,6 +152,7 @@ impl UnixListener {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn accept(&self) -> io::Result<(UnixStream, SocketAddr)> {
+        super::bail_if_postgres!();
         let mut storage: libc::sockaddr_un = unsafe { mem::zeroed() };
         let mut len = mem::size_of_val(&storage) as libc::socklen_t;
         let sock = self.0.accept(&mut storage as *mut _ as *mut _, &mut len)?;
@@ -194,6 +197,7 @@ impl UnixListener {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn local_addr(&self) -> io::Result<SocketAddr> {
+        super::bail_if_postgres!();
         SocketAddr::new(|addr, len| unsafe { libc::getsockname(self.as_raw_fd(), addr, len) })
     }
 

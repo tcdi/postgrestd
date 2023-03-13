@@ -1,12 +1,10 @@
 #![allow(non_camel_case_types)]
 use crate::fmt;
-use crate::prelude::rust_2021::*;
 use crate::io::{self, IoSlice, IoSliceMut};
 use crate::net::{Ipv4Addr, Ipv6Addr, Shutdown, SocketAddr};
 use crate::sys::unsupported;
 
 use crate::os::unix::prelude::*;
-pub use crate::sys::{cvt, cvt_r};
 
 use crate::cmp;
 use crate::ffi::CStr;
@@ -14,16 +12,12 @@ use crate::mem;
 use crate::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, RawFd};
 use crate::str;
 use crate::sys::fd::FileDesc;
-use crate::sys_common::net::{getsockopt, setsockopt, sockaddr_to_addr};
 use crate::sys_common::{AsInner, FromInner, IntoInner};
 use crate::time::{Duration, Instant};
 
-pub extern crate libc as netc;
-use netc::{MSG_PEEK, sockaddr, socklen_t};
-use netc::c_int;
 use core::ffi::c_void;
-
-pub type wrlen_t = netc::size_t;
+pub(crate) use libc as netc;
+use libc::{c_int, sockaddr, socklen_t};
 
 pub struct TcpStream(!);
 
@@ -34,6 +28,14 @@ impl TcpStream {
 
     pub fn connect_timeout(_: &SocketAddr, _: Duration) -> io::Result<TcpStream> {
         unsupported()
+    }
+
+    pub fn socket(&self) -> &Socket {
+        self.0
+    }
+
+    pub fn into_socket(self) -> Socket {
+        self.0
     }
 
     pub fn set_read_timeout(&self, _: Option<Duration>) -> io::Result<()> {
@@ -130,8 +132,8 @@ impl TcpStream {
 }
 
 impl fmt::Debug for TcpStream {
-    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("TcpStream").finish_non_exhaustive()
     }
 }
 
@@ -140,6 +142,14 @@ pub struct TcpListener(!);
 impl TcpListener {
     pub fn bind(_: io::Result<&SocketAddr>) -> io::Result<TcpListener> {
         unsupported()
+    }
+
+    pub fn socket(&self) -> &Socket {
+        self.0
+    }
+
+    pub fn into_socket(self) -> Socket {
+        self.0
     }
 
     pub fn socket_addr(&self) -> io::Result<SocketAddr> {
@@ -180,8 +190,8 @@ impl TcpListener {
 }
 
 impl fmt::Debug for TcpListener {
-    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("TcpListener").finish_non_exhaustive()
     }
 }
 
@@ -190,6 +200,14 @@ pub struct UdpSocket(!);
 impl UdpSocket {
     pub fn bind(_: io::Result<&SocketAddr>) -> io::Result<UdpSocket> {
         unsupported()
+    }
+
+    pub fn socket(&self) -> &Socket {
+        self.0
+    }
+
+    pub fn into_socket(self) -> Socket {
+        self.0
     }
 
     pub fn peer_addr(&self) -> io::Result<SocketAddr> {
@@ -350,35 +368,12 @@ impl<'a> TryFrom<(&'a str, u16)> for LookupHost {
     }
 }
 
-pub struct Socket(FileDesc);
+pub struct Socket(!);
 
 pub fn init() {}
 
-pub fn cvt_gai(err: c_int) -> io::Result<()> {
-    if err == 0 {
-        return Ok(());
-    }
-
-    // We may need to trigger a gnetc workaround. See on_resolver_failure() for details.
-    on_resolver_failure();
-
-    #[cfg(not(target_os = "espidf"))]
-    if err == netc::EAI_SYSTEM {
-        return Err(io::Error::last_os_error());
-    }
-
-    #[cfg(not(target_os = "espidf"))]
-    let detail = unsafe {
-        str::from_utf8(CStr::from_ptr(netc::gai_strerror(err)).to_bytes()).unwrap().to_owned()
-    };
-
-    #[cfg(target_os = "espidf")]
-    let detail = "";
-
-    Err(io::Error::new(
-        io::ErrorKind::Uncategorized,
-        &format!("failed to lookup address information: {detail}")[..],
-    ))
+pub fn cvt_gai(_: c_int) -> io::Result<()> {
+    unsupported()
 }
 
 impl Socket {
@@ -439,8 +434,8 @@ impl Socket {
         unsupported()
     }
 
-    #[cfg(any(target_os = "android", target_os = "linux", target_os = "postgres"))]
-    pub fn recv_msg(&self, msg: &mut netc::msghdr) -> io::Result<usize> {
+    #[cfg(any(target_os = "android", target_os = "linux"))]
+    pub fn recv_msg(&self, msg: &mut libc::msghdr) -> io::Result<usize> {
         unsupported()
     }
 
@@ -461,16 +456,16 @@ impl Socket {
         false
     }
 
-    #[cfg(any(target_os = "android", target_os = "linux", target_os = "postgres"))]
-    pub fn send_msg(&self, msg: &mut netc::msghdr) -> io::Result<usize> {
+    #[cfg(any(target_os = "android", target_os = "linux"))]
+    pub fn send_msg(&self, msg: &mut libc::msghdr) -> io::Result<usize> {
         unsupported()
     }
 
-    pub fn set_timeout(&self, dur: Option<Duration>, kind: netc::c_int) -> io::Result<()> {
+    pub fn set_timeout(&self, dur: Option<Duration>, kind: c_int) -> io::Result<()> {
         unsupported()
     }
 
-    pub fn timeout(&self, kind: netc::c_int) -> io::Result<Option<Duration>> {
+    pub fn timeout(&self, kind: libc::c_int) -> io::Result<Option<Duration>> {
         unsupported()
     }
 
@@ -504,12 +499,12 @@ impl Socket {
         unsupported()
     }
 
-    #[cfg(any(target_os = "android", target_os = "linux", target_os = "postgres"))]
+    #[cfg(any(target_os = "android", target_os = "linux"))]
     pub fn set_passcred(&self, passcred: bool) -> io::Result<()> {
         unsupported()
     }
 
-    #[cfg(any(target_os = "android", target_os = "linux", target_os = "postgres"))]
+    #[cfg(any(target_os = "android", target_os = "linux"))]
     pub fn passcred(&self) -> io::Result<bool> {
         unsupported()
     }
@@ -539,7 +534,6 @@ impl Socket {
         unsupported()
     }
 
-
     pub fn take_error(&self) -> io::Result<Option<io::Error>> {
         unsupported()
     }
@@ -552,44 +546,95 @@ impl Socket {
 
 impl AsInner<FileDesc> for Socket {
     fn as_inner(&self) -> &FileDesc {
-        &self.0
+        unimplemented!()
     }
 }
 
 impl IntoInner<FileDesc> for Socket {
     fn into_inner(self) -> FileDesc {
-        self.0
+        unimplemented!()
     }
 }
 
 impl FromInner<FileDesc> for Socket {
     fn from_inner(file_desc: FileDesc) -> Self {
-        Self(file_desc)
+        unimplemented!()
     }
 }
 
 impl AsFd for Socket {
     fn as_fd(&self) -> BorrowedFd<'_> {
-        self.0.as_fd()
+        unimplemented!()
     }
 }
 
 impl AsRawFd for Socket {
     fn as_raw_fd(&self) -> RawFd {
-        self.0.as_raw_fd()
+        unimplemented!()
     }
 }
 
 impl IntoRawFd for Socket {
     fn into_raw_fd(self) -> RawFd {
-        self.0.into_raw_fd()
+        unimplemented!()
     }
 }
 
 impl FromRawFd for Socket {
     unsafe fn from_raw_fd(raw_fd: RawFd) -> Self {
-        Self(FromRawFd::from_raw_fd(raw_fd))
+        unimplemented!()
+    }
+}
+
+impl FromInner<Socket> for TcpListener {
+    fn from_inner(socket: Socket) -> TcpListener {
+        unimplemented!()
+    }
+}
+
+impl FromInner<Socket> for UdpSocket {
+    fn from_inner(socket: Socket) -> UdpSocket {
+        unimplemented!()
     }
 }
 
 fn on_resolver_failure() {}
+
+#[repr(C)]
+pub(crate) union SocketAddrCRepr {
+    v4: libc::sockaddr_in,
+    v6: libc::sockaddr_in6,
+}
+
+impl SocketAddrCRepr {
+    pub fn as_ptr(&self) -> *const sockaddr {
+        self as *const _ as *const sockaddr
+    }
+}
+
+impl<'a> IntoInner<(SocketAddrCRepr, socklen_t)> for &'a SocketAddr {
+    fn into_inner(self) -> (SocketAddrCRepr, socklen_t) {
+        match *self {
+            SocketAddr::V4(ref a) => {
+                let sockaddr = SocketAddrCRepr { v4: a.into_inner() };
+                (sockaddr, mem::size_of::<libc::sockaddr_in>() as socklen_t)
+            }
+            SocketAddr::V6(ref a) => {
+                let sockaddr = SocketAddrCRepr { v6: a.into_inner() };
+                (sockaddr, mem::size_of::<libc::sockaddr_in6>() as socklen_t)
+            }
+        }
+    }
+}
+
+impl AsInner<Socket> for TcpStream {
+    fn as_inner(&self) -> &Socket {
+        self.0
+    }
+}
+
+impl FromInner<Socket> for TcpStream {
+    fn from_inner(socket: Socket) -> TcpStream {
+        socket.0
+    }
+}

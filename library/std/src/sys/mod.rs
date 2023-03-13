@@ -20,7 +20,7 @@
 //! inter-dependencies within `std` that will be a challenging goal to
 //! achieve.
 
-#![allow(missing_debug_implementations)]
+#![allow(missing_debug_implementations, unused_imports)]
 
 pub mod common;
 
@@ -28,7 +28,6 @@ cfg_if::cfg_if! {
     if #[cfg(target_family = "postgres")] {
         // mod unix;
         mod postgres;
-        use postgres as unix;
         pub use self::postgres::*;
     } else if #[cfg(unix)] {
         mod unix;
@@ -51,9 +50,6 @@ cfg_if::cfg_if! {
     } else if #[cfg(all(target_vendor = "fortanix", target_env = "sgx"))] {
         mod sgx;
         pub use self::sgx::*;
-    } else if #[cfg(target_os = "postgres")] {
-        mod postgres;
-        pub use self::postgres::*;
     } else {
         mod unsupported;
         pub use self::unsupported::*;

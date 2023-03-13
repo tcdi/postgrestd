@@ -219,8 +219,13 @@ pub enum BacktraceStyle {
 }
 
 impl BacktraceStyle {
+    #[cfg_attr(target_family = "postgres", allow(unused))]
     pub(crate) fn full() -> Option<Self> {
-        if cfg!(feature = "backtrace") { Some(BacktraceStyle::Full) } else { None }
+        if cfg!(feature = "backtrace") {
+            Some(BacktraceStyle::Full)
+        } else {
+            None
+        }
     }
 
     fn as_usize(self) -> usize {

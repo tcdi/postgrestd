@@ -24,15 +24,18 @@
 // operations! Whee!
 
 cfg_if::cfg_if! {
-    if #[cfg(any(
-        target_os = "linux",
-        target_os = "android",
-        all(target_arch = "wasm32", target_feature = "atomics"),
-        target_os = "freebsd",
-        target_os = "openbsd",
-        target_os = "dragonfly",
-        target_os = "fuchsia",
-        target_os = "hermit",
+    if #[cfg(all(
+        not(target_family = "postgres"),
+        any(
+            target_os = "linux",
+            target_os = "android",
+            all(target_arch = "wasm32", target_feature = "atomics"),
+            target_os = "freebsd",
+            target_os = "openbsd",
+            target_os = "dragonfly",
+            target_os = "fuchsia",
+            target_os = "hermit",
+        )
     ))] {
         mod futex;
         pub use futex::{Once, OnceState};

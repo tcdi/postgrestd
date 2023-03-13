@@ -31,6 +31,20 @@
 #![stable(feature = "rust1", since = "1.0.0")]
 #![doc(cfg(unix))]
 
+#[cfg(target_family = "postgres")]
+#[allow(unused)] // not used on all targets
+macro bail_if_postgres() {
+    // Make this conditional (even though the macro already is) just to avoid
+    // dead code warnings.
+    if cfg!(target_family = "postgres") {
+        return crate::sys::unsupported();
+    }
+}
+// `crate::sys::unsupported()` doesn't exist on non-postgres.
+#[cfg(not(target_family = "postgres"))]
+#[allow(unused)] // not used on all targets
+macro bail_if_postgres() {}
+
 // Use linux as the default platform when documenting on other platforms like Windows
 #[cfg(doc)]
 use crate::os::linux as platform;
@@ -80,6 +94,7 @@ mod platform {
 pub mod ffi;
 pub mod fs;
 pub mod io;
+// #[cfg(not(target_family = "postgres"))]
 pub mod net;
 pub mod process;
 pub mod raw;

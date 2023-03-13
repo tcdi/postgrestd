@@ -29,13 +29,7 @@ pub mod time;
 mod common;
 pub use common::*;
 
-#[path = "../unix/fd.rs"]
 pub mod fd;
-
-#[path = "../unix/futex.rs"]
-pub mod futex;
-#[path = "../unix/stack_overflow.rs"]
-pub mod stack_overflow;
 
 use crate::ffi::CStr;
 use crate::io::ErrorKind;
@@ -55,30 +49,42 @@ macro_rules! impl_is_minus_one {
 
 impl_is_minus_one! { i8 i16 i32 i64 isize }
 
-pub fn cvt<T: IsMinusOne>(t: T) -> crate::io::Result<T> {
-    if t.is_minus_one() { Err(crate::io::Error::last_os_error()) } else { Ok(t) }
+pub fn real_last_os_error_use_carefully() -> crate::io::Error {
+    crate::io::Error::from_raw_os_error(os::real_errno_use_carefully())
+}
+// TODO: audit these and think about them more...
+pub use {cvt_unsup as cvt, cvt_unsup_r as cvt_r};
+
+pub fn cvt_unsup<T: IsMinusOne>(t: T) -> crate::io::Result<T> {
+    if t.is_minus_one() {
+        unsupported()
+    } else {
+        Ok(t)
+    }
 }
 
-pub fn cvt_r<T, F>(mut f: F) -> crate::io::Result<T>
+pub fn cvt_unsup_r<T, F>(mut f: F) -> crate::io::Result<T>
 where
     T: IsMinusOne,
     F: FnMut() -> T,
 {
     loop {
-        match cvt(f()) {
-            Err(ref e) if e.kind() == ErrorKind::Interrupted => {}
-            other => return other,
+        if f().is_minus_one() {
+            let e = real_last_os_error_use_carefully();
+            if e.kind() != ErrorKind::Interrupted {
+                return unsupported();
+            }
         }
     }
 }
 
-#[allow(dead_code)] // Not used on all platforms.
-pub fn cvt_nz(error: libc::c_int) -> crate::io::Result<()> {
-    if error == 0 { Ok(()) } else { Err(crate::io::Error::from_raw_os_error(error)) }
-}
+// #[allow(dead_code)] // Not used on all platforms.
+// pub fn cvt_nz(error: libc::c_int) -> crate::io::Result<()> {
+//     if error == 0 {
+//         Ok(())
+//     } else {
+//         Err(crate::io::Error::from_raw_os_error(error))
+//     }
+// }
 
-#[cfg(target_os = "android")]
-pub use crate::sys::android::signal;
-#[cfg(not(target_os = "android"))]
-pub use libc::signal;
 pub use libc::strlen;

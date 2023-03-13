@@ -3,6 +3,10 @@
 #![allow(irrefutable_let_patterns)]
 #![stable(feature = "unix_socket", since = "1.10.0")]
 
+#[cfg(target_family = "postgres")]
+#[allow(unused)]
+use super::bail_if_postgres;
+
 mod addr;
 #[doc(cfg(any(target_os = "android", target_os = "linux")))]
 #[cfg(any(doc, target_os = "android", target_os = "linux"))]

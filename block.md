@@ -1,6 +1,10 @@
 Rust `std` modules with impacted functionality:
 - arch - SIMD and vendor intrinsics module.
     - Technically available but in practice unusable (it is almost entirely `unsafe`)
+- backtrace - Support for capturing a stack backtrace of an OS thread
+    - Backtraces are currently always disabled.
+- env - Inspection and manipulation of the process’s environment.
+    - May panic, return `Err("unsupported operation")`, or have arbitrary results.
 - fs - Filesystem manipulation operations.
     - May panic, return `Err("unsupported operation")`, or have arbitrary results (e.g. `is_file` always returns `false`)
 - io - Traits, helpers, and type definitions for core I/O functionality.
@@ -9,12 +13,24 @@ Rust `std` modules with impacted functionality:
     - May panic, return `Err("unsupported operation")`, or have arbitrary results.
 - os - OS-specific functionality.
     - May panic, return `Err("unsupported operation")`, or have arbitrary results.
+    - Some infrequently used OS-specific submodules with complex APIs we would need to disable are entirely missing (`std::os::unix::net`, for example), although this will hopefully be improved.
+- panic - Panic support in the standard library.
+    - Some functionality, like changing the panic handler, is unsupported.
+    - Panic information is not output to stderr (because writing to standard streams is not possible).
+- path - Cross-platform path manipulation.
+    - Path operations that do not rely on the filesystem or current working directory should work.
 - process - A module for working with processes.
     - May panic, return `Err("unsupported operation")`, or have arbitrary results.
 - ptr - Manually manage memory through raw pointers.
     - Technically available but in practice unusable (it is almost entirely `unsafe`)
+- sync - "Useful" synchronization primitives.
+    - Not actually very useful without threading.
+    - Atomics function as normal, as does Arc. Anything backed by syscalls will fail.
 - thread - Native threads.
     - May panic, return `Err("unsupported operation")`, or have arbitrary results.
+- time - Temporal quantification.
+    - `SystemTime` and `Instant` may panic, return `Err("unsupported operation")`, or have arbitrary results.
+    - `Duration` should be fine.
 
 
 Other Rust `std` modules:
@@ -22,7 +38,6 @@ Other Rust `std` modules:
 - any - Utilities for dynamic typing or type reflection.
 - array - Utilities for the array primitive type.
 - ascii - Operations on ASCII strings and characters.
-- backtrace - Support for capturing a stack backtrace of an OS thread
 - borrow - A module for working with borrowed data.
 - boxed - The `Box<T>` type for heap allocation.
 - cell - Shareable mutable containers.
@@ -31,7 +46,6 @@ Other Rust `std` modules:
 - collection - Collection types.
 - convert - Traits for conversions between types.
 - default - The Default trait for types with a default value.
-- env - Inspection and manipulation of the process’s environment.
 - error - Interfaces for working with Errors.
 - ffi - Utilities related to FFI bindings.
 - fmt - Utilities for formatting and printing Strings.
@@ -44,8 +58,6 @@ Other Rust `std` modules:
 - num - Additional functionality for numerics.
 - ops - Overloadable operators.
 - option - Optional values.
-- panic - Panic support in the standard library.
-- path - Cross-platform path manipulation.
 - pin - Types that pin data to its location in memory.
 - prelude - The Rust Prelude
 - primitive - This module reexports the primitive types to allow usage that is not possibly shadowed by other declared types.
@@ -54,7 +66,5 @@ Other Rust `std` modules:
 - slice - Utilities for the slice primitive type.
 - str - Utilities for the str primitive type.
 - string - A UTF-8–encoded, growable string.
-- sync - Useful synchronization primitives.
 - task - Types and Traits for working with asynchronous tasks.
-- time - Temporal quantification.
 - vec - A contiguous growable array type with heap-allocated contents, written `Vec<T>`.
