@@ -88,7 +88,11 @@ fn add_to_ancillary_data<T>(
     cmsg_level: libc::c_int,
     cmsg_type: libc::c_int,
 ) -> bool {
-    super::bail_if_postgres!();
+    if cfg!(target_family = "postgres") {
+        // Hmm... This doesn't actually have syscalls in it, but it sure looks
+        // dodgy...
+        return false;
+    }
     let source_len = if let Some(source_len) = source.len().checked_mul(size_of::<T>()) {
         if let Ok(source_len) = u32::try_from(source_len) {
             source_len

@@ -318,7 +318,9 @@ impl DirBuilder {
         unsupported()
     }
 
-    pub fn set_mode(&mut self, _mode: u32) {}
+    pub fn set_mode(&mut self, _mode: u32) {
+        panic!("not supported")
+    }
 }
 
 impl fmt::Debug for File {

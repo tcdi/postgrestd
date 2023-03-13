@@ -1,8 +1,5 @@
 #![unstable(reason = "not public", issue = "none", feature = "fd")]
 
-#[cfg(test)]
-mod tests;
-
 use crate::cmp;
 use crate::io::{self, BorrowedCursor, IoSlice, IoSliceMut, Read};
 use crate::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};

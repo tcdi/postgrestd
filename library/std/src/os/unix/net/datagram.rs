@@ -1,14 +1,8 @@
-#[cfg(all(
-    any(doc, target_os = "android", target_os = "linux"),
-    not(target_family = "postgres")
-))]
+#[cfg(all(any(doc, target_os = "android", target_os = "linux"),))]
 use super::{recv_vectored_with_ancillary_from, send_vectored_with_ancillary_to, SocketAncillary};
 use super::{sockaddr_un, SocketAddr};
 
-#[cfg(all(
-    any(doc, target_os = "android", target_os = "linux"),
-    not(target_family = "postgres")
-))]
+#[cfg(all(any(doc, target_os = "android", target_os = "linux")))]
 use crate::io::{IoSlice, IoSliceMut};
 use crate::net::Shutdown;
 use crate::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
@@ -92,11 +86,7 @@ impl UnixDatagram {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn bind<P: AsRef<Path>>(path: P) -> io::Result<UnixDatagram> {
-        #[cfg(target_family = "postgres")]
-        {
-            crate::sys::unsupported()
-        }
-        #[cfg(not(target_family = "postgres"))]
+        super::bail_if_postgres!();
         unsafe {
             let socket = UnixDatagram::unbound()?;
             let (addr, len) = sockaddr_un(path.as_ref())?;
@@ -131,11 +121,7 @@ impl UnixDatagram {
     /// ```
     #[unstable(feature = "unix_socket_abstract", issue = "85410")]
     pub fn bind_addr(socket_addr: &SocketAddr) -> io::Result<UnixDatagram> {
-        #[cfg(target_family = "postgres")]
-        {
-            crate::sys::unsupported()
-        }
-        #[cfg(not(target_family = "postgres"))]
+        super::bail_if_postgres!();
         unsafe {
             let socket = UnixDatagram::unbound()?;
             cvt(libc::bind(
@@ -164,15 +150,9 @@ impl UnixDatagram {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn unbound() -> io::Result<UnixDatagram> {
-        #[cfg(target_family = "postgres")]
-        {
-            crate::sys::unsupported()
-        }
-        #[cfg(not(target_family = "postgres"))]
-        {
-            let inner = Socket::new_raw(libc::AF_UNIX, libc::SOCK_DGRAM)?;
-            Ok(UnixDatagram(inner))
-        }
+        super::bail_if_postgres!();
+        let inner = Socket::new_raw(libc::AF_UNIX, libc::SOCK_DGRAM)?;
+        Ok(UnixDatagram(inner))
     }
 
     /// Creates an unnamed pair of connected sockets.
@@ -194,15 +174,9 @@ impl UnixDatagram {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn pair() -> io::Result<(UnixDatagram, UnixDatagram)> {
-        #[cfg(target_family = "postgres")]
-        {
-            crate::sys::unsupported()
-        }
-        #[cfg(not(target_family = "postgres"))]
-        {
-            let (i1, i2) = Socket::new_pair(libc::AF_UNIX, libc::SOCK_DGRAM)?;
-            Ok((UnixDatagram(i1), UnixDatagram(i2)))
-        }
+        super::bail_if_postgres!();
+        let (i1, i2) = Socket::new_pair(libc::AF_UNIX, libc::SOCK_DGRAM)?;
+        Ok((UnixDatagram(i1), UnixDatagram(i2)))
     }
 
     /// Connects the socket to the specified path address.
@@ -233,11 +207,7 @@ impl UnixDatagram {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn connect<P: AsRef<Path>>(&self, path: P) -> io::Result<()> {
-        #[cfg(target_family = "postgres")]
-        {
-            crate::sys::unsupported()
-        }
-        #[cfg(not(target_family = "postgres"))]
+        super::bail_if_postgres!();
         unsafe {
             let (addr, len) = sockaddr_un(path.as_ref())?;
 
@@ -271,11 +241,7 @@ impl UnixDatagram {
     /// ```
     #[unstable(feature = "unix_socket_abstract", issue = "85410")]
     pub fn connect_addr(&self, socket_addr: &SocketAddr) -> io::Result<()> {
-        #[cfg(target_family = "postgres")]
-        {
-            crate::sys::unsupported()
-        }
-        #[cfg(not(target_family = "postgres"))]
+        super::bail_if_postgres!();
         unsafe {
             cvt(libc::connect(
                 self.as_raw_fd(),
@@ -323,14 +289,8 @@ impl UnixDatagram {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn local_addr(&self) -> io::Result<SocketAddr> {
-        #[cfg(target_family = "postgres")]
-        {
-            crate::sys::unsupported()
-        }
-        #[cfg(not(target_family = "postgres"))]
-        {
-            SocketAddr::new(|addr, len| unsafe { libc::getsockname(self.as_raw_fd(), addr, len) })
-        }
+        super::bail_if_postgres!();
+        SocketAddr::new(|addr, len| unsafe { libc::getsockname(self.as_raw_fd(), addr, len) })
     }
 
     /// Returns the address of this socket's peer.
@@ -354,30 +314,16 @@ impl UnixDatagram {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn peer_addr(&self) -> io::Result<SocketAddr> {
-        #[cfg(target_family = "postgres")]
-        {
-            crate::sys::unsupported()
-        }
-        #[cfg(not(target_family = "postgres"))]
-        {
-            SocketAddr::new(|addr, len| unsafe { libc::getpeername(self.as_raw_fd(), addr, len) })
-        }
+        super::bail_if_postgres!();
+        SocketAddr::new(|addr, len| unsafe { libc::getpeername(self.as_raw_fd(), addr, len) })
     }
 
-    #[cfg(target_family = "postgres")]
     fn recv_from_flags(
         &self,
         buf: &mut [u8],
         flags: libc::c_int,
     ) -> io::Result<(usize, SocketAddr)> {
-        crate::sys::unsupported()
-    }
-    #[cfg(not(target_family = "postgres"))]
-    fn recv_from_flags(
-        &self,
-        buf: &mut [u8],
-        flags: libc::c_int,
-    ) -> io::Result<(usize, SocketAddr)> {
+        super::bail_if_postgres!();
         let mut count = 0;
         let addr = SocketAddr::new(|addr, len| unsafe {
             count = libc::recvfrom(
@@ -481,16 +427,14 @@ impl UnixDatagram {
     ///     Ok(())
     /// }
     /// ```
-    #[cfg(all(
-        any(doc, target_os = "android", target_os = "linux"),
-        not(target_family = "postgres")
-    ))]
+    #[cfg(all(any(doc, target_os = "android", target_os = "linux"),))]
     #[unstable(feature = "unix_socket_ancillary_data", issue = "76915")]
     pub fn recv_vectored_with_ancillary_from(
         &self,
         bufs: &mut [IoSliceMut<'_>],
         ancillary: &mut SocketAncillary<'_>,
     ) -> io::Result<(usize, bool, SocketAddr)> {
+        super::bail_if_postgres!();
         let (count, truncated, addr) = recv_vectored_with_ancillary_from(&self.0, bufs, ancillary)?;
         let addr = addr?;
 
@@ -534,16 +478,14 @@ impl UnixDatagram {
     ///     Ok(())
     /// }
     /// ```
-    #[cfg(all(
-        any(doc, target_os = "android", target_os = "linux"),
-        not(target_family = "postgres")
-    ))]
+    #[cfg(all(any(doc, target_os = "android", target_os = "linux")))]
     #[unstable(feature = "unix_socket_ancillary_data", issue = "76915")]
     pub fn recv_vectored_with_ancillary(
         &self,
         bufs: &mut [IoSliceMut<'_>],
         ancillary: &mut SocketAncillary<'_>,
     ) -> io::Result<(usize, bool)> {
+        super::bail_if_postgres!();
         let (count, truncated, addr) = recv_vectored_with_ancillary_from(&self.0, bufs, ancillary)?;
         addr?;
 
@@ -567,6 +509,7 @@ impl UnixDatagram {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn send_to<P: AsRef<Path>>(&self, buf: &[u8], path: P) -> io::Result<usize> {
+        super::bail_if_postgres!();
         unsafe {
             let (addr, len) = sockaddr_un(path.as_ref())?;
 
@@ -605,11 +548,7 @@ impl UnixDatagram {
     /// ```
     #[unstable(feature = "unix_socket_abstract", issue = "85410")]
     pub fn send_to_addr(&self, buf: &[u8], socket_addr: &SocketAddr) -> io::Result<usize> {
-        #[cfg(target_family = "postgres")]
-        {
-            crate::sys::unsupported()
-        }
-        #[cfg(not(target_family = "postgres"))]
+        super::bail_if_postgres!();
         unsafe {
             let count = cvt(libc::sendto(
                 self.as_raw_fd(),
@@ -678,10 +617,7 @@ impl UnixDatagram {
     ///     Ok(())
     /// }
     /// ```
-    #[cfg(all(
-        any(doc, target_os = "android", target_os = "linux"),
-        not(target_family = "postgres")
-    ))]
+    #[cfg(all(any(doc, target_os = "android", target_os = "linux")))]
     #[unstable(feature = "unix_socket_ancillary_data", issue = "76915")]
     pub fn send_vectored_with_ancillary_to<P: AsRef<Path>>(
         &self,
@@ -689,6 +625,7 @@ impl UnixDatagram {
         ancillary: &mut SocketAncillary<'_>,
         path: P,
     ) -> io::Result<usize> {
+        super::bail_if_postgres!();
         send_vectored_with_ancillary_to(&self.0, Some(path.as_ref()), bufs, ancillary)
     }
 
@@ -723,16 +660,14 @@ impl UnixDatagram {
     ///     Ok(())
     /// }
     /// ```
-    #[cfg(all(
-        any(doc, target_os = "android", target_os = "linux"),
-        not(target_family = "postgres")
-    ))]
+    #[cfg(all(any(doc, target_os = "android", target_os = "linux")))]
     #[unstable(feature = "unix_socket_ancillary_data", issue = "76915")]
     pub fn send_vectored_with_ancillary(
         &self,
         bufs: &[IoSlice<'_>],
         ancillary: &mut SocketAncillary<'_>,
     ) -> io::Result<usize> {
+        super::bail_if_postgres!();
         send_vectored_with_ancillary_to(&self.0, None, bufs, ancillary)
     }
 

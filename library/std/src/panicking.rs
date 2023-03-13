@@ -8,6 +8,7 @@
 //! * Shims around "try"
 
 #![deny(unsafe_op_in_unsafe_fn)]
+#![cfg_attr(target_family = "postgres", allow(unused))]
 
 use crate::panic::BacktraceStyle;
 use core::panic::{BoxMeUp, Location, PanicInfo};

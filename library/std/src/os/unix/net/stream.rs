@@ -90,6 +90,7 @@ impl UnixStream {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn connect<P: AsRef<Path>>(path: P) -> io::Result<UnixStream> {
+        super::bail_if_postgres!();
         unsafe {
             let inner = Socket::new_raw(libc::AF_UNIX, libc::SOCK_STREAM)?;
             let (addr, len) = sockaddr_un(path.as_ref())?;
@@ -125,6 +126,7 @@ impl UnixStream {
     /// ````
     #[unstable(feature = "unix_socket_abstract", issue = "85410")]
     pub fn connect_addr(socket_addr: &SocketAddr) -> io::Result<UnixStream> {
+        super::bail_if_postgres!();
         unsafe {
             let inner = Socket::new_raw(libc::AF_UNIX, libc::SOCK_STREAM)?;
             cvt(libc::connect(
@@ -155,6 +157,7 @@ impl UnixStream {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn pair() -> io::Result<(UnixStream, UnixStream)> {
+        super::bail_if_postgres!();
         let (i1, i2) = Socket::new_pair(libc::AF_UNIX, libc::SOCK_STREAM)?;
         Ok((UnixStream(i1), UnixStream(i2)))
     }
@@ -179,6 +182,7 @@ impl UnixStream {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn try_clone(&self) -> io::Result<UnixStream> {
+        super::bail_if_postgres!();
         self.0.duplicate().map(UnixStream)
     }
 
@@ -197,6 +201,7 @@ impl UnixStream {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn local_addr(&self) -> io::Result<SocketAddr> {
+        super::bail_if_postgres!();
         SocketAddr::new(|addr, len| unsafe { libc::getsockname(self.as_raw_fd(), addr, len) })
     }
 
@@ -215,6 +220,7 @@ impl UnixStream {
     /// ```
     #[stable(feature = "unix_socket", since = "1.10.0")]
     pub fn peer_addr(&self) -> io::Result<SocketAddr> {
+        super::bail_if_postgres!();
         SocketAddr::new(|addr, len| unsafe { libc::getpeername(self.as_raw_fd(), addr, len) })
     }
 
@@ -244,6 +250,7 @@ impl UnixStream {
         target_os = "netbsd",
         target_os = "openbsd"
     ))]
+    #[cfg(not(target_family = "postgres"))]
     pub fn peer_cred(&self) -> io::Result<UCred> {
         ucred::peer_cred(self)
     }

@@ -29,6 +29,11 @@ impl Parker {
 
     // This implementation doesn't require `unsafe` and `Pin`, but other implementations do.
     pub unsafe fn park(self: Pin<&Self>) {
+        if cfg!(target_family = "postgres") {
+            // Panic now rather than when we go to wait on the condvar to avoid
+            // poisoning the mutex and giving a less clear message.
+            panic!("parker park not supported");
+        }
         // If we were previously notified then we consume this notification and
         // return quickly.
         if self.state.compare_exchange(NOTIFIED, EMPTY, SeqCst, SeqCst).is_ok() {
@@ -63,6 +68,11 @@ impl Parker {
 
     // This implementation doesn't require `unsafe` and `Pin`, but other implementations do.
     pub unsafe fn park_timeout(self: Pin<&Self>, dur: Duration) {
+        if cfg!(target_family = "postgres") {
+            // Panic now rather than when we go to wait on the condvar to avoid
+            // poisoning the mutex and giving a less clear message.
+            panic!("parker park not supported");
+        }
         // Like `park` above we have a fast path for an already-notified thread, and
         // afterwards we start coordinating for a sleep.
         // return quickly.

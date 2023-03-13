@@ -16,7 +16,6 @@ use crate::sys_common::{AsInner, FromInner, IntoInner};
 use crate::time::{Duration, Instant};
 
 use core::ffi::c_void;
-// TODO(thom): make this less dangerous by only exporting some things (e.g. only types).
 pub(crate) use libc as netc;
 use libc::{c_int, sockaddr, socklen_t};
 
