@@ -23,6 +23,9 @@ Rust `std` modules with impacted functionality:
     - May panic, return `Err("unsupported operation")`, or have arbitrary results.
 - ptr - Manually manage memory through raw pointers.
     - Technically available but in practice unusable (it is almost entirely `unsafe`)
+- sync - "Useful" synchronization primitives.
+    - Not actually very useful without threading.
+    - Atomics function as normal, as does Arc. Anything backed by syscalls will fail.
 - thread - Native threads.
     - May panic, return `Err("unsupported operation")`, or have arbitrary results.
 - time - Temporal quantification.

@@ -3,12 +3,11 @@ set -e
 
 sysroot="$(rustc --print sysroot)"
 
-uname="$(uname -s)"
 postgres_targets=("x86_64-postgres-linux-gnu" "aarch64-postgres-linux-gnu")
 
 # Experimental support for apple targets. Note that cross-compiling to one
 # target from the other is generally supported without extra work.
-if [ "Darwin" = "$uname" ]; then
+if [ "Darwin" = "$(uname -s)" ]; then
     echo "warning: macOS support is still experimental" >&2
     postgres_targets=("x86_64-apple-darwin-postgres" "aarch64-apple-darwin-postgres")
 fi
