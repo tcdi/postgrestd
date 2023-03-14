@@ -101,7 +101,7 @@ fn try_fill_bytes(v: &mut [u8]) -> bool {
         fn getentropy(p: *mut libc::c_void, sz: libc::size_t) -> libc::c_int;
     }
     for chunk in v.chunks_mut(256) {
-        if unsafe { getentropy(chunk.as_ptr(), chunk.len()) } == -1 {
+        if unsafe { getentropy(chunk.as_mut_ptr().cast::<libc::c_void>(), chunk.len()) } == -1 {
             return false;
         }
     }
