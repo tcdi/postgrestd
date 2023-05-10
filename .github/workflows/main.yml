@@ -58,7 +58,7 @@ jobs:
         CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: cc
 
   # Because (at the time of this writing) Github Actions does not have support for aarch64, we need to spin up
-  # aarch64 instances in AWS in order to build the artifacts.
+  # aarch64 instances in AWS in order to run whatever is required.
   spin_up_aarch64_instances:
     name: Spin up aarch64 runner instances
 
