@@ -94,6 +94,10 @@ jobs:
     needs: spin_up_aarch64_instances # Dont run this until 'spin_up_aarch64_instances' has completed
 
     steps:
+
+    - name: Temporary Fake Fail
+      run: exit 1
+
     - uses: actions/checkout@v3
       with:
         submodules: 'recursive'
