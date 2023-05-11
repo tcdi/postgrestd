@@ -58,6 +58,7 @@ jobs:
   #       CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: cc
 
   aarch64_instance:
+    if: success() || failure()
     # The following permissions are required to instruct GHA that it is allowed
     # to communicate to another service via OIDC
     permissions:
