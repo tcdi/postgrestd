@@ -41,6 +41,7 @@ jobs:
     # on a Github Action runner.
     steps:
     - name: Configure AWS Credentials
+      if: success() || failure()
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-region: us-east-2
@@ -50,4 +51,5 @@ jobs:
     # Launch as many instances as needed. LaunchTemplateId is something known
     # ahead of time, and is created elsewhere outside of Github Actions.
     - name: Launch runner instance
+      if: success() || failure()
       run: aws ec2 run-instances --launch-template LaunchTemplateId=lt-0a56ee65c272f154e
