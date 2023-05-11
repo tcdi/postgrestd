@@ -58,6 +58,12 @@ jobs:
         CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: cc
 
   aarch64_instance:
+    # The following permissions are required to instruct GHA that it is allowed
+    # to communicate to another service via OIDC
+    permissions:
+      id-token: write # Required for requesting OIDC JWTs
+      contents: read  # This is required for actions/checkout
+
     uses: ./.github/workflows/spin_up_aarch64_instance.yml
   test_aarch64:
     name: "aarch64 (cross: x86_64) build & test"
