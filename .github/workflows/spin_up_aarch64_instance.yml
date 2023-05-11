@@ -17,7 +17,7 @@ name: Spin up aarch64 instance
 #       - on-demand-aarch64-runners
 #       - 1.67.1
 
-on: [workfow_call]
+on: [workflow_call]
 
 jobs:
   # Because (at the time of this writing) Github Actions does not have support for aarch64, we need to spin up
