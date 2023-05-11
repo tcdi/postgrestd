@@ -1,0 +1,52 @@
+name: Spin up aarch64 instance
+
+# on:
+#   push:
+#     branches:
+#       - 1.67.1
+#   pull_request:
+#     branches:
+#       - 1.67.1
+# on:
+#   push:
+#     branches:
+#       - on-demand-aarch64-runners
+#       - 1.67.1
+#   pull_request:
+#     branches:
+#       - on-demand-aarch64-runners
+#       - 1.67.1
+
+on: [workfow_call]
+
+jobs:
+  # Because (at the time of this writing) Github Actions does not have support for aarch64, we need to spin up
+  # aarch64 instances in AWS in order to run whatever is required.
+  spin_up_aarch64_instances:
+    name: Spin up aarch64 runner instances
+
+    # The following permissions are required to instruct GHA that it is allowed
+    # to communicate to another service via OIDC
+    permissions:
+      id-token: write # Required for requesting OIDC JWTs
+      contents: read  # This is required for actions/checkout
+
+    runs-on: ubuntu-latest
+
+    # In order to run this against aarch64 instances in AWS, GHA needs to authenticate
+    # against AWS via OIDC so it can directly communicate and launch AWS instances as
+    # needed. All the infrastructure and machinery is set up outside of Github Actions.
+    # Using OIDC is an alternative to setting up hard-coded AWS CLI credentials somewhere
+    # on a Github Action runner.
+    steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-region: us-east-2
+        role-to-assume: arn:aws:iam::950481341027:role/github_oidc_iam_role
+        role-session-name: GithubPostgrestdCiSession
+
+    # Launch as many instances as needed. LaunchTemplateId is something known
+    # ahead of time, and is created elsewhere outside of Github Actions.
+    - name: Launch runner instance
+      run: aws ec2 run-instances --launch-template LaunchTemplateId=lt-0a56ee65c272f154e
