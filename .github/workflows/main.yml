@@ -61,7 +61,7 @@ jobs:
   # aarch64 instances in AWS in order to run whatever is required.
   spin_up_aarch64_instances:
     name: Spin up aarch64 runner instances
-    if: ${{ always() }}
+    if: success() || failure()
 
     # The following permissions are required to instruct GHA that it is allowed
     # to communicate to another service via OIDC
@@ -78,6 +78,7 @@ jobs:
     # on a Github Action runner.
     steps:
     - name: Configure AWS Credentials
+      if: success() || failure()
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-region: us-east-2
@@ -87,6 +88,7 @@ jobs:
     # Launch as many instances as needed. LaunchTemplateId is something known
     # ahead of time, and is created elsewhere outside of Github Actions.
     - name: Launch runner instance
+      if: success() || failure()
       run: aws ec2 run-instances --launch-template LaunchTemplateId=lt-0a56ee65c272f154e
 
   test_aarch64:
