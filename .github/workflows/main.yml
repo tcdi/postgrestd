@@ -18,59 +18,81 @@ on:
       - 1.67.1
 
 jobs:
-  # test_x86_84:
-  #   name: "x86_64 (cross: aarch64) build & test"
-  #   runs-on: ubuntu-latest
+  test_x86_84:
+    name: "x86_64 (cross: aarch64) build & test"
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #     with:
-  #       submodules: 'recursive'
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
 
-  #   - name: Install system dependencies
-  #     run: |
-  #       sudo apt-get -y update && sudo apt-get install -y \
-  #         clang-11 \
-  #         llvm-11 \
-  #         clang \
-  #         gcc \
-  #         make \
-  #         build-essential \
-  #         libz-dev \
-  #         zlib1g-dev \
-  #         strace \
-  #         libssl-dev \
-  #         pkg-config \
-  #         crossbuild-essential-arm64
+    - name: Install system dependencies
+      run: |
+        sudo apt-get -y update && sudo apt-get install -y \
+          clang-11 \
+          llvm-11 \
+          clang \
+          gcc \
+          make \
+          build-essential \
+          libz-dev \
+          zlib1g-dev \
+          strace \
+          libssl-dev \
+          pkg-config \
+          crossbuild-essential-arm64
 
-  #   - name: Install rust
-  #     run: |
-  #       export RUSTUP_HOME="$HOME/.rustup"
-  #       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-  #       source "$HOME/.cargo/env"
-  #       cargo --version
+    - name: Install rust
+      run: |
+        export RUSTUP_HOME="$HOME/.rustup"
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source "$HOME/.cargo/env"
+        cargo --version
 
-  #   - name: Build postgrestd for both x86_64 and aarch64
-  #     run: ./run install
-  #     env:
-  #       CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
-  #       CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
-  #       CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: cc
+    - name: Build postgrestd for both x86_64 and aarch64
+      run: ./run install
+      env:
+        CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: cc
 
-  aarch64_instance:
-    if: success() || failure()
+  # Because (at the time of this writing) Github Actions does not have support for aarch64, we need to spin up
+  # aarch64 instances in AWS in order to run whatever is required.
+  spin_up_aarch64_instances:
+    name: Spin up aarch64 runner instances
+    if: ${{ always() }}
+
     # The following permissions are required to instruct GHA that it is allowed
     # to communicate to another service via OIDC
     permissions:
       id-token: write # Required for requesting OIDC JWTs
       contents: read  # This is required for actions/checkout
 
-    uses: ./.github/workflows/spin_up_aarch64_instance.yml
+    runs-on: ubuntu-latest
+
+    # In order to run this against aarch64 instances in AWS, GHA needs to authenticate
+    # against AWS via OIDC so it can directly communicate and launch AWS instances as
+    # needed. All the infrastructure and machinery is set up outside of Github Actions.
+    # Using OIDC is an alternative to setting up hard-coded AWS CLI credentials somewhere
+    # on a Github Action runner.
+    steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-region: us-east-2
+        role-to-assume: arn:aws:iam::950481341027:role/github_oidc_iam_role
+        role-session-name: GithubPostgrestdCiSession
+
+    # Launch as many instances as needed. LaunchTemplateId is something known
+    # ahead of time, and is created elsewhere outside of Github Actions.
+    - name: Launch runner instance
+      run: aws ec2 run-instances --launch-template LaunchTemplateId=lt-0a56ee65c272f154e
+
   test_aarch64:
     name: "aarch64 (cross: x86_64) build & test"
     runs-on: [self-hosted, linux, ARM64, postgrestd_ci]
-    needs: [aarch64_instance]
-    # needs: spin_up_aarch64_instances # Dont run this until 'spin_up_aarch64_instances' has completed
+    needs: spin_up_aarch64_instances # Dont run this until 'spin_up_aarch64_instances' has completed
 
     steps:
 
@@ -119,24 +141,24 @@ jobs:
         CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER: x86_64-linux-gnu-gcc
         CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER: cc
 
-  # test_macos:
-  #   name: "macos build & test (experimental)"
-  #   runs-on: macos-latest
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #     with:
-  #       submodules: 'recursive'
+  test_macos:
+    name: "macos build & test (experimental)"
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
 
-  #   - name: Install rust
-  #     run: |
-  #       export RUSTUP_HOME="$HOME/.rustup"
-  #       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-  #       source "$HOME/.cargo/env"
-  #       rustup toolchain install 1.67.1
-  #       cargo --version
+    - name: Install rust
+      run: |
+        export RUSTUP_HOME="$HOME/.rustup"
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source "$HOME/.cargo/env"
+        rustup toolchain install 1.67.1
+        cargo --version
 
-  #   - name: Print env
-  #     run: env
+    - name: Print env
+      run: env
 
-  #   - name: Build/install both apple targets
-  #     run: ./run install
+    - name: Build/install both apple targets
+      run: ./run install
