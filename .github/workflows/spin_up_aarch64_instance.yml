@@ -24,7 +24,7 @@ jobs:
   # aarch64 instances in AWS in order to run whatever is required.
   spin_up_aarch64_instances:
     name: Spin up aarch64 runner instances
-    if: always()
+    if: true
 
     # The following permissions are required to instruct GHA that it is allowed
     # to communicate to another service via OIDC
