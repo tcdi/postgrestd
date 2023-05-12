@@ -90,12 +90,12 @@ jobs:
 
   test_aarch64:
     name: "aarch64 (cross: x86_64) build & test"
-    runs-on: [self-hosted, linux, ARM64, postgrestd_ci]
+    runs-on: [self-hosted, linux, ARM64, postgrestd_ci, launch_template_id__lt-0a56ee65c272f154e]
     # needs: spin_up_aarch64_instances # Dont run this until 'spin_up_aarch64_instances' has completed
 
-    strategy:
-      matrix:
-        versions: [1,2,3]
+    # strategy:
+    #   matrix:
+    #     versions: [1,2,3]
 
     steps:
 
