@@ -95,54 +95,55 @@ jobs:
 
     strategy:
       matrix:
-        versions: [1,2,3]
+        version: [1,2,3]
 
     steps:
 
     - name: Temporary Fake Fail
+      if: ${{ matrix.version == 1 || matrix.version == 3 }}
       run: exit 1
 
-    - uses: actions/checkout@v3
-      with:
-        submodules: 'recursive'
+    # - uses: actions/checkout@v3
+    #   with:
+    #     submodules: 'recursive'
 
-    - name: Show kernel info
-      run: uname -a
+    # - name: Show kernel info
+    #   run: uname -a
 
-    - name: Print env
-      run: env
+    # - name: Print env
+    #   run: env
 
-    - name: Install system dependencies
-      run: |
-        sudo apt-get -y update && sudo apt-get install -y \
-          clang-11 \
-          llvm-11 \
-          clang \
-          gcc \
-          make \
-          build-essential \
-          libz-dev \
-          zlib1g-dev \
-          strace \
-          libssl-dev \
-          pkg-config \
-          crossbuild-essential-amd64
+    # - name: Install system dependencies
+    #   run: |
+    #     sudo apt-get -y update && sudo apt-get install -y \
+    #       clang-11 \
+    #       llvm-11 \
+    #       clang \
+    #       gcc \
+    #       make \
+    #       build-essential \
+    #       libz-dev \
+    #       zlib1g-dev \
+    #       strace \
+    #       libssl-dev \
+    #       pkg-config \
+    #       crossbuild-essential-amd64
 
-    - name: Install rust
-      run: |
-        export RUSTUP_HOME="$HOME/.rustup"
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-        source "$HOME/.cargo/env"
-        echo "RUSTUP_HOME=$HOME/.rustup" >> $GITHUB_ENV
-        echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
-        cargo --version
+    # - name: Install rust
+    #   run: |
+    #     export RUSTUP_HOME="$HOME/.rustup"
+    #     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    #     source "$HOME/.cargo/env"
+    #     echo "RUSTUP_HOME=$HOME/.rustup" >> $GITHUB_ENV
+    #     echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
+    #     cargo --version
 
-    - name: Build postgrestd for both aarch64 and x86_64
-      run: ./run install
-      env:
-        CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: x86_64-linux-gnu-gcc
-        CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER: x86_64-linux-gnu-gcc
-        CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER: cc
+    # - name: Build postgrestd for both aarch64 and x86_64
+    #   run: ./run install
+    #   env:
+    #     CARGO_TARGET_X86_64_POSTGRES_LINUX_GNU_LINKER: x86_64-linux-gnu-gcc
+    #     CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER: x86_64-linux-gnu-gcc
+    #     CARGO_TARGET_AARCH64_POSTGRES_LINUX_GNU_LINKER: cc
 
   # test_macos:
   #   name: "macos build & test (experimental)"
