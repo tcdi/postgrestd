@@ -99,9 +99,9 @@ jobs:
 
     steps:
 
-    - name: Temporary Fake Fail
-      if: ${{ matrix.version == 1 || matrix.version == 3 }}
-      run: exit 1
+    # - name: Temporary Fake Fail
+    #   if: ${{ matrix.version == 1 || matrix.version == 3 }}
+    #   run: exit 1
 
     # - uses: actions/checkout@v3
     #   with:
