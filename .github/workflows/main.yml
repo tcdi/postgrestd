@@ -1,20 +1,11 @@
 name: Build and test Postgres Standard Library
 
-# on:
-#   push:
-#     branches:
-#       - 1.67.1
-#   pull_request:
-#     branches:
-#       - 1.67.1
 on:
   push:
     branches:
-      - on-demand-aarch64-runners
       - 1.67.1
   pull_request:
     branches:
-      - on-demand-aarch64-runners
       - 1.67.1
 
 jobs:
