@@ -50,7 +50,7 @@ jobs:
 
   test_aarch64:
     name: "aarch64 (cross: x86_64) build & test"
-    runs-on: [self-hosted, linux, ARM64, postgrestd]
+    runs-on: [self-hosted, linux, ARM64, launch_template_id__lt-0a56ee65c272f154e]
 
     steps:
     - uses: actions/checkout@v3
