@@ -96,8 +96,3 @@ pub fn abort_internal() -> ! {
     // these anyway, and aborting is at least a clean exit.
     core::intrinsics::abort();
 }
-
-pub fn hashmap_random_keys() -> (u64, u64) {
-    // FIXME: Can this lead to HashDOS?
-    (1, 2)
-}

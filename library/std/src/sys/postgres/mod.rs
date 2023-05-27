@@ -19,12 +19,15 @@ pub mod os_str;
 pub mod path;
 pub mod pipe;
 pub mod process;
+pub mod rand;
 pub mod stdio;
 pub mod thread;
 #[cfg(target_thread_local)]
 pub mod thread_local_dtor;
 pub mod thread_local_key;
 pub mod time;
+
+pub use rand::hashmap_random_keys;
 
 mod common;
 pub use common::*;

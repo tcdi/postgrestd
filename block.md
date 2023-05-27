@@ -3,6 +3,8 @@ Rust `std` modules with impacted functionality:
     - Technically available but in practice unusable (it is almost entirely `unsafe`)
 - backtrace - Support for capturing a stack backtrace of an OS thread
     - Backtraces are currently always disabled.
+- collection - Collection types.
+    - `HashMap`'s default hasher (specifically `RandomState`) may panic if it fails to access randomness for its seed (note that this is the case for the `HashMap` in normal `std` as well). Users who hit this may be better off using `BTreeMap` instead.
 - env - Inspection and manipulation of the process’s environment.
     - May panic, return `Err("unsupported operation")`, or have arbitrary results.
 - fs - Filesystem manipulation operations.
@@ -43,7 +45,6 @@ Other Rust `std` modules:
 - cell - Shareable mutable containers.
 - clone - The Clone trait for types that cannot be ‘implicitly copied’.
 - cmp - Utilities for comparing and ordering values.
-- collection - Collection types.
 - convert - Traits for conversions between types.
 - default - The Default trait for types with a default value.
 - error - Interfaces for working with Errors.
