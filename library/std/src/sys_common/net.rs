@@ -14,14 +14,14 @@ use crate::sys::net::{cvt, cvt_gai, cvt_r, init, wrlen_t, Socket};
 use crate::sys_common::{AsInner, FromInner, IntoInner};
 use crate::time::Duration;
 
-use libc::{c_int, c_void};
+use crate::ffi::{c_int, c_void};
 
 cfg_if::cfg_if! {
     if #[cfg(any(
         target_os = "dragonfly", target_os = "freebsd",
         target_os = "ios", target_os = "macos", target_os = "watchos",
         target_os = "openbsd", target_os = "netbsd", target_os = "illumos",
-        target_os = "solaris", target_os = "haiku", target_os = "l4re"))] {
+        target_os = "solaris", target_os = "haiku", target_os = "l4re", target_os = "nto"))] {
         use crate::sys::net::netc::IPV6_JOIN_GROUP as IPV6_ADD_MEMBERSHIP;
         use crate::sys::net::netc::IPV6_LEAVE_GROUP as IPV6_DROP_MEMBERSHIP;
     } else {
@@ -35,7 +35,7 @@ cfg_if::cfg_if! {
         target_os = "linux", target_os = "android",
         target_os = "dragonfly", target_os = "freebsd",
         target_os = "openbsd", target_os = "netbsd",
-        target_os = "haiku"))] {
+        target_os = "haiku", target_os = "nto"))] {
         use libc::MSG_NOSIGNAL;
     } else {
         const MSG_NOSIGNAL: c_int = 0x0;
@@ -46,8 +46,9 @@ cfg_if::cfg_if! {
     if #[cfg(any(
         target_os = "dragonfly", target_os = "freebsd",
         target_os = "openbsd", target_os = "netbsd",
-        target_os = "solaris", target_os = "illumos"))] {
-        use libc::c_uchar;
+        target_os = "solaris", target_os = "illumos",
+        target_os = "nto"))] {
+        use crate::ffi::c_uchar;
         type IpV4MultiCastType = c_uchar;
     } else {
         type IpV4MultiCastType = c_int;
@@ -127,8 +128,8 @@ fn to_ipv6mr_interface(value: u32) -> c_int {
 }
 
 #[cfg(not(target_os = "android"))]
-fn to_ipv6mr_interface(value: u32) -> libc::c_uint {
-    value as libc::c_uint
+fn to_ipv6mr_interface(value: u32) -> crate::ffi::c_uint {
+    value as crate::ffi::c_uint
 }
 
 ////////////////////////////////////////////////////////////////////////////////

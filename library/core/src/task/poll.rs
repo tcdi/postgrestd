@@ -9,7 +9,7 @@ use crate::task::Ready;
 /// scheduled to receive a wakeup instead.
 #[must_use = "this `Poll` may be a `Pending` variant, which should be handled"]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
-#[cfg_attr(not(bootstrap), lang = "Poll")]
+#[lang = "Poll"]
 #[stable(feature = "futures_api", since = "1.36.0")]
 pub enum Poll<T> {
     /// Represents that a value is immediately ready.
@@ -45,6 +45,7 @@ impl<T> Poll<T> {
     /// assert_eq!(poll_some_len, Poll::Ready(13));
     /// ```
     #[stable(feature = "futures_api", since = "1.36.0")]
+    #[inline]
     pub fn map<U, F>(self, f: F) -> Poll<U>
     where
         F: FnOnce(T) -> U,
@@ -144,6 +145,7 @@ impl<T, E> Poll<Result<T, E>> {
     /// assert_eq!(squared, Poll::Ready(Ok(144)));
     /// ```
     #[stable(feature = "futures_api", since = "1.36.0")]
+    #[inline]
     pub fn map_ok<U, F>(self, f: F) -> Poll<Result<U, E>>
     where
         F: FnOnce(T) -> U,
@@ -171,6 +173,7 @@ impl<T, E> Poll<Result<T, E>> {
     /// assert_eq!(res, Poll::Ready(Err(0)));
     /// ```
     #[stable(feature = "futures_api", since = "1.36.0")]
+    #[inline]
     pub fn map_err<U, F>(self, f: F) -> Poll<Result<T, U>>
     where
         F: FnOnce(E) -> U,
@@ -199,6 +202,7 @@ impl<T, E> Poll<Option<Result<T, E>>> {
     /// assert_eq!(squared, Poll::Ready(Some(Ok(144))));
     /// ```
     #[stable(feature = "poll_map", since = "1.51.0")]
+    #[inline]
     pub fn map_ok<U, F>(self, f: F) -> Poll<Option<Result<U, E>>>
     where
         F: FnOnce(T) -> U,
@@ -228,6 +232,7 @@ impl<T, E> Poll<Option<Result<T, E>>> {
     /// assert_eq!(res, Poll::Ready(Some(Err(0))));
     /// ```
     #[stable(feature = "poll_map", since = "1.51.0")]
+    #[inline]
     pub fn map_err<U, F>(self, f: F) -> Poll<Option<Result<T, U>>>
     where
         F: FnOnce(E) -> U,

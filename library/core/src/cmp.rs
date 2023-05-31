@@ -22,10 +22,10 @@
 
 #![stable(feature = "rust1", since = "1.0.0")]
 
-use crate::const_closure::ConstFnMutClosure;
+mod bytewise;
+pub(crate) use bytewise::BytewiseEq;
+
 use crate::marker::Destruct;
-#[cfg(bootstrap)]
-use crate::marker::StructuralPartialEq;
 
 use self::Ordering::*;
 
@@ -333,7 +333,7 @@ pub struct AssertParamIsEq<T: Eq + ?Sized> {
 /// assert_eq!(Ordering::Greater, result);
 /// ```
 #[derive(Clone, Copy, Eq, Debug, Hash)]
-#[cfg_attr(not(bootstrap), derive_const(PartialOrd, Ord, PartialEq))]
+#[derive_const(PartialOrd, Ord, PartialEq)]
 #[stable(feature = "rust1", since = "1.0.0")]
 #[repr(i8)]
 pub enum Ordering {
@@ -800,9 +800,6 @@ pub trait Ord: Eq + PartialOrd<Self> {
         Self: Sized,
         Self: ~const Destruct,
     {
-        // HACK(fee1-dead): go back to using `self.max_by(other, Ord::cmp)`
-        // when trait methods are allowed to be used when a const closure is
-        // expected.
         match self.cmp(&other) {
             Ordering::Less | Ordering::Equal => other,
             Ordering::Greater => self,
@@ -827,9 +824,6 @@ pub trait Ord: Eq + PartialOrd<Self> {
         Self: Sized,
         Self: ~const Destruct,
     {
-        // HACK(fee1-dead): go back to using `self.min_by(other, Ord::cmp)`
-        // when trait methods are allowed to be used when a const closure is
-        // expected.
         match self.cmp(&other) {
             Ordering::Less | Ordering::Equal => self,
             Ordering::Greater => other,
@@ -877,40 +871,6 @@ pub trait Ord: Eq + PartialOrd<Self> {
 #[allow_internal_unstable(core_intrinsics)]
 pub macro Ord($item:item) {
     /* compiler built-in */
-}
-
-#[stable(feature = "rust1", since = "1.0.0")]
-#[cfg(bootstrap)]
-impl StructuralPartialEq for Ordering {}
-
-#[stable(feature = "rust1", since = "1.0.0")]
-#[rustc_const_unstable(feature = "const_cmp", issue = "92391")]
-#[cfg(bootstrap)]
-impl const PartialEq for Ordering {
-    #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        (*self as i32).eq(&(*other as i32))
-    }
-}
-
-#[stable(feature = "rust1", since = "1.0.0")]
-#[rustc_const_unstable(feature = "const_cmp", issue = "92391")]
-#[cfg(bootstrap)]
-impl const Ord for Ordering {
-    #[inline]
-    fn cmp(&self, other: &Ordering) -> Ordering {
-        (*self as i32).cmp(&(*other as i32))
-    }
-}
-
-#[stable(feature = "rust1", since = "1.0.0")]
-#[rustc_const_unstable(feature = "const_cmp", issue = "92391")]
-#[cfg(bootstrap)]
-impl const PartialOrd for Ordering {
-    #[inline]
-    fn partial_cmp(&self, other: &Ordering) -> Option<Ordering> {
-        (*self as i32).partial_cmp(&(*other as i32))
-    }
 }
 
 /// Trait for types that form a [partial order](https://en.wikipedia.org/wiki/Partial_order).
@@ -1230,12 +1190,7 @@ pub const fn min<T: ~const Ord + ~const Destruct>(v1: T, v2: T) -> T {
 #[inline]
 #[must_use]
 #[stable(feature = "cmp_min_max_by", since = "1.53.0")]
-#[rustc_const_unstable(feature = "const_cmp", issue = "92391")]
-pub const fn min_by<T, F: ~const FnOnce(&T, &T) -> Ordering>(v1: T, v2: T, compare: F) -> T
-where
-    T: ~const Destruct,
-    F: ~const Destruct,
-{
+pub fn min_by<T, F: FnOnce(&T, &T) -> Ordering>(v1: T, v2: T, compare: F) -> T {
     match compare(&v1, &v2) {
         Ordering::Less | Ordering::Equal => v1,
         Ordering::Greater => v2,
@@ -1257,24 +1212,8 @@ where
 #[inline]
 #[must_use]
 #[stable(feature = "cmp_min_max_by", since = "1.53.0")]
-#[rustc_const_unstable(feature = "const_cmp", issue = "92391")]
-pub const fn min_by_key<T, F: ~const FnMut(&T) -> K, K: ~const Ord>(v1: T, v2: T, mut f: F) -> T
-where
-    T: ~const Destruct,
-    F: ~const Destruct,
-    K: ~const Destruct,
-{
-    const fn imp<T, F: ~const FnMut(&T) -> K, K: ~const Ord>(
-        f: &mut F,
-        (v1, v2): (&T, &T),
-    ) -> Ordering
-    where
-        T: ~const Destruct,
-        K: ~const Destruct,
-    {
-        f(v1).cmp(&f(v2))
-    }
-    min_by(v1, v2, ConstFnMutClosure::new(&mut f, imp))
+pub fn min_by_key<T, F: FnMut(&T) -> K, K: Ord>(v1: T, v2: T, mut f: F) -> T {
+    min_by(v1, v2, |v1, v2| f(v1).cmp(&f(v2)))
 }
 
 /// Compares and returns the maximum of two values.
@@ -1315,12 +1254,7 @@ pub const fn max<T: ~const Ord + ~const Destruct>(v1: T, v2: T) -> T {
 #[inline]
 #[must_use]
 #[stable(feature = "cmp_min_max_by", since = "1.53.0")]
-#[rustc_const_unstable(feature = "const_cmp", issue = "92391")]
-pub const fn max_by<T, F: ~const FnOnce(&T, &T) -> Ordering>(v1: T, v2: T, compare: F) -> T
-where
-    T: ~const Destruct,
-    F: ~const Destruct,
-{
+pub fn max_by<T, F: FnOnce(&T, &T) -> Ordering>(v1: T, v2: T, compare: F) -> T {
     match compare(&v1, &v2) {
         Ordering::Less | Ordering::Equal => v2,
         Ordering::Greater => v1,
@@ -1342,24 +1276,8 @@ where
 #[inline]
 #[must_use]
 #[stable(feature = "cmp_min_max_by", since = "1.53.0")]
-#[rustc_const_unstable(feature = "const_cmp", issue = "92391")]
-pub const fn max_by_key<T, F: ~const FnMut(&T) -> K, K: ~const Ord>(v1: T, v2: T, mut f: F) -> T
-where
-    T: ~const Destruct,
-    F: ~const Destruct,
-    K: ~const Destruct,
-{
-    const fn imp<T, F: ~const FnMut(&T) -> K, K: ~const Ord>(
-        f: &mut F,
-        (v1, v2): (&T, &T),
-    ) -> Ordering
-    where
-        T: ~const Destruct,
-        K: ~const Destruct,
-    {
-        f(v1).cmp(&f(v2))
-    }
-    max_by(v1, v2, ConstFnMutClosure::new(&mut f, imp))
+pub fn max_by_key<T, F: FnMut(&T) -> K, K: Ord>(v1: T, v2: T, mut f: F) -> T {
+    max_by(v1, v2, |v1, v2| f(v1).cmp(&f(v2)))
 }
 
 // Implementation of PartialEq, Eq, PartialOrd and Ord for primitive types
@@ -1560,9 +1478,10 @@ mod impls {
         }
     }
     #[stable(feature = "rust1", since = "1.0.0")]
-    impl<A: ?Sized, B: ?Sized> PartialOrd<&B> for &A
+    #[rustc_const_unstable(feature = "const_cmp", issue = "92391")]
+    impl<A: ?Sized, B: ?Sized> const PartialOrd<&B> for &A
     where
-        A: PartialOrd<B>,
+        A: ~const PartialOrd<B>,
     {
         #[inline]
         fn partial_cmp(&self, other: &&B) -> Option<Ordering> {

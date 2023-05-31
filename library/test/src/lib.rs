@@ -116,7 +116,7 @@ pub fn test_main(args: &[String], tests: Vec<TestDescAndFn>, options: Option<Opt
     } else {
         if !opts.nocapture {
             // If we encounter a non-unwinding panic, flush any captured output from the current test,
-            // and stop  capturing output to ensure that the non-unwinding panic message is visible.
+            // and stop capturing output to ensure that the non-unwinding panic message is visible.
             // We also acquire the locks for both output streams to prevent output from other threads
             // from interleaving with the panic message or appearing after it.
             let builtin_panic_hook = panic::take_hook();
@@ -204,7 +204,7 @@ fn make_owned_test(test: &&TestDescAndFn) -> TestDescAndFn {
 }
 
 /// Invoked when unit tests terminate. Returns `Result::Err` if the test is
-/// considered a failure. By default, invokes `report() and checks for a `0`
+/// considered a failure. By default, invokes `report()` and checks for a `0`
 /// result.
 pub fn assert_test_result<T: Termination>(result: T) -> Result<(), String> {
     let code = result.report().to_i32();
@@ -213,8 +213,7 @@ pub fn assert_test_result<T: Termination>(result: T) -> Result<(), String> {
     } else {
         Err(format!(
             "the test returned a termination value with a non-zero status code \
-             ({}) which indicates a failure",
-            code
+             ({code}) which indicates a failure"
         ))
     }
 }
@@ -750,7 +749,7 @@ fn spawn_test_subprocess(
         })() {
             Ok(r) => r,
             Err(e) => {
-                write!(&mut test_output, "Unexpected error: {}", e).unwrap();
+                write!(&mut test_output, "Unexpected error: {e}").unwrap();
                 TrFailed
             }
         };
@@ -790,7 +789,7 @@ fn run_test_in_spawned_subprocess(
         }
     });
     let record_result2 = record_result.clone();
-    panic::set_hook(Box::new(move |info| record_result2(Some(&info))));
+    panic::set_hook(Box::new(move |info| record_result2(Some(info))));
     if let Err(message) = testfn() {
         panic!("{}", message);
     }

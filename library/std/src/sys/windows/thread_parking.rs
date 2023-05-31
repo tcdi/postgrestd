@@ -97,7 +97,7 @@ const NOTIFIED: i8 = 1;
 impl Parker {
     /// Construct the Windows parker. The UNIX parker implementation
     /// requires this to happen in-place.
-    pub unsafe fn new(parker: *mut Parker) {
+    pub unsafe fn new_in_place(parker: *mut Parker) {
         parker.write(Self { state: AtomicI8::new(EMPTY) });
     }
 
@@ -221,7 +221,7 @@ impl Parker {
 
 fn keyed_event_handle() -> c::HANDLE {
     const INVALID: c::HANDLE = ptr::invalid_mut(!0);
-    static HANDLE: AtomicPtr<libc::c_void> = AtomicPtr::new(INVALID);
+    static HANDLE: AtomicPtr<crate::ffi::c_void> = AtomicPtr::new(INVALID);
     match HANDLE.load(Relaxed) {
         INVALID => {
             let mut handle = c::INVALID_HANDLE_VALUE;

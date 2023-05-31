@@ -6,6 +6,10 @@ use crate::pin::Pin;
 use crate::ptr::addr_of_mut;
 use crate::sync::atomic::AtomicUsize;
 use crate::sync::atomic::Ordering::SeqCst;
+#[cfg(not(target_os = "nto"))]
+use crate::sys::time::TIMESPEC_MAX;
+#[cfg(target_os = "nto")]
+use crate::sys::time::TIMESPEC_MAX_CAPPED;
 use crate::time::Duration;
 
 const EMPTY: usize = 0;
@@ -32,9 +36,6 @@ unsafe fn wait(cond: *mut libc::pthread_cond_t, lock: *mut libc::pthread_mutex_t
     debug_assert_eq!(r, 0);
 }
 
-const TIMESPEC_MAX: libc::timespec =
-    libc::timespec { tv_sec: <libc::time_t>::MAX, tv_nsec: 1_000_000_000 - 1 };
-
 unsafe fn wait_timeout(
     cond: *mut libc::pthread_cond_t,
     lock: *mut libc::pthread_mutex_t,
@@ -46,7 +47,8 @@ unsafe fn wait_timeout(
         target_os = "macos",
         target_os = "ios",
         target_os = "watchos",
-        target_os = "espidf"
+        target_os = "espidf",
+        target_os = "horizon",
     ))]
     let (now, dur) = {
         use crate::cmp::min;
@@ -72,7 +74,8 @@ unsafe fn wait_timeout(
         target_os = "macos",
         target_os = "ios",
         target_os = "watchos",
-        target_os = "espidf"
+        target_os = "espidf",
+        target_os = "horizon",
     )))]
     let (now, dur) = {
         use crate::sys::time::Timespec;
@@ -80,8 +83,14 @@ unsafe fn wait_timeout(
         (Timespec::now(libc::CLOCK_MONOTONIC), dur)
     };
 
+    #[cfg(not(target_os = "nto"))]
     let timeout =
         now.checked_add_duration(&dur).and_then(|t| t.to_timespec()).unwrap_or(TIMESPEC_MAX);
+    #[cfg(target_os = "nto")]
+    let timeout = now
+        .checked_add_duration(&dur)
+        .and_then(|t| t.to_timespec_capped())
+        .unwrap_or(TIMESPEC_MAX_CAPPED);
     let r = libc::pthread_cond_timedwait(cond, lock, &timeout);
     debug_assert!(r == libc::ETIMEDOUT || r == 0);
 }
@@ -99,7 +108,7 @@ impl Parker {
     ///
     /// # Safety
     /// The constructed parker must never be moved.
-    pub unsafe fn new(parker: *mut Parker) {
+    pub unsafe fn new_in_place(parker: *mut Parker) {
         // Use the default mutex implementation to allow for simpler initialization.
         // This could lead to undefined behaviour when deadlocking. This is avoided
         // by not deadlocking. Note in particular the unlocking operation before any

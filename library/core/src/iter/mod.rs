@@ -278,6 +278,7 @@
 //!
 //! ```
 //! # #![allow(unused_must_use)]
+//! # #![cfg_attr(not(bootstrap), allow(map_unit_fn))]
 //! let v = vec![1, 2, 3, 4, 5];
 //! v.iter().map(|x| println!("{x}"));
 //! ```
@@ -362,15 +363,13 @@ macro_rules! impl_fold_via_try_fold {
     };
     (@internal $fold:ident -> $try_fold:ident) => {
         #[inline]
-        fn $fold<AAA, FFF>(mut self, init: AAA, mut fold: FFF) -> AAA
+        fn $fold<AAA, FFF>(mut self, init: AAA, fold: FFF) -> AAA
         where
             FFF: FnMut(AAA, Self::Item) -> AAA,
         {
-            use crate::const_closure::ConstFnMutClosure;
             use crate::ops::NeverShortCircuit;
 
-            let fold = ConstFnMutClosure::new(&mut fold, NeverShortCircuit::wrap_mut_2_imp);
-            self.$try_fold(init, fold).0
+            self.$try_fold(init, NeverShortCircuit::wrap_mut_2(fold)).0
         }
     };
 }
@@ -452,6 +451,7 @@ pub use self::adapters::{
 pub use self::adapters::{Intersperse, IntersperseWith};
 
 pub(crate) use self::adapters::try_process;
+pub(crate) use self::traits::UncheckedIterator;
 
 mod adapters;
 mod range;

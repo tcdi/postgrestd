@@ -10,8 +10,7 @@ use crate::{cmp, fmt, hash, mem, num};
 /// are likely not to be supported by actual allocators and linkers.
 #[unstable(feature = "ptr_alignment_type", issue = "102070")]
 #[derive(Copy, Clone, Eq)]
-#[cfg_attr(bootstrap, derive(PartialEq))]
-#[cfg_attr(not(bootstrap), derive_const(PartialEq))]
+#[derive_const(PartialEq)]
 #[repr(transparent)]
 pub struct Alignment(AlignmentEnum);
 
@@ -42,7 +41,7 @@ impl Alignment {
     /// Returns the alignment for a type.
     ///
     /// This provides the same numerical value as [`mem::align_of`],
-    /// but in an `Alignment` instead of a `usize.
+    /// but in an `Alignment` instead of a `usize`.
     #[unstable(feature = "ptr_alignment_type", issue = "102070")]
     #[inline]
     pub const fn of<T>() -> Self {
@@ -203,8 +202,7 @@ type AlignmentEnum = AlignmentEnum32;
 type AlignmentEnum = AlignmentEnum64;
 
 #[derive(Copy, Clone, Eq)]
-#[cfg_attr(bootstrap, derive(PartialEq))]
-#[cfg_attr(not(bootstrap), derive_const(PartialEq))]
+#[derive_const(PartialEq)]
 #[repr(u16)]
 enum AlignmentEnum16 {
     _Align1Shl0 = 1 << 0,
@@ -226,8 +224,7 @@ enum AlignmentEnum16 {
 }
 
 #[derive(Copy, Clone, Eq)]
-#[cfg_attr(bootstrap, derive(PartialEq))]
-#[cfg_attr(not(bootstrap), derive_const(PartialEq))]
+#[derive_const(PartialEq)]
 #[repr(u32)]
 enum AlignmentEnum32 {
     _Align1Shl0 = 1 << 0,
@@ -265,8 +262,7 @@ enum AlignmentEnum32 {
 }
 
 #[derive(Copy, Clone, Eq)]
-#[cfg_attr(bootstrap, derive(PartialEq))]
-#[cfg_attr(not(bootstrap), derive_const(PartialEq))]
+#[derive_const(PartialEq)]
 #[repr(u64)]
 enum AlignmentEnum64 {
     _Align1Shl0 = 1 << 0,

@@ -15,8 +15,8 @@ cfg-if = { version = "1.0", features = ['rustc-dep-of-std'] }
 panic_unwind = { path = "../panic_unwind", optional = true }
 panic_abort = { path = "../panic_abort" }
 core = { path = "../core" }
-libc = { version = "0.2.138", default-features = false, features = ['rustc-dep-of-std'] }
-compiler_builtins = { version = "0.1.82" }
+libc = { version = "0.2.139", default-features = false, features = ['rustc-dep-of-std'] }
+compiler_builtins = { version = "0.1.87" }
 profiler_builtins = { path = "../profiler_builtins", optional = true }
 unwind = { path = "../unwind" }
 hashbrown = { version = "0.12", default-features = false, features = ['rustc-dep-of-std'] }
@@ -33,7 +33,8 @@ default-features = false
 features = ['read_core', 'elf', 'macho', 'pe', 'unaligned', 'archive']
 
 [dev-dependencies]
-rand = "0.7"
+rand = { version = "0.8.5", default-features = false, features = ["alloc"] }
+rand_xorshift = "0.3.0"
 
 [target.'cfg(any(all(target_family = "wasm", not(target_os = "emscripten")), all(target_vendor = "fortanix", target_env = "sgx")))'.dependencies]
 dlmalloc = { version = "0.2.3", features = ['rustc-dep-of-std'] }
@@ -42,7 +43,7 @@ dlmalloc = { version = "0.2.3", features = ['rustc-dep-of-std'] }
 fortanix-sgx-abi = { version = "0.5.0", features = ['rustc-dep-of-std'] }
 
 [target.'cfg(target_os = "hermit")'.dependencies]
-hermit-abi = { version = "0.2.6", features = ['rustc-dep-of-std'] }
+hermit-abi = { version = "0.3.0", features = ['rustc-dep-of-std'] }
 
 [target.wasm32-wasi.dependencies]
 wasi = { version = "0.11.0", features = ['rustc-dep-of-std'], default-features = false }

@@ -38,18 +38,18 @@
 //!    which do not trigger a panic can be assured that this function is never
 //!    called. The `lang` attribute is called `eh_personality`.
 
-// Since libcore defines many fundamental lang items, all tests live in a
-// separate crate, libcoretest, to avoid bizarre issues.
+// Since core defines many fundamental lang items, all tests live in a
+// separate crate, libcoretest (library/core/tests), to avoid bizarre issues.
 //
 // Here we explicitly #[cfg]-out this whole crate when testing. If we don't do
 // this, both the generated test artifact and the linked libtest (which
-// transitively includes libcore) will both define the same set of lang items,
+// transitively includes core) will both define the same set of lang items,
 // and this will cause the E0152 "found duplicate lang item" error. See
 // discussion in #50466 for details.
 //
 // This cfg won't affect doc tests.
 #![cfg(not(test))]
-// To run libcore tests without x.py without ending up with two copies of libcore, Miri needs to be
+// To run core tests without x.py without ending up with two copies of core, Miri needs to be
 // able to "empty" this crate. See <https://github.com/rust-lang/miri-test-libstd/issues/4>.
 // rustc itself never sets the feature, so this line has no affect there.
 #![cfg(any(not(feature = "miri-test-libstd"), test, doctest))]
@@ -95,6 +95,7 @@
 #![warn(missing_docs)]
 #![allow(explicit_outlives_requirements)]
 #![allow(incomplete_features)]
+#![cfg_attr(not(bootstrap), warn(multiple_supertrait_upcastable))]
 //
 // Library features:
 #![feature(const_align_offset)]
@@ -123,6 +124,8 @@
 #![feature(const_inherent_unchecked_arith)]
 #![feature(const_int_unchecked_arith)]
 #![feature(const_intrinsic_forget)]
+#![feature(const_ipv4)]
+#![feature(const_ipv6)]
 #![feature(const_likely)]
 #![feature(const_maybe_uninit_uninit_array)]
 #![feature(const_maybe_uninit_as_mut_ptr)]
@@ -133,6 +136,7 @@
 #![feature(const_option)]
 #![feature(const_option_ext)]
 #![feature(const_pin)]
+#![feature(const_pointer_byte_offsets)]
 #![feature(const_pointer_is_aligned)]
 #![feature(const_ptr_sub_ptr)]
 #![feature(const_replace)]
@@ -158,6 +162,7 @@
 #![feature(const_unsafecell_get_mut)]
 #![feature(const_waker)]
 #![feature(core_panic)]
+#![feature(char_indices_offset)]
 #![feature(duration_consts_float)]
 #![feature(maybe_uninit_uninit_array)]
 #![feature(ptr_alignment_type)]
@@ -166,6 +171,8 @@
 #![feature(slice_ptr_get)]
 #![feature(slice_split_at_unchecked)]
 #![feature(str_internals)]
+#![feature(str_split_remainder)]
+#![feature(str_split_inclusive_remainder)]
 #![feature(strict_provenance)]
 #![feature(utf16_extra)]
 #![feature(utf16_extra_const)]
@@ -175,6 +182,7 @@
 #![feature(const_slice_index)]
 #![feature(const_is_char_boundary)]
 #![feature(const_cstr_methods)]
+#![feature(ip)]
 #![feature(is_ascii_octdigit)]
 //
 // Language features:
@@ -188,13 +196,15 @@
 #![feature(cfg_sanitize)]
 #![feature(cfg_target_has_atomic)]
 #![feature(cfg_target_has_atomic_equal_alignment)]
+#![feature(const_closures)]
 #![feature(const_fn_floating_point_arithmetic)]
+#![feature(const_for)]
 #![feature(const_mut_refs)]
 #![feature(const_precise_live_drops)]
 #![feature(const_refs_to_cell)]
 #![feature(decl_macro)]
 #![feature(deprecated_suggestion)]
-#![cfg_attr(not(bootstrap), feature(derive_const))]
+#![feature(derive_const)]
 #![feature(doc_cfg)]
 #![feature(doc_notable_trait)]
 #![feature(rustdoc_internals)]
@@ -231,12 +241,11 @@
 #![feature(unsized_fn_params)]
 #![feature(asm_const)]
 #![feature(const_transmute_copy)]
+#![cfg_attr(not(bootstrap), feature(multiple_supertrait_upcastable))]
 //
 // Target features:
 #![feature(arm_target_feature)]
 #![feature(avx512_target_feature)]
-#![feature(cmpxchg16b_target_feature)]
-#![feature(f16c_target_feature)]
 #![feature(hexagon_target_feature)]
 #![feature(mips_target_feature)]
 #![feature(powerpc_target_feature)]
@@ -245,6 +254,7 @@
 #![feature(sse4a_target_feature)]
 #![feature(tbm_target_feature)]
 #![feature(wasm_target_feature)]
+#![cfg_attr(bootstrap, feature(cmpxchg16b_target_feature))]
 
 // allow using `core::` in intra-doc links
 #[allow(unused_extern_crates)]
@@ -309,7 +319,7 @@ pub mod f64;
 #[macro_use]
 pub mod num;
 
-/* The libcore prelude, not as all-encompassing as the libstd prelude */
+/* The core prelude, not as all-encompassing as the std prelude */
 
 pub mod prelude;
 
@@ -343,6 +353,7 @@ pub mod cell;
 pub mod char;
 pub mod ffi;
 pub mod iter;
+pub mod net;
 pub mod option;
 pub mod panic;
 pub mod panicking;
@@ -371,17 +382,15 @@ mod bool;
 mod tuple;
 mod unit;
 
-mod const_closure;
-
 #[stable(feature = "core_primitive", since = "1.43.0")]
 pub mod primitive;
 
-// Pull in the `core_arch` crate directly into libcore. The contents of
+// Pull in the `core_arch` crate directly into core. The contents of
 // `core_arch` are in a different repository: rust-lang/stdarch.
 //
-// `core_arch` depends on libcore, but the contents of this module are
+// `core_arch` depends on core, but the contents of this module are
 // set up in such a way that directly pulling it here works such that the
-// crate uses the this crate as its libcore.
+// crate uses the this crate as its core.
 #[path = "../../stdarch/crates/core_arch/src/mod.rs"]
 #[allow(
     missing_docs,
@@ -400,12 +409,12 @@ mod core_arch;
 #[stable(feature = "simd_arch", since = "1.27.0")]
 pub mod arch;
 
-// Pull in the `core_simd` crate directly into libcore. The contents of
+// Pull in the `core_simd` crate directly into core. The contents of
 // `core_simd` are in a different repository: rust-lang/portable-simd.
 //
-// `core_simd` depends on libcore, but the contents of this module are
+// `core_simd` depends on core, but the contents of this module are
 // set up in such a way that directly pulling it here works such that the
-// crate uses this crate as its libcore.
+// crate uses this crate as its core.
 #[path = "../../portable-simd/crates/core_simd/src/mod.rs"]
 #[allow(missing_debug_implementations, dead_code, unsafe_op_in_unsafe_fn, unused_unsafe)]
 #[allow(rustdoc::bare_urls)]

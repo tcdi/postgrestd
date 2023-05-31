@@ -1,6 +1,6 @@
 use super::*;
 use crate::cmp::Ordering::{self, Equal, Greater, Less};
-use crate::intrinsics;
+use crate::intrinsics::{self, const_eval_select};
 use crate::slice::{self, SliceIndex};
 
 impl<T: ?Sized> *mut T {
@@ -22,8 +22,6 @@ impl<T: ?Sized> *mut T {
     ///
     /// # Examples
     ///
-    /// Basic usage:
-    ///
     /// ```
     /// let mut s = [1, 2, 3];
     /// let ptr: *mut u32 = s.as_mut_ptr();
@@ -33,12 +31,23 @@ impl<T: ?Sized> *mut T {
     #[rustc_const_unstable(feature = "const_ptr_is_null", issue = "74939")]
     #[inline]
     pub const fn is_null(self) -> bool {
-        // Compare via a cast to a thin pointer, so fat pointers are only
-        // considering their "data" part for null-ness.
-        match (self as *mut u8).guaranteed_eq(null_mut()) {
-            None => false,
-            Some(res) => res,
+        #[inline]
+        fn runtime_impl(ptr: *mut u8) -> bool {
+            ptr.addr() == 0
         }
+
+        #[inline]
+        const fn const_impl(ptr: *mut u8) -> bool {
+            // Compare via a cast to a thin pointer, so fat pointers are only
+            // considering their "data" part for null-ness.
+            match (ptr).guaranteed_eq(null_mut()) {
+                None => false,
+                Some(res) => res,
+            }
+        }
+
+        // SAFETY: The two versions are equivalent at runtime.
+        unsafe { const_eval_select((self as *mut u8,), const_impl, runtime_impl) }
     }
 
     /// Casts to a pointer of another type.
@@ -197,14 +206,11 @@ impl<T: ?Sized> *mut T {
     #[must_use]
     #[inline(always)]
     #[unstable(feature = "strict_provenance", issue = "95228")]
-    pub fn addr(self) -> usize
-    where
-        T: Sized,
-    {
+    pub fn addr(self) -> usize {
         // FIXME(strict_provenance_magic): I am magic and should be a compiler intrinsic.
         // SAFETY: Pointer-to-integer transmutes are valid (if you are okay with losing the
         // provenance).
-        unsafe { mem::transmute(self) }
+        unsafe { mem::transmute(self.cast::<()>()) }
     }
 
     /// Gets the "address" portion of the pointer, and 'exposes' the "provenance" part for future
@@ -234,12 +240,9 @@ impl<T: ?Sized> *mut T {
     #[must_use]
     #[inline(always)]
     #[unstable(feature = "strict_provenance", issue = "95228")]
-    pub fn expose_addr(self) -> usize
-    where
-        T: Sized,
-    {
+    pub fn expose_addr(self) -> usize {
         // FIXME(strict_provenance_magic): I am magic and should be a compiler intrinsic.
-        self as usize
+        self.cast::<()>() as usize
     }
 
     /// Creates a new pointer with the given address.
@@ -257,10 +260,7 @@ impl<T: ?Sized> *mut T {
     #[must_use]
     #[inline]
     #[unstable(feature = "strict_provenance", issue = "95228")]
-    pub fn with_addr(self, addr: usize) -> Self
-    where
-        T: Sized,
-    {
+    pub fn with_addr(self, addr: usize) -> Self {
         // FIXME(strict_provenance_magic): I am magic and should be a compiler intrinsic.
         //
         // In the mean-time, this operation is defined to be "as if" it was
@@ -283,10 +283,7 @@ impl<T: ?Sized> *mut T {
     #[must_use]
     #[inline]
     #[unstable(feature = "strict_provenance", issue = "95228")]
-    pub fn map_addr(self, f: impl FnOnce(usize) -> usize) -> Self
-    where
-        T: Sized,
-    {
+    pub fn map_addr(self, f: impl FnOnce(usize) -> usize) -> Self {
         self.with_addr(f(self.addr()))
     }
 
@@ -332,8 +329,6 @@ impl<T: ?Sized> *mut T {
     /// [the module documentation]: crate::ptr#safety
     ///
     /// # Examples
-    ///
-    /// Basic usage:
     ///
     /// ```
     /// let ptr: *mut u8 = &mut 10u8 as *mut u8;
@@ -397,8 +392,6 @@ impl<T: ?Sized> *mut T {
     ///
     /// # Examples
     ///
-    /// Basic usage:
-    ///
     /// ```
     /// #![feature(ptr_as_uninit)]
     ///
@@ -461,8 +454,6 @@ impl<T: ?Sized> *mut T {
     /// [allocated object]: crate::ptr#allocated-object
     ///
     /// # Examples
-    ///
-    /// Basic usage:
     ///
     /// ```
     /// let mut s = [1, 2, 3];
@@ -539,8 +530,6 @@ impl<T: ?Sized> *mut T {
     /// [allocated object]: crate::ptr#allocated-object
     ///
     /// # Examples
-    ///
-    /// Basic usage:
     ///
     /// ```
     /// // Iterate using a raw pointer in increments of two elements
@@ -660,8 +649,6 @@ impl<T: ?Sized> *mut T {
     /// [the module documentation]: crate::ptr#safety
     ///
     /// # Examples
-    ///
-    /// Basic usage:
     ///
     /// ```
     /// let mut s = [1, 2, 3];
@@ -905,7 +892,7 @@ impl<T: ?Sized> *mut T {
     /// This computes the same value that [`offset_from`](#method.offset_from)
     /// would compute, but with the added precondition that the offset is
     /// guaranteed to be non-negative.  This method is equivalent to
-    /// `usize::from(self.offset_from(origin)).unwrap_unchecked()`,
+    /// `usize::try_from(self.offset_from(origin)).unwrap_unchecked()`,
     /// but it provides slightly more information to the optimizer, which can
     /// sometimes allow it to optimize slightly better with some backends.
     ///
@@ -1011,8 +998,6 @@ impl<T: ?Sized> *mut T {
     ///
     /// # Examples
     ///
-    /// Basic usage:
-    ///
     /// ```
     /// let s: &str = "123";
     /// let ptr: *const u8 = s.as_ptr();
@@ -1096,8 +1081,6 @@ impl<T: ?Sized> *mut T {
     ///
     /// # Examples
     ///
-    /// Basic usage:
-    ///
     /// ```
     /// let s: &str = "123";
     ///
@@ -1110,7 +1093,7 @@ impl<T: ?Sized> *mut T {
     #[stable(feature = "pointer_methods", since = "1.26.0")]
     #[must_use = "returns a new pointer rather than modifying its argument"]
     #[rustc_const_stable(feature = "const_ptr_offset", since = "1.61.0")]
-    #[inline]
+    #[inline(always)]
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
     pub const unsafe fn sub(self, count: usize) -> Self
     where
@@ -1174,8 +1157,6 @@ impl<T: ?Sized> *mut T {
     /// [allocated object]: crate::ptr#allocated-object
     ///
     /// # Examples
-    ///
-    /// Basic usage:
     ///
     /// ```
     /// // Iterate using a raw pointer in increments of two elements
@@ -1255,8 +1236,6 @@ impl<T: ?Sized> *mut T {
     ///
     /// # Examples
     ///
-    /// Basic usage:
-    ///
     /// ```
     /// // Iterate using a raw pointer in increments of two elements (backwards)
     /// let data = [1u8, 2, 3, 4, 5];
@@ -1275,7 +1254,7 @@ impl<T: ?Sized> *mut T {
     #[stable(feature = "pointer_methods", since = "1.26.0")]
     #[must_use = "returns a new pointer rather than modifying its argument"]
     #[rustc_const_stable(feature = "const_ptr_offset", since = "1.61.0")]
-    #[inline]
+    #[inline(always)]
     pub const fn wrapping_sub(self, count: usize) -> Self
     where
         T: Sized,
@@ -1618,26 +1597,6 @@ impl<T: ?Sized> *mut T {
             panic!("align_offset: align is not a power-of-two");
         }
 
-        #[cfg(bootstrap)]
-        {
-            fn rt_impl<T>(p: *mut T, align: usize) -> usize {
-                // SAFETY: `align` has been checked to be a power of 2 above
-                unsafe { align_offset(p, align) }
-            }
-
-            const fn ctfe_impl<T>(_: *mut T, _: usize) -> usize {
-                usize::MAX
-            }
-
-            // SAFETY:
-            // It is permissible for `align_offset` to always return `usize::MAX`,
-            // algorithm correctness can not depend on `align_offset` returning non-max values.
-            //
-            // As such the behaviour can't change after replacing `align_offset` with `usize::MAX`, only performance can.
-            unsafe { intrinsics::const_eval_select((self, align), ctfe_impl, rt_impl) }
-        }
-
-        #[cfg(not(bootstrap))]
         {
             // SAFETY: `align` has been checked to be a power of 2 above
             unsafe { align_offset(self, align) }
@@ -1648,7 +1607,6 @@ impl<T: ?Sized> *mut T {
     ///
     /// # Examples
     ///
-    /// Basic usage:
     /// ```
     /// #![feature(pointer_is_aligned)]
     /// #![feature(pointer_byte_offsets)]
@@ -1674,8 +1632,7 @@ impl<T: ?Sized> *mut T {
     /// is never aligned if cast to a type with a stricter alignment than the reference's
     /// underlying allocation.
     ///
-    #[cfg_attr(bootstrap, doc = "```ignore")]
-    #[cfg_attr(not(bootstrap), doc = "```")]
+    /// ```
     /// #![feature(pointer_is_aligned)]
     /// #![feature(const_pointer_is_aligned)]
     /// #![feature(const_mut_refs)]
@@ -1702,8 +1659,7 @@ impl<T: ?Sized> *mut T {
     /// Due to this behavior, it is possible that a runtime pointer derived from a compiletime
     /// pointer is aligned, even if the compiletime pointer wasn't aligned.
     ///
-    #[cfg_attr(bootstrap, doc = "```ignore")]
-    #[cfg_attr(not(bootstrap), doc = "```")]
+    /// ```
     /// #![feature(pointer_is_aligned)]
     /// #![feature(const_pointer_is_aligned)]
     ///
@@ -1730,8 +1686,7 @@ impl<T: ?Sized> *mut T {
     /// If a pointer is created from a fixed address, this function behaves the same during
     /// runtime and compiletime.
     ///
-    #[cfg_attr(bootstrap, doc = "```ignore")]
-    #[cfg_attr(not(bootstrap), doc = "```")]
+    /// ```
     /// #![feature(pointer_is_aligned)]
     /// #![feature(const_pointer_is_aligned)]
     ///
@@ -1776,7 +1731,6 @@ impl<T: ?Sized> *mut T {
     ///
     /// # Examples
     ///
-    /// Basic usage:
     /// ```
     /// #![feature(pointer_is_aligned)]
     /// #![feature(pointer_byte_offsets)]
@@ -1807,8 +1761,7 @@ impl<T: ?Sized> *mut T {
     /// return `true` if the pointer is guaranteed to be aligned. This means that the pointer
     /// cannot be stricter aligned than the reference's underlying allocation.
     ///
-    #[cfg_attr(bootstrap, doc = "```ignore")]
-    #[cfg_attr(not(bootstrap), doc = "```")]
+    /// ```
     /// #![feature(pointer_is_aligned)]
     /// #![feature(const_pointer_is_aligned)]
     /// #![feature(const_mut_refs)]
@@ -1834,8 +1787,7 @@ impl<T: ?Sized> *mut T {
     /// Due to this behavior, it is possible that a runtime pointer derived from a compiletime
     /// pointer is aligned, even if the compiletime pointer wasn't aligned.
     ///
-    #[cfg_attr(bootstrap, doc = "```ignore")]
-    #[cfg_attr(not(bootstrap), doc = "```")]
+    /// ```
     /// #![feature(pointer_is_aligned)]
     /// #![feature(const_pointer_is_aligned)]
     ///
@@ -1860,8 +1812,7 @@ impl<T: ?Sized> *mut T {
     /// If a pointer is created from a fixed address, this function behaves the same during
     /// runtime and compiletime.
     ///
-    #[cfg_attr(bootstrap, doc = "```ignore")]
-    #[cfg_attr(not(bootstrap), doc = "```")]
+    /// ```
     /// #![feature(pointer_is_aligned)]
     /// #![feature(const_pointer_is_aligned)]
     ///
@@ -1885,11 +1836,22 @@ impl<T: ?Sized> *mut T {
             panic!("is_aligned_to: align is not a power-of-two");
         }
 
-        // We can't use the address of `self` in a `const fn`, so we use `align_offset` instead.
-        // The cast to `()` is used to
-        //   1. deal with fat pointers; and
-        //   2. ensure that `align_offset` doesn't actually try to compute an offset.
-        self.cast::<()>().align_offset(align) == 0
+        #[inline]
+        fn runtime_impl(ptr: *mut (), align: usize) -> bool {
+            ptr.addr() & (align - 1) == 0
+        }
+
+        #[inline]
+        const fn const_impl(ptr: *mut (), align: usize) -> bool {
+            // We can't use the address of `self` in a `const fn`, so we use `align_offset` instead.
+            // The cast to `()` is used to
+            //   1. deal with fat pointers; and
+            //   2. ensure that `align_offset` doesn't actually try to compute an offset.
+            ptr.align_offset(align) == 0
+        }
+
+        // SAFETY: The two versions are equivalent at runtime.
+        unsafe { const_eval_select((self.cast::<()>(), align), const_impl, runtime_impl) }
     }
 }
 

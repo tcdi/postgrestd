@@ -1,9 +1,8 @@
-//! These tests just check that the macros are available in libstd.
+//! These tests just check that the macros are available in std.
 
 #![cfg_attr(
     any(
         all(target_arch = "arm", any(target_os = "linux", target_os = "android")),
-        all(bootstrap, target_arch = "aarch64", any(target_os = "linux", target_os = "android")),
         all(target_arch = "powerpc", target_os = "linux"),
         all(target_arch = "powerpc64", target_os = "linux"),
     ),
@@ -121,16 +120,13 @@ fn x86_all() {
     println!("avx512dq: {:?}", is_x86_feature_detected!("avx512dq"));
     println!("avx512er: {:?}", is_x86_feature_detected!("avx512er"));
     println!("avx512f: {:?}", is_x86_feature_detected!("avx512f"));
-    println!("avx512gfni: {:?}", is_x86_feature_detected!("avx512gfni"));
     println!("avx512ifma: {:?}", is_x86_feature_detected!("avx512ifma"));
     println!("avx512pf: {:?}", is_x86_feature_detected!("avx512pf"));
-    println!("avx512vaes: {:?}", is_x86_feature_detected!("avx512vaes"));
     println!("avx512vbmi2: {:?}", is_x86_feature_detected!("avx512vbmi2"));
     println!("avx512vbmi: {:?}", is_x86_feature_detected!("avx512vbmi"));
     println!("avx512vl: {:?}", is_x86_feature_detected!("avx512vl"));
     println!("avx512vnni: {:?}", is_x86_feature_detected!("avx512vnni"));
     println!("avx512vp2intersect: {:?}", is_x86_feature_detected!("avx512vp2intersect"));
-    println!("avx512vpclmulqdq: {:?}", is_x86_feature_detected!("avx512vpclmulqdq"));
     println!("avx512vpopcntdq: {:?}", is_x86_feature_detected!("avx512vpopcntdq"));
     println!("avx: {:?}", is_x86_feature_detected!("avx"));
     println!("bmi1: {:?}", is_x86_feature_detected!("bmi1"));
@@ -139,6 +135,7 @@ fn x86_all() {
     println!("f16c: {:?}", is_x86_feature_detected!("f16c"));
     println!("fma: {:?}", is_x86_feature_detected!("fma"));
     println!("fxsr: {:?}", is_x86_feature_detected!("fxsr"));
+    println!("gfni: {:?}", is_x86_feature_detected!("gfni"));
     println!("lzcnt: {:?}", is_x86_feature_detected!("lzcnt"));
     //println!("movbe: {:?}", is_x86_feature_detected!("movbe")); // movbe is unsupported as a target feature
     println!("pclmulqdq: {:?}", is_x86_feature_detected!("pclmulqdq"));
@@ -155,6 +152,8 @@ fn x86_all() {
     println!("sse: {:?}", is_x86_feature_detected!("sse"));
     println!("ssse3: {:?}", is_x86_feature_detected!("ssse3"));
     println!("tbm: {:?}", is_x86_feature_detected!("tbm"));
+    println!("vaes: {:?}", is_x86_feature_detected!("vaes"));
+    println!("vpclmulqdq: {:?}", is_x86_feature_detected!("vpclmulqdq"));
     println!("xsave: {:?}", is_x86_feature_detected!("xsave"));
     println!("xsavec: {:?}", is_x86_feature_detected!("xsavec"));
     println!("xsaveopt: {:?}", is_x86_feature_detected!("xsaveopt"));

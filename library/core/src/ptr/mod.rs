@@ -516,6 +516,27 @@ pub const fn null<T: ?Sized + Thin>() -> *const T {
     from_raw_parts(invalid(0), ())
 }
 
+/// Creates a null mutable raw pointer.
+///
+/// # Examples
+///
+/// ```
+/// use std::ptr;
+///
+/// let p: *mut i32 = ptr::null_mut();
+/// assert!(p.is_null());
+/// ```
+#[inline(always)]
+#[must_use]
+#[stable(feature = "rust1", since = "1.0.0")]
+#[rustc_promotable]
+#[rustc_const_stable(feature = "const_ptr_null", since = "1.24.0")]
+#[rustc_allow_const_fn_unstable(ptr_metadata)]
+#[rustc_diagnostic_item = "ptr_null_mut"]
+pub const fn null_mut<T: ?Sized + Thin>() -> *mut T {
+    from_raw_parts_mut(invalid_mut(0), ())
+}
+
 /// Creates an invalid pointer with the given address.
 ///
 /// This is different from `addr as *const T`, which creates a pointer that picks up a previously
@@ -663,25 +684,26 @@ where
     addr as *mut T
 }
 
-/// Creates a null mutable raw pointer.
+/// Convert a reference to a raw pointer.
 ///
-/// # Examples
-///
-/// ```
-/// use std::ptr;
-///
-/// let p: *mut i32 = ptr::null_mut();
-/// assert!(p.is_null());
-/// ```
+/// This is equivalent to `r as *const T`, but is a bit safer since it will never silently change
+/// type or mutability, in particular if the code is refactored.
 #[inline(always)]
 #[must_use]
-#[stable(feature = "rust1", since = "1.0.0")]
-#[rustc_promotable]
-#[rustc_const_stable(feature = "const_ptr_null", since = "1.24.0")]
-#[rustc_allow_const_fn_unstable(ptr_metadata)]
-#[rustc_diagnostic_item = "ptr_null_mut"]
-pub const fn null_mut<T: ?Sized + Thin>() -> *mut T {
-    from_raw_parts_mut(invalid_mut(0), ())
+#[unstable(feature = "ptr_from_ref", issue = "106116")]
+pub fn from_ref<T: ?Sized>(r: &T) -> *const T {
+    r
+}
+
+/// Convert a mutable reference to a raw pointer.
+///
+/// This is equivalent to `r as *mut T`, but is a bit safer since it will never silently change
+/// type or mutability, in particular if the code is refactored.
+#[inline(always)]
+#[must_use]
+#[unstable(feature = "ptr_from_ref", issue = "106116")]
+pub fn from_mut<T: ?Sized>(r: &mut T) -> *mut T {
+    r
 }
 
 /// Forms a raw slice from a pointer and a length.
@@ -1679,7 +1701,7 @@ pub(crate) const unsafe fn align_offset<T: Sized>(p: *const T, a: usize) -> usiz
         // offset is not a multiple of `stride`, the input pointer was misaligned and no pointer
         // offset will be able to produce a `p` aligned to the specified `a`.
         //
-        // The naive `-p (mod a)` equation  inhibits LLVM's ability to select instructions
+        // The naive `-p (mod a)` equation inhibits LLVM's ability to select instructions
         // like `lea`. We compute `(round_up_to_next_alignment(p, a) - p)` instead. This
         // redistributes operations around the load-bearing, but pessimizing `and` instruction
         // sufficiently for LLVM to be able to utilize the various optimizations it knows about.

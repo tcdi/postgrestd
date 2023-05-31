@@ -20,10 +20,10 @@ use core::marker::Destruct;
 mod tests;
 
 extern "Rust" {
-    // These are the magic symbols to call the global allocator.  rustc generates
+    // These are the magic symbols to call the global allocator. rustc generates
     // them to call `__rg_alloc` etc. if there is a `#[global_allocator]` attribute
     // (the code expanding that attribute macro generates those functions), or to call
-    // the default implementations in libstd (`__rdl_alloc` etc. in `library/std/src/alloc.rs`)
+    // the default implementations in std (`__rdl_alloc` etc. in `library/std/src/alloc.rs`)
     // otherwise.
     // The rustc fork of LLVM 14 and earlier also special-cases these function names to be able to optimize them
     // like `malloc`, `realloc`, and `free`, respectively.
@@ -353,7 +353,7 @@ pub(crate) const unsafe fn box_free<T: ?Sized, A: ~const Allocator + ~const Dest
 
 #[cfg(not(no_global_oom_handling))]
 extern "Rust" {
-    // This is the magic symbol to call the global alloc error handler.  rustc generates
+    // This is the magic symbol to call the global alloc error handler. rustc generates
     // it to call `__rg_oom` if there is a `#[alloc_error_handler]`, or to call the
     // default implementations below (`__rdl_oom`) otherwise.
     fn __rust_alloc_error_handler(size: usize, align: usize) -> !;
@@ -402,20 +402,20 @@ pub mod __alloc_error_handler {
     // `#[alloc_error_handler]`.
     #[rustc_std_internal_symbol]
     pub unsafe fn __rdl_oom(size: usize, _align: usize) -> ! {
-        panic!("memory allocation of {size} bytes failed")
-    }
-
-    #[cfg(bootstrap)]
-    #[rustc_std_internal_symbol]
-    pub unsafe fn __rg_oom(size: usize, align: usize) -> ! {
-        use crate::alloc::Layout;
-
-        let layout = unsafe { Layout::from_size_align_unchecked(size, align) };
         extern "Rust" {
-            #[lang = "oom"]
-            fn oom_impl(layout: Layout) -> !;
+            // This symbol is emitted by rustc next to __rust_alloc_error_handler.
+            // Its value depends on the -Zoom={panic,abort} compiler option.
+            static __rust_alloc_error_handler_should_panic: u8;
         }
-        unsafe { oom_impl(layout) }
+
+        #[allow(unused_unsafe)]
+        if unsafe { __rust_alloc_error_handler_should_panic != 0 } {
+            panic!("memory allocation of {size} bytes failed")
+        } else {
+            core::panicking::panic_nounwind_fmt(format_args!(
+                "memory allocation of {size} bytes failed"
+            ))
+        }
     }
 }
 

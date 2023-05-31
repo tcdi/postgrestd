@@ -96,13 +96,16 @@ impl Default for Hook {
 
 static HOOK: RwLock<Hook> = RwLock::new(Hook::Default);
 
-/// Registers a custom panic hook, replacing any that was previously registered.
+/// Registers a custom panic hook, replacing the previously registered hook.
 ///
 /// The panic hook is invoked when a thread panics, but before the panic runtime
 /// is invoked. As such, the hook will run with both the aborting and unwinding
-/// runtimes. The default hook prints a message to standard error and generates
-/// a backtrace if requested, but this behavior can be customized with the
-/// `set_hook` and [`take_hook`] functions.
+/// runtimes.
+///
+/// The default hook, which is registered at startup, prints a message to standard error and
+/// generates a backtrace if requested. This behavior can be customized using the `set_hook` function.
+/// The current hook can be retrieved while reinstating the default hook with the [`take_hook`]
+/// function.
 ///
 /// [`take_hook`]: ./fn.take_hook.html
 ///
@@ -144,13 +147,14 @@ pub fn set_hook(hook: Box<dyn Fn(&PanicInfo<'_>) + 'static + Sync + Send>) {
     drop(old);
 }
 
-/// Unregisters the current panic hook, returning it.
+/// Unregisters the current panic hook and returns it, registering the default hook
+/// in its place.
 ///
 /// *See also the function [`set_hook`].*
 ///
 /// [`set_hook`]: ./fn.set_hook.html
 ///
-/// If no custom hook is registered, the default hook will be returned.
+/// If the default hook is registered it will be returned, but remain registered.
 ///
 /// # Panics
 ///
@@ -311,11 +315,11 @@ pub mod panic_count {
     // and after increase and decrease, but not necessarily during their execution.
     //
     // Additionally, the top bit of GLOBAL_PANIC_COUNT (GLOBAL_ALWAYS_ABORT_FLAG)
-    // records whether panic::always_abort() has been called.  This can only be
+    // records whether panic::always_abort() has been called. This can only be
     // set, never cleared.
     // panic::always_abort() is usually called to prevent memory allocations done by
     // the panic handling in the child created by `libc::fork`.
-    // Memory allocations performed in  a child created with `libc::fork` are undefined
+    // Memory allocations performed in a child created with `libc::fork` are undefined
     // behavior in most operating systems.
     // Accessing LOCAL_PANIC_COUNT in a child created by `libc::fork` would lead to a memory
     // allocation. Only GLOBAL_PANIC_COUNT can be accessed in this situation. This is
@@ -522,7 +526,7 @@ pub fn panicking() -> bool {
     !panic_count::count_is_zero()
 }
 
-/// Entry point of panics from the libcore crate (`panic_impl` lang item).
+/// Entry point of panics from the core crate (`panic_impl` lang item).
 #[cfg(not(test))]
 #[panic_handler]
 pub fn begin_panic_handler(info: &PanicInfo<'_>) -> ! {
@@ -704,7 +708,11 @@ fn rust_panic_with_hook(
         // have limited options. Currently our preference is to
         // just abort. In the future we may consider resuming
         // unwinding or otherwise exiting the thread cleanly.
-        rtprintpanic!("thread panicked while panicking. aborting.\n");
+        if !can_unwind {
+            rtprintpanic!("thread caused non-unwinding panic. aborting.\n");
+        } else {
+            rtprintpanic!("thread panicked while panicking. aborting.\n");
+        }
         crate::sys::abort_internal();
     }
 

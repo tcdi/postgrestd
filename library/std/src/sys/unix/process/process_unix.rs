@@ -18,6 +18,7 @@ use crate::sys::weak::raw_syscall;
     target_os = "freebsd",
     all(target_os = "linux", target_env = "gnu"),
     all(target_os = "linux", target_env = "musl"),
+    target_os = "nto",
 ))]
 use crate::sys::weak::weak;
 
@@ -29,6 +30,15 @@ use libc::{c_int, pid_t};
 
 #[cfg(not(any(target_os = "vxworks", target_os = "l4re")))]
 use libc::{gid_t, uid_t};
+
+cfg_if::cfg_if! {
+    if #[cfg(all(target_os = "nto", target_env = "nto71"))] {
+        use crate::thread;
+        use libc::{c_char, posix_spawn_file_actions_t, posix_spawnattr_t};
+        // arbitrary number of tries:
+        const MAX_FORKSPAWN_TRIES: u32 = 4;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Command
@@ -66,14 +76,15 @@ impl Command {
         //
         // Note that as soon as we're done with the fork there's no need to hold
         // a lock any more because the parent won't do anything and the child is
-        // in its own process. Thus the parent drops the lock guard while the child
-        // forgets it to avoid unlocking it on a new thread, which would be invalid.
+        // in its own process. Thus the parent drops the lock guard immediately.
+        // The child calls `mem::forget` to leak the lock, which is crucial because
+        // releasing a lock is not async-signal-safe.
         let env_lock = sys::os::env_read_lock();
         let (pid, pidfd) = unsafe { self.do_fork()? };
 
         if pid == 0 {
             crate::panic::always_abort();
-            mem::forget(env_lock);
+            mem::forget(env_lock); // avoid non-async-signal-safe unlocking
             drop(input);
             let Err(err) = unsafe { self.do_exec(theirs, envp.as_ref()) };
             let errno = err.raw_os_error().unwrap_or(libc::EINVAL) as u32;
@@ -132,11 +143,36 @@ impl Command {
         }
     }
 
+    pub fn output(&mut self) -> io::Result<(ExitStatus, Vec<u8>, Vec<u8>)> {
+        let (proc, pipes) = self.spawn(Stdio::MakePipe, false)?;
+        crate::sys_common::process::wait_with_output(proc, pipes)
+    }
+
     // Attempts to fork the process. If successful, returns Ok((0, -1))
     // in the child, and Ok((child_pid, -1)) in the parent.
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(any(target_os = "linux", all(target_os = "nto", target_env = "nto71"))))]
     unsafe fn do_fork(&mut self) -> Result<(pid_t, pid_t), io::Error> {
         cvt(libc::fork()).map(|res| (res, -1))
+    }
+
+    // On QNX Neutrino, fork can fail with EBADF in case "another thread might have opened
+    // or closed a file descriptor while the fork() was occurring".
+    // Documentation says "... or try calling fork() again". This is what we do here.
+    // See also https://www.qnx.com/developers/docs/7.1/#com.qnx.doc.neutrino.lib_ref/topic/f/fork.html
+    #[cfg(all(target_os = "nto", target_env = "nto71"))]
+    unsafe fn do_fork(&mut self) -> Result<(pid_t, pid_t), io::Error> {
+        use crate::sys::os::errno;
+
+        let mut tries_left = MAX_FORKSPAWN_TRIES;
+        loop {
+            let r = libc::fork();
+            if r == -1 as libc::pid_t && tries_left > 0 && errno() as libc::c_int == libc::EBADF {
+                thread::yield_now();
+                tries_left -= 1;
+            } else {
+                return cvt(r).map(|res| (res, -1));
+            }
+        }
     }
 
     // Attempts to fork the process. If successful, returns Ok((0, -1))
@@ -383,6 +419,7 @@ impl Command {
         target_os = "freebsd",
         all(target_os = "linux", target_env = "gnu"),
         all(target_os = "linux", target_env = "musl"),
+        target_os = "nto",
     )))]
     fn posix_spawn(
         &mut self,
@@ -399,6 +436,7 @@ impl Command {
         target_os = "freebsd",
         all(target_os = "linux", target_env = "gnu"),
         all(target_os = "linux", target_env = "musl"),
+        target_os = "nto",
     ))]
     fn posix_spawn(
         &mut self,
@@ -427,6 +465,34 @@ impl Command {
                 }
             } else {
                 return Ok(None);
+            }
+        }
+
+        // On QNX Neutrino, posix_spawnp can fail with EBADF in case "another thread might have opened
+        // or closed a file descriptor while the posix_spawn() was occurring".
+        // Documentation says "... or try calling posix_spawn() again". This is what we do here.
+        // See also http://www.qnx.com/developers/docs/7.1/#com.qnx.doc.neutrino.lib_ref/topic/p/posix_spawn.html
+        #[cfg(all(target_os = "nto", target_env = "nto71"))]
+        unsafe fn retrying_libc_posix_spawnp(
+            pid: *mut pid_t,
+            file: *const c_char,
+            file_actions: *const posix_spawn_file_actions_t,
+            attrp: *const posix_spawnattr_t,
+            argv: *const *mut c_char,
+            envp: *const *mut c_char,
+        ) -> i32 {
+            let mut tries_left = MAX_FORKSPAWN_TRIES;
+            loop {
+                match libc::posix_spawnp(pid, file, file_actions, attrp, argv, envp) {
+                    libc::EBADF if tries_left > 0 => {
+                        thread::yield_now();
+                        tries_left -= 1;
+                        continue;
+                    }
+                    r => {
+                        return r;
+                    }
+                }
             }
         }
 
@@ -549,7 +615,12 @@ impl Command {
             // Make sure we synchronize access to the global `environ` resource
             let _env_lock = sys::os::env_read_lock();
             let envp = envp.map(|c| c.as_ptr()).unwrap_or_else(|| *sys::os::environ() as *const _);
-            cvt_nz(libc::posix_spawnp(
+
+            #[cfg(not(target_os = "nto"))]
+            let spawn_fn = libc::posix_spawnp;
+            #[cfg(target_os = "nto")]
+            let spawn_fn = retrying_libc_posix_spawnp;
+            cvt_nz(spawn_fn(
                 &mut p.pid,
                 self.get_program_cstr().as_ptr(),
                 file_actions.0.as_ptr(),
@@ -660,11 +731,11 @@ impl ExitStatus {
     }
 
     pub fn exit_ok(&self) -> Result<(), ExitStatusError> {
-        // This assumes that WIFEXITED(status) && WEXITSTATUS==0 corresponds to status==0.  This is
+        // This assumes that WIFEXITED(status) && WEXITSTATUS==0 corresponds to status==0. This is
         // true on all actual versions of Unix, is widely assumed, and is specified in SuS
-        // https://pubs.opengroup.org/onlinepubs/9699919799/functions/wait.html .  If it is not
+        // https://pubs.opengroup.org/onlinepubs/9699919799/functions/wait.html. If it is not
         // true for a platform pretending to be Unix, the tests (our doctests, and also
-        // procsss_unix/tests.rs) will spot it.  `ExitStatusError::code` assumes this too.
+        // procsss_unix/tests.rs) will spot it. `ExitStatusError::code` assumes this too.
         match NonZero_c_int::try_from(self.0) {
             /* was nonzero */ Ok(failure) => Err(ExitStatusError(failure)),
             /* was zero, couldn't convert */ Err(_) => Ok(()),
@@ -740,6 +811,8 @@ fn signal_string(signal: i32) -> &'static str {
         libc::SIGWINCH => " (SIGWINCH)",
         #[cfg(not(target_os = "haiku"))]
         libc::SIGIO => " (SIGIO)",
+        #[cfg(target_os = "haiku")]
+        libc::SIGPOLL => " (SIGPOLL)",
         libc::SIGSYS => " (SIGSYS)",
         // For information on Linux signals, run `man 7 signal`
         #[cfg(all(
@@ -752,7 +825,7 @@ fn signal_string(signal: i32) -> &'static str {
             )
         ))]
         libc::SIGSTKFLT => " (SIGSTKFLT)",
-        #[cfg(target_os = "linux")]
+        #[cfg(any(target_os = "linux", target_os = "nto"))]
         libc::SIGPWR => " (SIGPWR)",
         #[cfg(any(
             target_os = "macos",
@@ -761,7 +834,8 @@ fn signal_string(signal: i32) -> &'static str {
             target_os = "freebsd",
             target_os = "netbsd",
             target_os = "openbsd",
-            target_os = "dragonfly"
+            target_os = "dragonfly",
+            target_os = "nto",
         ))]
         libc::SIGEMT => " (SIGEMT)",
         #[cfg(any(

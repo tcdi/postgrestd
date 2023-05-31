@@ -48,7 +48,6 @@
 #![feature(is_sorted)]
 #![feature(layout_for_ptr)]
 #![feature(pattern)]
-#![feature(pin_macro)]
 #![feature(sort_internals)]
 #![feature(slice_take)]
 #![feature(slice_from_ptr_range)]
@@ -67,6 +66,8 @@
 #![feature(try_trait_v2)]
 #![feature(slice_internals)]
 #![feature(slice_partition_dedup)]
+#![feature(ip)]
+#![feature(ip_in_core)]
 #![feature(iter_advance_by)]
 #![feature(iter_array_chunks)]
 #![feature(iter_collect_into)]
@@ -78,6 +79,9 @@
 #![feature(iter_repeat_n)]
 #![feature(iterator_try_collect)]
 #![feature(iterator_try_reduce)]
+#![feature(const_ip)]
+#![feature(const_ipv4)]
+#![feature(const_ipv6)]
 #![feature(const_mut_refs)]
 #![feature(const_pin)]
 #![feature(const_waker)]
@@ -136,6 +140,7 @@ mod lazy;
 mod macros;
 mod manually_drop;
 mod mem;
+mod net;
 mod nonzero;
 mod num;
 mod ops;
@@ -155,3 +160,16 @@ mod time;
 mod tuple;
 mod unicode;
 mod waker;
+
+/// Copied from `std::test_helpers::test_rng`, see that function for rationale.
+#[track_caller]
+#[allow(dead_code)] // Not used in all configurations.
+pub(crate) fn test_rng() -> rand_xorshift::XorShiftRng {
+    use core::hash::{BuildHasher, Hash, Hasher};
+    let mut hasher = std::collections::hash_map::RandomState::new().build_hasher();
+    core::panic::Location::caller().hash(&mut hasher);
+    let hc64 = hasher.finish();
+    let seed_vec = hc64.to_le_bytes().into_iter().chain(0u8..8).collect::<Vec<u8>>();
+    let seed: [u8; 16] = seed_vec.as_slice().try_into().unwrap();
+    rand::SeedableRng::from_seed(seed)
+}

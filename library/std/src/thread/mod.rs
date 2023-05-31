@@ -124,8 +124,10 @@
 //!
 //! ## Stack size
 //!
-//! The default stack size is platform-dependent and subject to change. Currently it is 2MB on all
-//! Tier-1 platforms. There are two ways to manually specify the stack size for spawned threads:
+//! The default stack size is platform-dependent and subject to change.
+//! Currently, it is 2 MiB on all Tier-1 platforms.
+//!
+//! There are two ways to manually specify the stack size for spawned threads:
 //!
 //! * Build the thread with [`Builder`] and pass the desired stack size to [`Builder::stack_size`].
 //! * Set the `RUST_MIN_STACK` environment variable to an integer representing the desired stack
@@ -173,9 +175,15 @@ use crate::sync::Arc;
 use crate::sys::thread as imp;
 use crate::sys_common::thread;
 use crate::sys_common::thread_info;
-use crate::sys_common::thread_parker::Parker;
+use crate::sys_common::thread_parking::Parker;
 use crate::sys_common::{AsInner, IntoInner};
 use crate::time::Duration;
+
+#[stable(feature = "scoped_threads", since = "1.63.0")]
+mod scoped;
+
+#[stable(feature = "scoped_threads", since = "1.63.0")]
+pub use scoped::{scope, Scope, ScopedJoinHandle};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Thread-local storage
@@ -183,12 +191,6 @@ use crate::time::Duration;
 
 #[macro_use]
 mod local;
-
-#[stable(feature = "scoped_threads", since = "1.63.0")]
-mod scoped;
-
-#[stable(feature = "scoped_threads", since = "1.63.0")]
-pub use scoped::{scope, Scope, ScopedJoinHandle};
 
 #[stable(feature = "rust1", since = "1.0.0")]
 pub use self::local::{AccessError, LocalKey};
@@ -209,7 +211,6 @@ pub use self::local::{AccessError, LocalKey};
 ))]
 #[doc(hidden)]
 pub use self::local::fast::Key as __FastLocalKeyInner;
-
 // when building for tests, use real std's type
 #[unstable(feature = "libstd_thread_internals", issue = "none")]
 #[cfg(test)]
@@ -220,12 +221,21 @@ pub use self::local::fast::Key as __FastLocalKeyInner;
 pub use realstd::thread::__FastLocalKeyInner;
 
 #[unstable(feature = "libstd_thread_internals", issue = "none")]
+#[cfg(not(test))]
 #[cfg(all(
     not(target_thread_local),
     not(all(target_family = "wasm", not(target_feature = "atomics"))),
 ))]
 #[doc(hidden)]
 pub use self::local::os::Key as __OsLocalKeyInner;
+// when building for tests, use real std's type
+#[unstable(feature = "libstd_thread_internals", issue = "none")]
+#[cfg(test)]
+#[cfg(all(
+    not(target_thread_local),
+    not(all(target_family = "wasm", not(target_feature = "atomics"))),
+))]
+pub use realstd::thread::__OsLocalKeyInner;
 
 #[unstable(feature = "libstd_thread_internals", issue = "none")]
 #[cfg(all(target_family = "wasm", not(target_feature = "atomics")))]
@@ -1216,7 +1226,7 @@ impl Thread {
             let ptr = Arc::get_mut_unchecked(&mut arc).as_mut_ptr();
             addr_of_mut!((*ptr).name).write(name);
             addr_of_mut!((*ptr).id).write(ThreadId::new());
-            Parker::new(addr_of_mut!((*ptr).parker));
+            Parker::new_in_place(addr_of_mut!((*ptr).parker));
             Pin::new_unchecked(arc.assume_init())
         };
 

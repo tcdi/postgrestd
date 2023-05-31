@@ -267,7 +267,7 @@ impl linux_ext::addr::SocketAddrExt for SocketAddr {
         }
     }
 
-    fn from_abstract_name<N>(name: &N) -> crate::io::Result<Self>
+    fn from_abstract_name<N>(name: N) -> crate::io::Result<Self>
     where
         N: AsRef<[u8]>,
     {
