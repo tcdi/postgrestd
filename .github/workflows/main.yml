@@ -108,7 +108,7 @@ jobs:
         export RUSTUP_HOME="$HOME/.rustup"
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         source "$HOME/.cargo/env"
-        rustup toolchain install 1.67.1
+        rustup toolchain install 1.69.0
         cargo --version
 
     - name: Print env
