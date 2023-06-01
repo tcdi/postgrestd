@@ -62,6 +62,10 @@ impl TcpStream {
         self.0
     }
 
+    pub fn read_buf(&self, buf: crate::io::BorrowedCursor<'_>) -> io::Result<()> {
+        self.0
+    }
+
     pub fn read_vectored(&self, _: &mut [IoSliceMut<'_>]) -> io::Result<usize> {
         self.0
     }

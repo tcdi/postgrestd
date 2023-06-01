@@ -28,6 +28,10 @@ impl AnonPipe {
         unsupported()
     }
 
+    pub fn read_buf(&self, buf: crate::io::BorrowedCursor<'_>) -> io::Result<()> {
+        unsupported()
+    }
+
     pub fn is_read_vectored(&self) -> bool {
         false
     }
