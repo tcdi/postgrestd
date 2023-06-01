@@ -21,7 +21,7 @@ cfg_if::cfg_if! {
     )))] {
         mod id;
         pub use id::Parker;
-    } else if #[cfg(any(windows, target_family = "unix", not(target_family = "postgres")))] {
+    } else if #[cfg(all(any(windows, target_family = "unix"), not(target_family = "postgres")))] {
         pub use crate::sys::thread_parking::Parker;
     } else {
         mod generic;

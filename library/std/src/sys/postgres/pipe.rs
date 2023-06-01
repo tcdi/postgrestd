@@ -20,6 +20,10 @@ impl AnonPipe {
         unsupported()
     }
 
+    pub fn read_to_end(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        unsupported()
+    }
+
     pub fn read_vectored(&self, bufs: &mut [IoSliceMut<'_>]) -> io::Result<usize> {
         unsupported()
     }

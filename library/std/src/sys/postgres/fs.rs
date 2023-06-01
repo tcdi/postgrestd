@@ -260,6 +260,10 @@ impl File {
         unsupported()
     }
 
+    pub fn read_vectored_at(&self, bufs: &mut [IoSliceMut<'_>], offset: u64) -> io::Result<usize> {
+        unsupported()
+    }
+
     pub fn is_read_vectored(&self) -> bool {
         false
     }
@@ -273,6 +277,10 @@ impl File {
     }
 
     pub fn write_vectored(&self, _bufs: &[IoSlice<'_>]) -> io::Result<usize> {
+        unsupported()
+    }
+
+    pub fn write_vectored_at(&self, bufs: &[IoSlice<'_>], offset: u64) -> io::Result<usize> {
         unsupported()
     }
 
