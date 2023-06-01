@@ -6,13 +6,13 @@ Setup required (If this isn't where you put these, substitute paths as necessary
 - `~/work/rust` should be a checkout of rust (e.g. <https://github.com/rust-lang/rust>). Do not use a checkout that has the normal git hooks for rust-lang/rust set up, otherwise this process will fail.
 
 Then, the rough steps are as follows:
-1. `cd ~/work/postgrestd && git checkout -b rust-$NEWVERSION`
+1. `cd ~/work/postgrestd && git remote update && git checkout rust-$OLDVERSION && git checkout -b rust-$NEWVERSION`
 2. `cd ~/work/rust`
-   1. `git checkout $NEWVERSION` (check out the tag for the new version)
-   2. `./x.py build` (do enough of a build to fully setup the repo and submodules. You can kill this once that part is complete)
+   1. `git remote update && git checkout $NEWVERSION` (check out the tag for the new version)
+   2. `./x.py build` (do enough of a build to fully setup the repo and submodules. You can kill this once that part is complete, and it's probably fine if this fails to compile)
    3. `git subtree push -P library ~/work/postgrestd "$NEWVERSION-library"` (push the subtree. This will take 1h-2h, so find something else to do while it runs)
 3. `cd ~/work/postgrestd`
-   1. `git subtree pull -P library . "1.69.0-library"`
+   1. `git subtree pull -P library . "$NEWVERSION-library"`
    2. Resolve merge conflicts.
    3. Push and fix issues.
    4. Audit the new stdlib APIs and internals for changes and make sure nothing new is added that we should not have exposed from PL/Rust. There's no real guide to how to do that, though, just go through the changes and use your best judgement. (Note: This is usually very time consuming)
