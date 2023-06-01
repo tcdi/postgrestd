@@ -91,7 +91,6 @@ impl UnixListener {
     /// # Examples
     ///
     /// ```no_run
-    /// #![feature(unix_socket_abstract)]
     /// use std::os::unix::net::{UnixListener};
     ///
     /// fn main() -> std::io::Result<()> {
@@ -108,7 +107,7 @@ impl UnixListener {
     ///     Ok(())
     /// }
     /// ```
-    #[unstable(feature = "unix_socket_abstract", issue = "85410")]
+    #[stable(feature = "unix_socket_abstract", since = "1.70.0")]
     pub fn bind_addr(socket_addr: &SocketAddr) -> io::Result<UnixListener> {
         super::bail_if_postgres!();
         unsafe {

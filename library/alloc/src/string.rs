@@ -45,9 +45,9 @@
 use core::error::Error;
 use core::fmt;
 use core::hash;
-use core::iter::FusedIterator;
 #[cfg(not(no_global_oom_handling))]
-use core::iter::{from_fn, FromIterator};
+use core::iter::from_fn;
+use core::iter::FusedIterator;
 #[cfg(not(no_global_oom_handling))]
 use core::ops::Add;
 #[cfg(not(no_global_oom_handling))]
@@ -359,7 +359,7 @@ use crate::vec::Vec;
 /// [Deref]: core::ops::Deref "ops::Deref"
 /// [`Deref`]: core::ops::Deref "ops::Deref"
 /// [`as_str()`]: String::as_str
-#[derive(PartialOrd, Eq, Ord)]
+#[derive(PartialEq, PartialOrd, Eq, Ord)]
 #[stable(feature = "rust1", since = "1.0.0")]
 #[cfg_attr(not(test), lang = "String")]
 pub struct String {
@@ -2204,14 +2204,6 @@ impl<'a, 'b> Pattern<'a> for &'b String {
     #[inline]
     fn strip_suffix_of(self, haystack: &'a str) -> Option<&'a str> {
         self[..].strip_suffix_of(haystack)
-    }
-}
-
-#[stable(feature = "rust1", since = "1.0.0")]
-impl PartialEq for String {
-    #[inline]
-    fn eq(&self, other: &String) -> bool {
-        PartialEq::eq(&self[..], &other[..])
     }
 }
 

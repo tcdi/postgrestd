@@ -201,7 +201,7 @@ macro_rules! impl_is_terminal {
         #[unstable(feature = "sealed", issue = "none")]
         impl crate::sealed::Sealed for $t {}
 
-        #[unstable(feature = "is_terminal", issue = "98070")]
+        #[stable(feature = "is_terminal", since = "1.70.0")]
         impl crate::io::IsTerminal for $t {
             #[inline]
             fn is_terminal(&self) -> bool {
@@ -268,7 +268,7 @@ impl AsFd for OwnedFd {
     #[inline]
     fn as_fd(&self) -> BorrowedFd<'_> {
         // Safety: `OwnedFd` and `BorrowedFd` have the same validity
-        // invariants, and the `BorrowdFd` is bounded by the lifetime
+        // invariants, and the `BorrowedFd` is bounded by the lifetime
         // of `&self`.
         unsafe { BorrowedFd::borrow_raw(self.as_raw_fd()) }
     }

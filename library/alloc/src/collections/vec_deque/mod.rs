@@ -10,7 +10,7 @@
 use core::cmp::{self, Ordering};
 use core::fmt;
 use core::hash::{Hash, Hasher};
-use core::iter::{repeat_n, repeat_with, ByRefSized, FromIterator};
+use core::iter::{repeat_n, repeat_with, ByRefSized};
 use core::mem::{ManuallyDrop, SizedTypeProperties};
 use core::ops::{Index, IndexMut, Range, RangeBounds};
 use core::ptr;
@@ -1156,7 +1156,7 @@ impl<T, A: Allocator> VecDeque<T, A> {
     #[inline]
     #[stable(feature = "deque_extras_15", since = "1.5.0")]
     pub fn as_slices(&self) -> (&[T], &[T]) {
-        let (a_range, b_range) = self.slice_ranges(..);
+        let (a_range, b_range) = self.slice_ranges(.., self.len);
         // SAFETY: `slice_ranges` always returns valid ranges into
         // the physical buffer.
         unsafe { (&*self.buffer_range(a_range), &*self.buffer_range(b_range)) }
@@ -1190,7 +1190,7 @@ impl<T, A: Allocator> VecDeque<T, A> {
     #[inline]
     #[stable(feature = "deque_extras_15", since = "1.5.0")]
     pub fn as_mut_slices(&mut self) -> (&mut [T], &mut [T]) {
-        let (a_range, b_range) = self.slice_ranges(..);
+        let (a_range, b_range) = self.slice_ranges(.., self.len);
         // SAFETY: `slice_ranges` always returns valid ranges into
         // the physical buffer.
         unsafe { (&mut *self.buffer_range(a_range), &mut *self.buffer_range(b_range)) }
@@ -1232,19 +1232,28 @@ impl<T, A: Allocator> VecDeque<T, A> {
 
     /// Given a range into the logical buffer of the deque, this function
     /// return two ranges into the physical buffer that correspond to
-    /// the given range.
-    fn slice_ranges<R>(&self, range: R) -> (Range<usize>, Range<usize>)
+    /// the given range. The `len` parameter should usually just be `self.len`;
+    /// the reason it's passed explicitly is that if the deque is wrapped in
+    /// a `Drain`, then `self.len` is not actually the length of the deque.
+    ///
+    /// # Safety
+    ///
+    /// This function is always safe to call. For the resulting ranges to be valid
+    /// ranges into the physical buffer, the caller must ensure that the result of
+    /// calling `slice::range(range, ..len)` represents a valid range into the
+    /// logical buffer, and that all elements in that range are initialized.
+    fn slice_ranges<R>(&self, range: R, len: usize) -> (Range<usize>, Range<usize>)
     where
         R: RangeBounds<usize>,
     {
-        let Range { start, end } = slice::range(range, ..self.len);
+        let Range { start, end } = slice::range(range, ..len);
         let len = end - start;
 
         if len == 0 {
             (0..0, 0..0)
         } else {
-            // `slice::range` guarantees that `start <= end <= self.len`.
-            // because `len != 0`, we know that `start < end`, so `start < self.len`
+            // `slice::range` guarantees that `start <= end <= len`.
+            // because `len != 0`, we know that `start < end`, so `start < len`
             // and the indexing is valid.
             let wrapped_start = self.to_physical_idx(start);
 
@@ -1290,7 +1299,7 @@ impl<T, A: Allocator> VecDeque<T, A> {
     where
         R: RangeBounds<usize>,
     {
-        let (a_range, b_range) = self.slice_ranges(range);
+        let (a_range, b_range) = self.slice_ranges(range, self.len);
         // SAFETY: The ranges returned by `slice_ranges`
         // are valid ranges into the physical buffer, so
         // it's ok to pass them to `buffer_range` and
@@ -1330,7 +1339,7 @@ impl<T, A: Allocator> VecDeque<T, A> {
     where
         R: RangeBounds<usize>,
     {
-        let (a_range, b_range) = self.slice_ranges(range);
+        let (a_range, b_range) = self.slice_ranges(range, self.len);
         // SAFETY: The ranges returned by `slice_ranges`
         // are valid ranges into the physical buffer, so
         // it's ok to pass them to `buffer_range` and
@@ -2385,7 +2394,8 @@ impl<T, A: Allocator> VecDeque<T, A> {
     }
 
     /// Binary searches this `VecDeque` for a given element.
-    /// This behaves similarly to [`contains`] if this `VecDeque` is sorted.
+    /// If the `VecDeque` is not sorted, the returned result is unspecified and
+    /// meaningless.
     ///
     /// If the value is found then [`Result::Ok`] is returned, containing the
     /// index of the matching element. If there are multiple matches, then any
@@ -2395,7 +2405,6 @@ impl<T, A: Allocator> VecDeque<T, A> {
     ///
     /// See also [`binary_search_by`], [`binary_search_by_key`], and [`partition_point`].
     ///
-    /// [`contains`]: VecDeque::contains
     /// [`binary_search_by`]: VecDeque::binary_search_by
     /// [`binary_search_by_key`]: VecDeque::binary_search_by_key
     /// [`partition_point`]: VecDeque::partition_point
@@ -2441,12 +2450,13 @@ impl<T, A: Allocator> VecDeque<T, A> {
     }
 
     /// Binary searches this `VecDeque` with a comparator function.
-    /// This behaves similarly to [`contains`] if this `VecDeque` is sorted.
     ///
-    /// The comparator function should implement an order consistent
-    /// with the sort order of the deque, returning an order code that
-    /// indicates whether its argument is `Less`, `Equal` or `Greater`
-    /// than the desired target.
+    /// The comparator function should return an order code that indicates
+    /// whether its argument is `Less`, `Equal` or `Greater` the desired
+    /// target.
+    /// If the `VecDeque` is not sorted or if the comparator function does not
+    /// implement an order consistent with the sort order of the underlying
+    /// `VecDeque`, the returned result is unspecified and meaningless.
     ///
     /// If the value is found then [`Result::Ok`] is returned, containing the
     /// index of the matching element. If there are multiple matches, then any
@@ -2456,7 +2466,6 @@ impl<T, A: Allocator> VecDeque<T, A> {
     ///
     /// See also [`binary_search`], [`binary_search_by_key`], and [`partition_point`].
     ///
-    /// [`contains`]: VecDeque::contains
     /// [`binary_search`]: VecDeque::binary_search
     /// [`binary_search_by_key`]: VecDeque::binary_search_by_key
     /// [`partition_point`]: VecDeque::partition_point
@@ -2496,10 +2505,11 @@ impl<T, A: Allocator> VecDeque<T, A> {
     }
 
     /// Binary searches this `VecDeque` with a key extraction function.
-    /// This behaves similarly to [`contains`] if this `VecDeque` is sorted.
     ///
     /// Assumes that the deque is sorted by the key, for instance with
     /// [`make_contiguous().sort_by_key()`] using the same key extraction function.
+    /// If the deque is not sorted by the key, the returned result is
+    /// unspecified and meaningless.
     ///
     /// If the value is found then [`Result::Ok`] is returned, containing the
     /// index of the matching element. If there are multiple matches, then any
@@ -2509,7 +2519,6 @@ impl<T, A: Allocator> VecDeque<T, A> {
     ///
     /// See also [`binary_search`], [`binary_search_by`], and [`partition_point`].
     ///
-    /// [`contains`]: VecDeque::contains
     /// [`make_contiguous().sort_by_key()`]: VecDeque::make_contiguous
     /// [`binary_search`]: VecDeque::binary_search
     /// [`binary_search_by`]: VecDeque::binary_search_by

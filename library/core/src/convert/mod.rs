@@ -722,6 +722,7 @@ where
     ///
     /// That is, this conversion is whatever the implementation of
     /// <code>[From]&lt;T&gt; for U</code> chooses to do.
+    #[inline]
     fn into(self) -> U {
         U::from(self)
     }
@@ -763,6 +764,7 @@ where
 {
     type Error = U::Error;
 
+    #[inline]
     fn try_into(self) -> Result<U, U::Error> {
         U::try_from(self)
     }
@@ -778,6 +780,7 @@ where
 {
     type Error = Infallible;
 
+    #[inline]
     fn try_from(value: U) -> Result<Self, Self::Error> {
         Ok(U::into(value))
     }

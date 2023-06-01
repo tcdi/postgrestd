@@ -56,13 +56,9 @@
 #[cfg(not(no_global_oom_handling))]
 use core::cmp;
 use core::cmp::Ordering;
-use core::convert::TryFrom;
 use core::fmt;
 use core::hash::{Hash, Hasher};
-use core::intrinsics::assume;
 use core::iter;
-#[cfg(not(no_global_oom_handling))]
-use core::iter::FromIterator;
 use core::marker::PhantomData;
 use core::mem::{self, ManuallyDrop, MaybeUninit, SizedTypeProperties};
 use core::ops::{self, Index, IndexMut, Range, RangeBounds};
@@ -1240,11 +1236,7 @@ impl<T, A: Allocator> Vec<T, A> {
     pub fn as_ptr(&self) -> *const T {
         // We shadow the slice method of the same name to avoid going through
         // `deref`, which creates an intermediate reference.
-        let ptr = self.buf.ptr();
-        unsafe {
-            assume(!ptr.is_null());
-        }
-        ptr
+        self.buf.ptr()
     }
 
     /// Returns an unsafe mutable pointer to the vector's buffer, or a dangling
@@ -1277,11 +1269,7 @@ impl<T, A: Allocator> Vec<T, A> {
     pub fn as_mut_ptr(&mut self) -> *mut T {
         // We shadow the slice method of the same name to avoid going through
         // `deref_mut`, which creates an intermediate reference.
-        let ptr = self.buf.ptr();
-        unsafe {
-            assume(!ptr.is_null());
-        }
-        ptr
+        self.buf.ptr()
     }
 
     /// Returns a reference to the underlying allocator.
@@ -2999,7 +2987,7 @@ impl<'a, T: Copy + 'a, A: Allocator + 'a> Extend<&'a T> for Vec<T, A> {
     }
 }
 
-/// Implements comparison of vectors, [lexicographically](core::cmp::Ord#lexicographical-comparison).
+/// Implements comparison of vectors, [lexicographically](Ord#lexicographical-comparison).
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<T: PartialOrd, A: Allocator> PartialOrd for Vec<T, A> {
     #[inline]
@@ -3011,7 +2999,7 @@ impl<T: PartialOrd, A: Allocator> PartialOrd for Vec<T, A> {
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<T: Eq, A: Allocator> Eq for Vec<T, A> {}
 
-/// Implements ordering of vectors, [lexicographically](core::cmp::Ord#lexicographical-comparison).
+/// Implements ordering of vectors, [lexicographically](Ord#lexicographical-comparison).
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<T: Ord, A: Allocator> Ord for Vec<T, A> {
     #[inline]

@@ -34,6 +34,13 @@ macro_rules! nonzero_integers {
             /// use std::mem::size_of;
             #[doc = concat!("assert_eq!(size_of::<Option<core::num::", stringify!($Ty), ">>(), size_of::<", stringify!($Int), ">());")]
             /// ```
+            ///
+            /// # Layout
+            ///
+            #[doc = concat!("`", stringify!($Ty), "` is guaranteed to have the same layout and bit validity as `", stringify!($Int), "`")]
+            /// with the exception that `0` is not a valid instance.
+            #[doc = concat!("`Option<", stringify!($Ty), ">` is guaranteed to be compatible with `", stringify!($Int), "`,")]
+            /// including in FFI.
             #[$stability]
             #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
             #[repr(transparent)]
@@ -1147,12 +1154,10 @@ macro_rules! nonzero_min_max_unsigned {
                 /// # Examples
                 ///
                 /// ```
-                /// #![feature(nonzero_min_max)]
-                ///
                 #[doc = concat!("# use std::num::", stringify!($Ty), ";")]
                 #[doc = concat!("assert_eq!(", stringify!($Ty), "::MIN.get(), 1", stringify!($Int), ");")]
                 /// ```
-                #[unstable(feature = "nonzero_min_max", issue = "89065")]
+                #[stable(feature = "nonzero_min_max", since = "1.70.0")]
                 pub const MIN: Self = Self::new(1).unwrap();
 
                 /// The largest value that can be represented by this non-zero
@@ -1162,12 +1167,10 @@ macro_rules! nonzero_min_max_unsigned {
                 /// # Examples
                 ///
                 /// ```
-                /// #![feature(nonzero_min_max)]
-                ///
                 #[doc = concat!("# use std::num::", stringify!($Ty), ";")]
                 #[doc = concat!("assert_eq!(", stringify!($Ty), "::MAX.get(), ", stringify!($Int), "::MAX);")]
                 /// ```
-                #[unstable(feature = "nonzero_min_max", issue = "89065")]
+                #[stable(feature = "nonzero_min_max", since = "1.70.0")]
                 pub const MAX: Self = Self::new(<$Int>::MAX).unwrap();
             }
         )+
@@ -1189,12 +1192,10 @@ macro_rules! nonzero_min_max_signed {
                 /// # Examples
                 ///
                 /// ```
-                /// #![feature(nonzero_min_max)]
-                ///
                 #[doc = concat!("# use std::num::", stringify!($Ty), ";")]
                 #[doc = concat!("assert_eq!(", stringify!($Ty), "::MIN.get(), ", stringify!($Int), "::MIN);")]
                 /// ```
-                #[unstable(feature = "nonzero_min_max", issue = "89065")]
+                #[stable(feature = "nonzero_min_max", since = "1.70.0")]
                 pub const MIN: Self = Self::new(<$Int>::MIN).unwrap();
 
                 /// The largest value that can be represented by this non-zero
@@ -1208,12 +1209,10 @@ macro_rules! nonzero_min_max_signed {
                 /// # Examples
                 ///
                 /// ```
-                /// #![feature(nonzero_min_max)]
-                ///
                 #[doc = concat!("# use std::num::", stringify!($Ty), ";")]
                 #[doc = concat!("assert_eq!(", stringify!($Ty), "::MAX.get(), ", stringify!($Int), "::MAX);")]
                 /// ```
-                #[unstable(feature = "nonzero_min_max", issue = "89065")]
+                #[stable(feature = "nonzero_min_max", since = "1.70.0")]
                 pub const MAX: Self = Self::new(<$Int>::MAX).unwrap();
             }
         )+

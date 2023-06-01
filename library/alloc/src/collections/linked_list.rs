@@ -15,7 +15,7 @@
 use core::cmp::Ordering;
 use core::fmt;
 use core::hash::{Hash, Hasher};
-use core::iter::{FromIterator, FusedIterator};
+use core::iter::FusedIterator;
 use core::marker::PhantomData;
 use core::mem;
 use core::ptr::NonNull;
@@ -130,7 +130,6 @@ impl<T: fmt::Debug> fmt::Debug for IterMut<'_, T> {
 /// (provided by the [`IntoIterator`] trait). See its documentation for more.
 ///
 /// [`into_iter`]: LinkedList::into_iter
-/// [`IntoIterator`]: core::iter::IntoIterator
 #[derive(Clone)]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub struct IntoIter<T> {
@@ -1075,6 +1074,20 @@ impl<T> ExactSizeIterator for Iter<'_, T> {}
 #[stable(feature = "fused", since = "1.26.0")]
 impl<T> FusedIterator for Iter<'_, T> {}
 
+#[stable(feature = "default_iters", since = "1.70.0")]
+impl<T> Default for Iter<'_, T> {
+    /// Creates an empty `linked_list::Iter`.
+    ///
+    /// ```
+    /// # use std::collections::linked_list;
+    /// let iter: linked_list::Iter<'_, u8> = Default::default();
+    /// assert_eq!(iter.len(), 0);
+    /// ```
+    fn default() -> Self {
+        Iter { head: None, tail: None, len: 0, marker: Default::default() }
+    }
+}
+
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<'a, T> Iterator for IterMut<'a, T> {
     type Item = &'a mut T;
@@ -1128,6 +1141,13 @@ impl<T> ExactSizeIterator for IterMut<'_, T> {}
 
 #[stable(feature = "fused", since = "1.26.0")]
 impl<T> FusedIterator for IterMut<'_, T> {}
+
+#[stable(feature = "default_iters", since = "1.70.0")]
+impl<T> Default for IterMut<'_, T> {
+    fn default() -> Self {
+        IterMut { head: None, tail: None, len: 0, marker: Default::default() }
+    }
+}
 
 /// A cursor over a `LinkedList`.
 ///
@@ -1807,6 +1827,20 @@ impl<T> ExactSizeIterator for IntoIter<T> {}
 
 #[stable(feature = "fused", since = "1.26.0")]
 impl<T> FusedIterator for IntoIter<T> {}
+
+#[stable(feature = "default_iters", since = "1.70.0")]
+impl<T> Default for IntoIter<T> {
+    /// Creates an empty `linked_list::IntoIter`.
+    ///
+    /// ```
+    /// # use std::collections::linked_list;
+    /// let iter: linked_list::IntoIter<u8> = Default::default();
+    /// assert_eq!(iter.len(), 0);
+    /// ```
+    fn default() -> Self {
+        LinkedList::new().into_iter()
+    }
+}
 
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<T> FromIterator<T> for LinkedList<T> {

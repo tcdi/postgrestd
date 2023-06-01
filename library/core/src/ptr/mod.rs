@@ -691,7 +691,7 @@ where
 #[inline(always)]
 #[must_use]
 #[unstable(feature = "ptr_from_ref", issue = "106116")]
-pub fn from_ref<T: ?Sized>(r: &T) -> *const T {
+pub const fn from_ref<T: ?Sized>(r: &T) -> *const T {
     r
 }
 
@@ -702,7 +702,7 @@ pub fn from_ref<T: ?Sized>(r: &T) -> *const T {
 #[inline(always)]
 #[must_use]
 #[unstable(feature = "ptr_from_ref", issue = "106116")]
-pub fn from_mut<T: ?Sized>(r: &mut T) -> *mut T {
+pub const fn from_mut<T: ?Sized>(r: &mut T) -> *mut T {
     r
 }
 
@@ -1135,27 +1135,58 @@ pub const unsafe fn replace<T>(dst: *mut T, mut src: T) -> T {
 #[rustc_const_unstable(feature = "const_ptr_read", issue = "80377")]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 pub const unsafe fn read<T>(src: *const T) -> T {
-    // We are calling the intrinsics directly to avoid function calls in the generated code
-    // as `intrinsics::copy_nonoverlapping` is a wrapper function.
-    extern "rust-intrinsic" {
-        #[rustc_const_stable(feature = "const_intrinsic_copy", since = "1.63.0")]
-        fn copy_nonoverlapping<T>(src: *const T, dst: *mut T, count: usize);
-    }
+    // It would be semantically correct to implement this via `copy_nonoverlapping`
+    // and `MaybeUninit`, as was done before PR #109035. Calling `assume_init`
+    // provides enough information to know that this is a typed operation.
 
-    let mut tmp = MaybeUninit::<T>::uninit();
-    // SAFETY: the caller must guarantee that `src` is valid for reads.
-    // `src` cannot overlap `tmp` because `tmp` was just allocated on
-    // the stack as a separate allocated object.
+    // However, as of March 2023 the compiler was not capable of taking advantage
+    // of that information.  Thus the implementation here switched to an intrinsic,
+    // which lowers to `_0 = *src` in MIR, to address a few issues:
     //
-    // Also, since we just wrote a valid value into `tmp`, it is guaranteed
-    // to be properly initialized.
+    // - Using `MaybeUninit::assume_init` after a `copy_nonoverlapping` was not
+    //   turning the untyped copy into a typed load. As such, the generated
+    //   `load` in LLVM didn't get various metadata, such as `!range` (#73258),
+    //   `!nonnull`, and `!noundef`, resulting in poorer optimization.
+    // - Going through the extra local resulted in multiple extra copies, even
+    //   in optimized MIR.  (Ignoring StorageLive/Dead, the intrinsic is one
+    //   MIR statement, while the previous implementation was eight.)  LLVM
+    //   could sometimes optimize them away, but because `read` is at the core
+    //   of so many things, not having them in the first place improves what we
+    //   hand off to the backend.  For example, `mem::replace::<Big>` previously
+    //   emitted 4 `alloca` and 6 `memcpy`s, but is now 1 `alloc` and 3 `memcpy`s.
+    // - In general, this approach keeps us from getting any more bugs (like
+    //   #106369) that boil down to "`read(p)` is worse than `*p`", as this
+    //   makes them look identical to the backend (or other MIR consumers).
+    //
+    // Future enhancements to MIR optimizations might well allow this to return
+    // to the previous implementation, rather than using an intrinsic.
+
+    // SAFETY: the caller must guarantee that `src` is valid for reads.
     unsafe {
         assert_unsafe_precondition!(
             "ptr::read requires that the pointer argument is aligned and non-null",
             [T](src: *const T) => is_aligned_and_not_null(src)
         );
-        copy_nonoverlapping(src, tmp.as_mut_ptr(), 1);
-        tmp.assume_init()
+
+        #[cfg(bootstrap)]
+        {
+            // We are calling the intrinsics directly to avoid function calls in the
+            // generated code as `intrinsics::copy_nonoverlapping` is a wrapper function.
+            extern "rust-intrinsic" {
+                #[rustc_const_stable(feature = "const_intrinsic_copy", since = "1.63.0")]
+                fn copy_nonoverlapping<T>(src: *const T, dst: *mut T, count: usize);
+            }
+
+            // `src` cannot overlap `tmp` because `tmp` was just allocated on
+            // the stack as a separate allocated object.
+            let mut tmp = MaybeUninit::<T>::uninit();
+            copy_nonoverlapping(src, tmp.as_mut_ptr(), 1);
+            tmp.assume_init()
+        }
+        #[cfg(not(bootstrap))]
+        {
+            crate::intrinsics::read_via_copy(src)
+        }
     }
 }
 
@@ -1340,6 +1371,7 @@ pub const unsafe fn write<T>(dst: *mut T, src: T) {
     // as `intrinsics::copy_nonoverlapping` is a wrapper function.
     extern "rust-intrinsic" {
         #[rustc_const_stable(feature = "const_intrinsic_copy", since = "1.63.0")]
+        #[rustc_nounwind]
         fn copy_nonoverlapping<T>(src: *const T, dst: *mut T, count: usize);
     }
 
@@ -1860,150 +1892,205 @@ pub fn hash<T: ?Sized, S: hash::Hasher>(hashee: *const T, into: &mut S) {
     hashee.hash(into);
 }
 
-// If this is a unary fn pointer, it adds a doc comment.
-// Otherwise, it hides the docs entirely.
-macro_rules! maybe_fnptr_doc {
-    (@ #[$meta:meta] $item:item) => {
-        #[doc(hidden)]
-        #[$meta]
-        $item
-    };
-    ($a:ident @ #[$meta:meta] $item:item) => {
-        #[doc(fake_variadic)]
-        #[doc = "This trait is implemented for function pointers with up to twelve arguments."]
-        #[$meta]
-        $item
-    };
-    ($a:ident $($rest_a:ident)+ @ #[$meta:meta] $item:item) => {
-        #[doc(hidden)]
-        #[$meta]
-        $item
-    };
-}
+#[cfg(bootstrap)]
+mod old_fn_ptr_impl {
+    use super::*;
+    // If this is a unary fn pointer, it adds a doc comment.
+    // Otherwise, it hides the docs entirely.
+    macro_rules! maybe_fnptr_doc {
+        (@ #[$meta:meta] $item:item) => {
+            #[doc(hidden)]
+            #[$meta]
+            $item
+        };
+        ($a:ident @ #[$meta:meta] $item:item) => {
+            #[doc(fake_variadic)]
+            #[doc = "This trait is implemented for function pointers with up to twelve arguments."]
+            #[$meta]
+            $item
+        };
+        ($a:ident $($rest_a:ident)+ @ #[$meta:meta] $item:item) => {
+            #[doc(hidden)]
+            #[$meta]
+            $item
+        };
+    }
 
-// FIXME(strict_provenance_magic): function pointers have buggy codegen that
-// necessitates casting to a usize to get the backend to do the right thing.
-// for now I will break AVR to silence *a billion* lints. We should probably
-// have a proper "opaque function pointer type" to handle this kind of thing.
+    // FIXME(strict_provenance_magic): function pointers have buggy codegen that
+    // necessitates casting to a usize to get the backend to do the right thing.
+    // for now I will break AVR to silence *a billion* lints. We should probably
+    // have a proper "opaque function pointer type" to handle this kind of thing.
 
-// Impls for function pointers
-macro_rules! fnptr_impls_safety_abi {
-    ($FnTy: ty, $($Arg: ident),*) => {
+    // Impls for function pointers
+    macro_rules! fnptr_impls_safety_abi {
+        ($FnTy: ty, $($Arg: ident),*) => {
         fnptr_impls_safety_abi! { #[stable(feature = "fnptr_impls", since = "1.4.0")] $FnTy, $($Arg),* }
     };
     (@c_unwind $FnTy: ty, $($Arg: ident),*) => {
         fnptr_impls_safety_abi! { #[unstable(feature = "c_unwind", issue = "74990")] $FnTy, $($Arg),* }
     };
     (#[$meta:meta] $FnTy: ty, $($Arg: ident),*) => {
-        maybe_fnptr_doc! {
-            $($Arg)* @
-            #[$meta]
-            impl<Ret, $($Arg),*> PartialEq for $FnTy {
-                #[inline]
-                fn eq(&self, other: &Self) -> bool {
-                    *self as usize == *other as usize
+            maybe_fnptr_doc! {
+                $($Arg)* @
+                #[$meta]
+                impl<Ret, $($Arg),*> PartialEq for $FnTy {
+                    #[inline]
+                    fn eq(&self, other: &Self) -> bool {
+                        *self as usize == *other as usize
+                    }
                 }
             }
-        }
 
-        maybe_fnptr_doc! {
-            $($Arg)* @
-            #[$meta]
-            impl<Ret, $($Arg),*> Eq for $FnTy {}
-        }
+            maybe_fnptr_doc! {
+                $($Arg)* @
+                #[$meta]
+                impl<Ret, $($Arg),*> Eq for $FnTy {}
+            }
 
-        maybe_fnptr_doc! {
-            $($Arg)* @
-            #[$meta]
-            impl<Ret, $($Arg),*> PartialOrd for $FnTy {
-                #[inline]
-                fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-                    (*self as usize).partial_cmp(&(*other as usize))
+            maybe_fnptr_doc! {
+                $($Arg)* @
+                #[$meta]
+                impl<Ret, $($Arg),*> PartialOrd for $FnTy {
+                    #[inline]
+                    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+                        (*self as usize).partial_cmp(&(*other as usize))
+                    }
                 }
             }
-        }
 
-        maybe_fnptr_doc! {
-            $($Arg)* @
-            #[$meta]
-            impl<Ret, $($Arg),*> Ord for $FnTy {
-                #[inline]
-                fn cmp(&self, other: &Self) -> Ordering {
-                    (*self as usize).cmp(&(*other as usize))
+            maybe_fnptr_doc! {
+                $($Arg)* @
+                #[$meta]
+                impl<Ret, $($Arg),*> Ord for $FnTy {
+                    #[inline]
+                    fn cmp(&self, other: &Self) -> Ordering {
+                        (*self as usize).cmp(&(*other as usize))
+                    }
                 }
             }
-        }
 
-        maybe_fnptr_doc! {
-            $($Arg)* @
-            #[$meta]
-            impl<Ret, $($Arg),*> hash::Hash for $FnTy {
-                fn hash<HH: hash::Hasher>(&self, state: &mut HH) {
-                    state.write_usize(*self as usize)
+            maybe_fnptr_doc! {
+                $($Arg)* @
+                #[$meta]
+                impl<Ret, $($Arg),*> hash::Hash for $FnTy {
+                    fn hash<HH: hash::Hasher>(&self, state: &mut HH) {
+                        state.write_usize(*self as usize)
+                    }
                 }
             }
-        }
 
-        maybe_fnptr_doc! {
-            $($Arg)* @
-            #[$meta]
-            impl<Ret, $($Arg),*> fmt::Pointer for $FnTy {
-                fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                    fmt::pointer_fmt_inner(*self as usize, f)
+            maybe_fnptr_doc! {
+                $($Arg)* @
+                #[$meta]
+                impl<Ret, $($Arg),*> fmt::Pointer for $FnTy {
+                    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                        fmt::pointer_fmt_inner(*self as usize, f)
+                    }
                 }
             }
-        }
 
-        maybe_fnptr_doc! {
-            $($Arg)* @
-            #[$meta]
-            impl<Ret, $($Arg),*> fmt::Debug for $FnTy {
-                fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                    fmt::pointer_fmt_inner(*self as usize, f)
+            maybe_fnptr_doc! {
+                $($Arg)* @
+                #[$meta]
+                impl<Ret, $($Arg),*> fmt::Debug for $FnTy {
+                    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                        fmt::pointer_fmt_inner(*self as usize, f)
+                    }
                 }
             }
         }
     }
-}
 
-macro_rules! fnptr_impls_args {
-    ($($Arg: ident),+) => {
-        fnptr_impls_safety_abi! { extern "Rust" fn($($Arg),+) -> Ret, $($Arg),+ }
-        fnptr_impls_safety_abi! { extern "C" fn($($Arg),+) -> Ret, $($Arg),+ }
-        fnptr_impls_safety_abi! { extern "C" fn($($Arg),+ , ...) -> Ret, $($Arg),+ }
+    macro_rules! fnptr_impls_args {
+        ($($Arg: ident),+) => {
+            fnptr_impls_safety_abi! { extern "Rust" fn($($Arg),+) -> Ret, $($Arg),+ }
+            fnptr_impls_safety_abi! { extern "C" fn($($Arg),+) -> Ret, $($Arg),+ }
+            fnptr_impls_safety_abi! { extern "C" fn($($Arg),+ , ...) -> Ret, $($Arg),+ }
         fnptr_impls_safety_abi! { @c_unwind extern "C-unwind" fn($($Arg),+) -> Ret, $($Arg),+ }
         fnptr_impls_safety_abi! { @c_unwind extern "C-unwind" fn($($Arg),+ , ...) -> Ret, $($Arg),+ }
-        fnptr_impls_safety_abi! { unsafe extern "Rust" fn($($Arg),+) -> Ret, $($Arg),+ }
-        fnptr_impls_safety_abi! { unsafe extern "C" fn($($Arg),+) -> Ret, $($Arg),+ }
-        fnptr_impls_safety_abi! { unsafe extern "C" fn($($Arg),+ , ...) -> Ret, $($Arg),+ }
+            fnptr_impls_safety_abi! { unsafe extern "Rust" fn($($Arg),+) -> Ret, $($Arg),+ }
+            fnptr_impls_safety_abi! { unsafe extern "C" fn($($Arg),+) -> Ret, $($Arg),+ }
+            fnptr_impls_safety_abi! { unsafe extern "C" fn($($Arg),+ , ...) -> Ret, $($Arg),+ }
         fnptr_impls_safety_abi! { @c_unwind unsafe extern "C-unwind" fn($($Arg),+) -> Ret, $($Arg),+ }
         fnptr_impls_safety_abi! { @c_unwind unsafe extern "C-unwind" fn($($Arg),+ , ...) -> Ret, $($Arg),+ }
-    };
-    () => {
-        // No variadic functions with 0 parameters
-        fnptr_impls_safety_abi! { extern "Rust" fn() -> Ret, }
-        fnptr_impls_safety_abi! { extern "C" fn() -> Ret, }
+        };
+        () => {
+            // No variadic functions with 0 parameters
+            fnptr_impls_safety_abi! { extern "Rust" fn() -> Ret, }
+            fnptr_impls_safety_abi! { extern "C" fn() -> Ret, }
         fnptr_impls_safety_abi! { @c_unwind extern "C-unwind" fn() -> Ret, }
-        fnptr_impls_safety_abi! { unsafe extern "Rust" fn() -> Ret, }
-        fnptr_impls_safety_abi! { unsafe extern "C" fn() -> Ret, }
+            fnptr_impls_safety_abi! { unsafe extern "Rust" fn() -> Ret, }
+            fnptr_impls_safety_abi! { unsafe extern "C" fn() -> Ret, }
         fnptr_impls_safety_abi! { @c_unwind unsafe extern "C-unwind" fn() -> Ret, }
-    };
+        };
+    }
+
+    fnptr_impls_args! {}
+    fnptr_impls_args! { T }
+    fnptr_impls_args! { A, B }
+    fnptr_impls_args! { A, B, C }
+    fnptr_impls_args! { A, B, C, D }
+    fnptr_impls_args! { A, B, C, D, E }
+    fnptr_impls_args! { A, B, C, D, E, F }
+    fnptr_impls_args! { A, B, C, D, E, F, G }
+    fnptr_impls_args! { A, B, C, D, E, F, G, H }
+    fnptr_impls_args! { A, B, C, D, E, F, G, H, I }
+    fnptr_impls_args! { A, B, C, D, E, F, G, H, I, J }
+    fnptr_impls_args! { A, B, C, D, E, F, G, H, I, J, K }
+    fnptr_impls_args! { A, B, C, D, E, F, G, H, I, J, K, L }
 }
 
-fnptr_impls_args! {}
-fnptr_impls_args! { T }
-fnptr_impls_args! { A, B }
-fnptr_impls_args! { A, B, C }
-fnptr_impls_args! { A, B, C, D }
-fnptr_impls_args! { A, B, C, D, E }
-fnptr_impls_args! { A, B, C, D, E, F }
-fnptr_impls_args! { A, B, C, D, E, F, G }
-fnptr_impls_args! { A, B, C, D, E, F, G, H }
-fnptr_impls_args! { A, B, C, D, E, F, G, H, I }
-fnptr_impls_args! { A, B, C, D, E, F, G, H, I, J }
-fnptr_impls_args! { A, B, C, D, E, F, G, H, I, J, K }
-fnptr_impls_args! { A, B, C, D, E, F, G, H, I, J, K, L }
+#[cfg(not(bootstrap))]
+mod new_fn_ptr_impl {
+    use super::*;
+    use crate::marker::FnPtr;
 
+    #[stable(feature = "fnptr_impls", since = "1.4.0")]
+    impl<F: FnPtr> PartialEq for F {
+        #[inline]
+        fn eq(&self, other: &Self) -> bool {
+            self.addr() == other.addr()
+        }
+    }
+    #[stable(feature = "fnptr_impls", since = "1.4.0")]
+    impl<F: FnPtr> Eq for F {}
+
+    #[stable(feature = "fnptr_impls", since = "1.4.0")]
+    impl<F: FnPtr> PartialOrd for F {
+        #[inline]
+        fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+            self.addr().partial_cmp(&other.addr())
+        }
+    }
+    #[stable(feature = "fnptr_impls", since = "1.4.0")]
+    impl<F: FnPtr> Ord for F {
+        #[inline]
+        fn cmp(&self, other: &Self) -> Ordering {
+            self.addr().cmp(&other.addr())
+        }
+    }
+
+    #[stable(feature = "fnptr_impls", since = "1.4.0")]
+    impl<F: FnPtr> hash::Hash for F {
+        fn hash<HH: hash::Hasher>(&self, state: &mut HH) {
+            state.write_usize(self.addr() as _)
+        }
+    }
+
+    #[stable(feature = "fnptr_impls", since = "1.4.0")]
+    impl<F: FnPtr> fmt::Pointer for F {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            fmt::pointer_fmt_inner(self.addr() as _, f)
+        }
+    }
+
+    #[stable(feature = "fnptr_impls", since = "1.4.0")]
+    impl<F: FnPtr> fmt::Debug for F {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            fmt::pointer_fmt_inner(self.addr() as _, f)
+        }
+    }
+}
 /// Create a `const` raw pointer to a place, without creating an intermediate reference.
 ///
 /// Creating a reference with `&`/`&mut` is only allowed if the pointer is properly aligned

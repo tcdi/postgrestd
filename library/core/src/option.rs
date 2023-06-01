@@ -559,6 +559,7 @@ use crate::{
 /// The `Option` type. See [the module level documentation](self) for more.
 #[derive(Copy, PartialOrd, Eq, Ord, Debug, Hash)]
 #[rustc_diagnostic_item = "Option"]
+#[cfg_attr(not(bootstrap), lang = "Option")]
 #[stable(feature = "rust1", since = "1.0.0")]
 pub enum Option<T> {
     /// No value.
@@ -604,8 +605,6 @@ impl<T> Option<T> {
     /// # Examples
     ///
     /// ```
-    /// #![feature(is_some_and)]
-    ///
     /// let x: Option<u32> = Some(2);
     /// assert_eq!(x.is_some_and(|x| x > 1), true);
     ///
@@ -617,7 +616,7 @@ impl<T> Option<T> {
     /// ```
     #[must_use]
     #[inline]
-    #[unstable(feature = "is_some_and", issue = "93050")]
+    #[stable(feature = "is_some_and", since = "1.70.0")]
     pub fn is_some_and(self, f: impl FnOnce(T) -> bool) -> bool {
         match self {
             None => false,
@@ -735,23 +734,6 @@ impl<T> Option<T> {
         }
     }
 
-    const fn get_some_offset() -> isize {
-        if mem::size_of::<Option<T>>() == mem::size_of::<T>() {
-            // niche optimization means the `T` is always stored at the same position as the Option.
-            0
-        } else {
-            assert!(mem::size_of::<Option<T>>() == mem::size_of::<Option<mem::MaybeUninit<T>>>());
-            let some_uninit = Some(mem::MaybeUninit::<T>::uninit());
-            // SAFETY: This gets the byte offset of the `Some(_)` value following the fact that
-            // niche optimization is not active, and thus Option<T> and Option<MaybeUninit<t>> share
-            // the same layout.
-            unsafe {
-                (some_uninit.as_ref().unwrap() as *const mem::MaybeUninit<T>)
-                    .byte_offset_from(&some_uninit as *const Option<mem::MaybeUninit<T>>)
-            }
-        }
-    }
-
     /// Returns a slice of the contained value, if any. If this is `None`, an
     /// empty slice is returned. This can be useful to have a single type of
     /// iterator over an `Option` or slice.
@@ -784,16 +766,27 @@ impl<T> Option<T> {
     #[must_use]
     #[unstable(feature = "option_as_slice", issue = "108545")]
     pub fn as_slice(&self) -> &[T] {
-        // SAFETY: This is sound as long as `get_some_offset` returns the
-        // correct offset. Though in the `None` case, the slice may be located
-        // at a pointer pointing into padding, the fact that the slice is
-        // empty, and the padding is at a properly aligned position for a
-        // value of that type makes it sound.
+        #[cfg(bootstrap)]
+        match self {
+            Some(value) => slice::from_ref(value),
+            None => &[],
+        }
+
+        #[cfg(not(bootstrap))]
+        // SAFETY: When the `Option` is `Some`, we're using the actual pointer
+        // to the payload, with a length of 1, so this is equivalent to
+        // `slice::from_ref`, and thus is safe.
+        // When the `Option` is `None`, the length used is 0, so to be safe it
+        // just needs to be aligned, which it is because `&self` is aligned and
+        // the offset used is a multiple of alignment.
+        //
+        // In the new version, the intrinsic always returns a pointer to an
+        // in-bounds and correctly aligned position for a `T` (even if in the
+        // `None` case it's just padding).
         unsafe {
             slice::from_raw_parts(
-                (self as *const Option<T>).wrapping_byte_offset(Self::get_some_offset())
-                    as *const T,
-                self.is_some() as usize,
+                crate::intrinsics::option_payload_ptr(crate::ptr::from_ref(self)),
+                usize::from(self.is_some()),
             )
         }
     }
@@ -840,15 +833,30 @@ impl<T> Option<T> {
     #[must_use]
     #[unstable(feature = "option_as_slice", issue = "108545")]
     pub fn as_mut_slice(&mut self) -> &mut [T] {
-        // SAFETY: This is sound as long as `get_some_offset` returns the
-        // correct offset. Though in the `None` case, the slice may be located
-        // at a pointer pointing into padding, the fact that the slice is
-        // empty, and the padding is at a properly aligned position for a
-        // value of that type makes it sound.
+        #[cfg(bootstrap)]
+        match self {
+            Some(value) => slice::from_mut(value),
+            None => &mut [],
+        }
+
+        #[cfg(not(bootstrap))]
+        // SAFETY: When the `Option` is `Some`, we're using the actual pointer
+        // to the payload, with a length of 1, so this is equivalent to
+        // `slice::from_mut`, and thus is safe.
+        // When the `Option` is `None`, the length used is 0, so to be safe it
+        // just needs to be aligned, which it is because `&self` is aligned and
+        // the offset used is a multiple of alignment.
+        //
+        // In the new version, the intrinsic creates a `*const T` from a
+        // mutable reference  so it is safe to cast back to a mutable pointer
+        // here. As with `as_slice`, the intrinsic always returns a pointer to
+        // an in-bounds and correctly aligned position for a `T` (even if in
+        // the `None` case it's just padding).
         unsafe {
             slice::from_raw_parts_mut(
-                (self as *mut Option<T>).wrapping_byte_offset(Self::get_some_offset()) as *mut T,
-                self.is_some() as usize,
+                crate::intrinsics::option_payload_ptr(crate::ptr::from_mut(self).cast_const())
+                    .cast_mut(),
+                usize::from(self.is_some()),
             )
         }
     }
@@ -1264,6 +1272,7 @@ impl<T> Option<T> {
     /// let x: Option<String> = None;
     /// assert_eq!(x.as_deref(), None);
     /// ```
+    #[inline]
     #[stable(feature = "option_deref", since = "1.40.0")]
     #[rustc_const_unstable(feature = "const_option_ext", issue = "91930")]
     pub const fn as_deref(&self) -> Option<&T::Target>
@@ -1290,6 +1299,7 @@ impl<T> Option<T> {
     ///     x
     /// }), Some("HEY".to_owned().as_mut_str()));
     /// ```
+    #[inline]
     #[stable(feature = "option_deref", since = "1.40.0")]
     #[rustc_const_unstable(feature = "const_option_ext", issue = "91930")]
     pub const fn as_deref_mut(&mut self) -> Option<&mut T::Target>
@@ -1766,36 +1776,6 @@ impl<T> Option<T> {
     #[stable(feature = "option_replace", since = "1.31.0")]
     pub const fn replace(&mut self, value: T) -> Option<T> {
         mem::replace(self, Some(value))
-    }
-
-    /// Returns `true` if the option is a [`Some`] value containing the given value.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// #![feature(option_result_contains)]
-    ///
-    /// let x: Option<u32> = Some(2);
-    /// assert_eq!(x.contains(&2), true);
-    ///
-    /// let x: Option<u32> = Some(3);
-    /// assert_eq!(x.contains(&2), false);
-    ///
-    /// let x: Option<u32> = None;
-    /// assert_eq!(x.contains(&2), false);
-    /// ```
-    #[must_use]
-    #[inline]
-    #[unstable(feature = "option_result_contains", issue = "62358")]
-    #[rustc_const_unstable(feature = "const_option_ext", issue = "91930")]
-    pub const fn contains<U>(&self, x: &U) -> bool
-    where
-        U: ~const PartialEq<T>,
-    {
-        match self {
-            Some(y) => x.eq(y),
-            None => false,
-        }
     }
 
     /// Zips `self` with another `Option`.

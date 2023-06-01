@@ -131,7 +131,8 @@
 //!
 //! * Build the thread with [`Builder`] and pass the desired stack size to [`Builder::stack_size`].
 //! * Set the `RUST_MIN_STACK` environment variable to an integer representing the desired stack
-//!   size (in bytes). Note that setting [`Builder::stack_size`] will override this.
+//!   size (in bytes). Note that setting [`Builder::stack_size`] will override this. Be aware that
+//!   changes to `RUST_MIN_STACK` may be ignored after program start.
 //!
 //! Note that the stack size of the main thread is *not* determined by Rust.
 //!
@@ -203,44 +204,9 @@ pub use self::local::{AccessError, LocalKey};
 // by the elf linker. "static" is for single-threaded platforms where a global
 // static is sufficient.
 
-#[unstable(feature = "libstd_thread_internals", issue = "none")]
-#[cfg(not(test))]
-#[cfg(all(
-    target_thread_local,
-    not(all(target_family = "wasm", not(target_feature = "atomics"))),
-))]
 #[doc(hidden)]
-pub use self::local::fast::Key as __FastLocalKeyInner;
-// when building for tests, use real std's type
 #[unstable(feature = "libstd_thread_internals", issue = "none")]
-#[cfg(test)]
-#[cfg(all(
-    target_thread_local,
-    not(all(target_family = "wasm", not(target_feature = "atomics"))),
-))]
-pub use realstd::thread::__FastLocalKeyInner;
-
-#[unstable(feature = "libstd_thread_internals", issue = "none")]
-#[cfg(not(test))]
-#[cfg(all(
-    not(target_thread_local),
-    not(all(target_family = "wasm", not(target_feature = "atomics"))),
-))]
-#[doc(hidden)]
-pub use self::local::os::Key as __OsLocalKeyInner;
-// when building for tests, use real std's type
-#[unstable(feature = "libstd_thread_internals", issue = "none")]
-#[cfg(test)]
-#[cfg(all(
-    not(target_thread_local),
-    not(all(target_family = "wasm", not(target_feature = "atomics"))),
-))]
-pub use realstd::thread::__OsLocalKeyInner;
-
-#[unstable(feature = "libstd_thread_internals", issue = "none")]
-#[cfg(all(target_family = "wasm", not(target_feature = "atomics")))]
-#[doc(hidden)]
-pub use self::local::statik::Key as __StaticLocalKeyInner;
+pub use crate::sys::common::thread_local::Key as __LocalKeyInner;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Builder

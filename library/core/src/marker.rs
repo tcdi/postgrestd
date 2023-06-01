@@ -97,7 +97,7 @@ unsafe impl<T: Sync + ?Sized> Send for &T {}
 #[fundamental] // for Default, for example, which requires that `[T]: !Default` be evaluatable
 #[rustc_specialization_trait]
 #[rustc_deny_explicit_impl]
-#[cfg_attr(not(bootstrap), rustc_coinductive)]
+#[rustc_coinductive]
 pub trait Sized {
     // Empty.
 }
@@ -324,7 +324,7 @@ pub trait StructuralEq {
 /// attempt to derive a `Copy` implementation, we'll get an error:
 ///
 /// ```text
-/// the trait `Copy` may not be implemented for this type; field `points` does not implement `Copy`
+/// the trait `Copy` cannot be implemented for this type; field `points` does not implement `Copy`
 /// ```
 ///
 /// Shared references (`&T`) are also `Copy`, so a type can be `Copy`, even when it holds
@@ -823,7 +823,7 @@ unsafe impl<T: ?Sized> Freeze for &mut T {}
 /// [`pin` module]: crate::pin
 #[stable(feature = "pin", since = "1.33.0")]
 #[rustc_on_unimplemented(
-    note = "consider using `Box::pin`",
+    note = "consider using the `pin!` macro\nconsider using `Box::pin` if you need to access the pinned value outside of the current scope",
     message = "`{Self}` cannot be unpinned"
 )]
 #[lang = "unpin"]
@@ -877,10 +877,9 @@ pub trait Tuple {}
 /// All types that have the same size and alignment as a `usize` or
 /// `*const ()` automatically implement this trait.
 #[unstable(feature = "pointer_like_trait", issue = "none")]
-#[cfg_attr(bootstrap, lang = "pointer_sized")]
-#[cfg_attr(not(bootstrap), lang = "pointer_like")]
+#[lang = "pointer_like"]
 #[rustc_on_unimplemented(
-    message = "`{Self}` needs to have the same alignment and size as a pointer",
+    message = "`{Self}` needs to have the same ABI as a pointer",
     label = "`{Self}` needs to be a pointer-like type"
 )]
 pub trait PointerLike {}
@@ -922,4 +921,19 @@ mod copy_impls {
     /// Shared references can be copied, but mutable references *cannot*!
     #[stable(feature = "rust1", since = "1.0.0")]
     impl<T: ?Sized> Copy for &T {}
+}
+
+/// A common trait implemented by all function pointers.
+#[unstable(
+    feature = "fn_ptr_trait",
+    issue = "none",
+    reason = "internal trait for implementing various traits for all function pointers"
+)]
+#[lang = "fn_ptr_trait"]
+#[cfg(not(bootstrap))]
+#[rustc_deny_explicit_impl]
+pub trait FnPtr: Copy + Clone {
+    /// Returns the address of the function pointer.
+    #[lang = "fn_ptr_addr"]
+    fn addr(self) -> *const ();
 }

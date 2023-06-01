@@ -107,7 +107,6 @@ impl UnixStream {
     /// # Examples
     ///
     /// ```no_run
-    /// #![feature(unix_socket_abstract)]
     /// use std::os::unix::net::{UnixListener, UnixStream};
     ///
     /// fn main() -> std::io::Result<()> {
@@ -124,7 +123,7 @@ impl UnixStream {
     ///     Ok(())
     /// }
     /// ````
-    #[unstable(feature = "unix_socket_abstract", issue = "85410")]
+    #[stable(feature = "unix_socket_abstract", since = "1.70.0")]
     pub fn connect_addr(socket_addr: &SocketAddr) -> io::Result<UnixStream> {
         super::bail_if_postgres!();
         unsafe {
@@ -405,8 +404,24 @@ impl UnixStream {
     ///
     /// # Examples
     ///
-    #[cfg_attr(any(target_os = "android", target_os = "linux"), doc = "```no_run")]
-    #[cfg_attr(not(any(target_os = "android", target_os = "linux")), doc = "```ignore")]
+    #[cfg_attr(
+        any(
+            target_os = "android",
+            target_os = "linux",
+            target_os = "netbsd",
+            target_os = "freebsd"
+        ),
+        doc = "```no_run"
+    )]
+    #[cfg_attr(
+        not(any(
+            target_os = "android",
+            target_os = "linux",
+            target_os = "netbsd",
+            target_os = "freebsd"
+        )),
+        doc = "```ignore"
+    )]
     /// #![feature(unix_socket_ancillary_data)]
     /// use std::os::unix::net::UnixStream;
     ///
@@ -416,7 +431,13 @@ impl UnixStream {
     ///     Ok(())
     /// }
     /// ```
-    #[cfg(any(doc, target_os = "android", target_os = "linux", target_os = "netbsd",))]
+    #[cfg(any(
+        doc,
+        target_os = "android",
+        target_os = "linux",
+        target_os = "netbsd",
+        target_os = "freebsd"
+    ))]
     #[unstable(feature = "unix_socket_ancillary_data", issue = "76915")]
     pub fn set_passcred(&self, passcred: bool) -> io::Result<()> {
         self.0.set_passcred(passcred)
@@ -428,7 +449,13 @@ impl UnixStream {
     /// Get the socket option `SO_PASSCRED`.
     ///
     /// [`set_passcred`]: UnixStream::set_passcred
-    #[cfg(any(doc, target_os = "android", target_os = "linux", target_os = "netbsd",))]
+    #[cfg(any(
+        doc,
+        target_os = "android",
+        target_os = "linux",
+        target_os = "netbsd",
+        target_os = "freebsd"
+    ))]
     #[unstable(feature = "unix_socket_ancillary_data", issue = "76915")]
     pub fn passcred(&self) -> io::Result<bool> {
         self.0.passcred()

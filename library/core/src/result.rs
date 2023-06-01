@@ -545,8 +545,6 @@ impl<T, E> Result<T, E> {
     /// # Examples
     ///
     /// ```
-    /// #![feature(is_some_and)]
-    ///
     /// let x: Result<u32, &str> = Ok(2);
     /// assert_eq!(x.is_ok_and(|x| x > 1), true);
     ///
@@ -558,7 +556,7 @@ impl<T, E> Result<T, E> {
     /// ```
     #[must_use]
     #[inline]
-    #[unstable(feature = "is_some_and", issue = "93050")]
+    #[stable(feature = "is_some_and", since = "1.70.0")]
     pub fn is_ok_and(self, f: impl FnOnce(T) -> bool) -> bool {
         match self {
             Err(_) => false,
@@ -590,7 +588,6 @@ impl<T, E> Result<T, E> {
     /// # Examples
     ///
     /// ```
-    /// #![feature(is_some_and)]
     /// use std::io::{Error, ErrorKind};
     ///
     /// let x: Result<u32, Error> = Err(Error::new(ErrorKind::NotFound, "!"));
@@ -604,7 +601,7 @@ impl<T, E> Result<T, E> {
     /// ```
     #[must_use]
     #[inline]
-    #[unstable(feature = "is_some_and", issue = "93050")]
+    #[stable(feature = "is_some_and", since = "1.70.0")]
     pub fn is_err_and(self, f: impl FnOnce(E) -> bool) -> bool {
         match self {
             Ok(_) => false,
@@ -908,6 +905,7 @@ impl<T, E> Result<T, E> {
     /// let y: Result<&str, &u32> = Err(&42);
     /// assert_eq!(x.as_deref(), y);
     /// ```
+    #[inline]
     #[stable(feature = "inner_deref", since = "1.47.0")]
     pub fn as_deref(&self) -> Result<&T::Target, &E>
     where
@@ -934,6 +932,7 @@ impl<T, E> Result<T, E> {
     /// let y: Result<&mut str, &mut u32> = Err(&mut i);
     /// assert_eq!(x.as_deref_mut().map(|x| { x.make_ascii_uppercase(); x }), y);
     /// ```
+    #[inline]
     #[stable(feature = "inner_deref", since = "1.47.0")]
     pub fn as_deref_mut(&mut self) -> Result<&mut T::Target, &mut E>
     where
@@ -1527,68 +1526,6 @@ impl<T, E> Result<T, E> {
             // SAFETY: the safety contract must be upheld by the caller.
             Ok(_) => unsafe { hint::unreachable_unchecked() },
             Err(e) => e,
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////
-    // Misc or niche
-    /////////////////////////////////////////////////////////////////////////
-
-    /// Returns `true` if the result is an [`Ok`] value containing the given value.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// #![feature(option_result_contains)]
-    ///
-    /// let x: Result<u32, &str> = Ok(2);
-    /// assert_eq!(x.contains(&2), true);
-    ///
-    /// let x: Result<u32, &str> = Ok(3);
-    /// assert_eq!(x.contains(&2), false);
-    ///
-    /// let x: Result<u32, &str> = Err("Some error message");
-    /// assert_eq!(x.contains(&2), false);
-    /// ```
-    #[must_use]
-    #[inline]
-    #[unstable(feature = "option_result_contains", issue = "62358")]
-    pub fn contains<U>(&self, x: &U) -> bool
-    where
-        U: PartialEq<T>,
-    {
-        match self {
-            Ok(y) => x == y,
-            Err(_) => false,
-        }
-    }
-
-    /// Returns `true` if the result is an [`Err`] value containing the given value.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// #![feature(result_contains_err)]
-    ///
-    /// let x: Result<u32, &str> = Ok(2);
-    /// assert_eq!(x.contains_err(&"Some error message"), false);
-    ///
-    /// let x: Result<u32, &str> = Err("Some error message");
-    /// assert_eq!(x.contains_err(&"Some error message"), true);
-    ///
-    /// let x: Result<u32, &str> = Err("Some other error message");
-    /// assert_eq!(x.contains_err(&"Some error message"), false);
-    /// ```
-    #[must_use]
-    #[inline]
-    #[unstable(feature = "result_contains_err", issue = "62358")]
-    pub fn contains_err<F>(&self, f: &F) -> bool
-    where
-        F: PartialEq<E>,
-    {
-        match self {
-            Ok(_) => false,
-            Err(e) => f == e,
         }
     }
 }
