@@ -15,7 +15,15 @@ Then, the rough steps are as follows:
    1. `git subtree pull -P library . "$NEWVERSION-library"`
    2. Resolve merge conflicts.
    3. Push and fix issues.
-   4. Audit the new stdlib APIs and internals for changes and make sure nothing new is added that we should not have exposed from PL/Rust. There's no real guide to how to do that, though, just go through the changes and use your best judgement. (Note: This is usually very time consuming)
+   4. Audit the new stdlib APIs and internals for changes and make sure nothing new is added that we should not have exposed from PL/Rust. There's no real guide to how to do that, though, just go through the changes and use your best judgement. (Note: This is usually very time consuming). In particular keep an eye out for:
+      1. New `std::io` APIs, and/or changes to their implementation.
+      2. New `std::os::{unix, linux, darwin}` APIs, and/or changes to their implementation.
+      3. New `std::{net, thread, backtrace, panic}` features, or changes to their implementation.
+      4. Ditto for everything we document as being blocked in [block.md](./block.md).
+      5. Removal of/changes to various `#[rustc_diagnostic_item]` that we use. (Many/all of these should be caught in PL/Rust? Any that aren't should have a test added).
+
+      Note that many of these (the implementation changes) will not be noted in release notes (even in RELEASES.md). You must check the code.
+
 4. In `~/work/plrust` and `~/work/postgrestd`, find all the references to the old version number and update them.
 5. In plrust, migrate any rustc APIs that plrustc uses to the new versions (this is usually pretty straightforward, if you get stuck you can try and find similar version bumps in the source for clippy, miri, and other rustc-drivers).
 6. Make sure CI passes and then you're good.
