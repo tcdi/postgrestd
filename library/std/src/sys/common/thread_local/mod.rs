@@ -2,22 +2,30 @@
 //! `__thread_local_internal` macro does not seem to be exported properly when using cfg_if
 #![unstable(feature = "thread_local_internals", reason = "should not be necessary", issue = "none")]
 
-#[cfg(all(target_thread_local, not(all(target_family = "wasm", not(target_feature = "atomics")))))]
+#[cfg(all(
+    target_thread_local,
+    not(target_family = "postgres"),
+    not(all(target_family = "wasm", not(target_feature = "atomics")))
+))]
 mod fast_local;
 #[cfg(all(
     not(target_thread_local),
+    not(target_family = "postgres"),
     not(all(target_family = "wasm", not(target_feature = "atomics")))
 ))]
 mod os_local;
-#[cfg(all(target_family = "wasm", not(target_feature = "atomics")))]
+#[cfg(any(
+    all(target_family = "wasm", not(target_feature = "atomics")),
+    target_family = "postgres"
+))]
 mod static_local;
 
 #[cfg(not(test))]
 cfg_if::cfg_if! {
-    if #[cfg(all(target_family = "wasm", not(target_feature = "atomics")))] {
+    if #[cfg(any(target_family = "postgres", all(target_family = "wasm", not(target_feature = "atomics"))))] {
         #[doc(hidden)]
         pub use static_local::statik::Key;
-    } else if #[cfg(all(target_thread_local, not(all(target_family = "wasm", not(target_feature = "atomics")))))] {
+    } else if #[cfg(all(target_thread_local, not(target_family = "postgres"), not(all(target_family = "wasm", not(target_feature = "atomics")))))] {
         #[doc(hidden)]
         pub use fast_local::fast::Key;
     } else if #[cfg(all(not(target_thread_local), not(all(target_family = "wasm", not(target_feature = "atomics")))))] {
