@@ -3,6 +3,7 @@ default-members = ["library/std"]
 members = [
   "library/std",
   "library/test",
+  "library/sysroot",
   "pallocator",
   "postpanic",
 ]
