@@ -6,11 +6,13 @@ on:
       - 1.67.1
       - rust-1.69.0
       - rust-1.70.0
+      - rust-1.71.0
   pull_request:
     branches:
       - 1.67.1
       - rust-1.69.0
       - rust-1.70.0
+      - rust-1.71.0
 
 jobs:
   test_x86_84:
@@ -112,7 +114,7 @@ jobs:
         export RUSTUP_HOME="$HOME/.rustup"
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         source "$HOME/.cargo/env"
-        rustup toolchain install 1.70.0
+        rustup toolchain install 1.71.0
         cargo --version
 
     - name: Print env

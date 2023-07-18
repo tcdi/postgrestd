@@ -4,6 +4,10 @@ use crate::prelude::rust_2021::*;
 use crate::sys::cvt_unsup;
 use crate::time::Duration;
 
+#[allow(dead_code)]
+pub const TIMESPEC_MAX: libc::timespec =
+    libc::timespec { tv_sec: <libc::time_t>::MAX, tv_nsec: 1_000_000_000 - 1 };
+
 const NSEC_PER_SEC: u64 = 1_000_000_000;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

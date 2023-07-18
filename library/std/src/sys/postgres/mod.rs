@@ -24,6 +24,8 @@ pub mod thread;
 #[cfg(target_thread_local)]
 pub mod thread_local_dtor;
 pub mod thread_local_key;
+#[path = "../unix/thread_parking/mod.rs"]
+pub mod thread_parking;
 pub mod time;
 
 mod common;

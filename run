@@ -92,7 +92,7 @@ run_build() {
             -Zbinary-dep-depinfo \
             --release \
             --features "compiler-builtins-mem" \
-            --manifest-path "library/test/Cargo.toml"
+            --manifest-path "library/sysroot/Cargo.toml"
     done
 }
 

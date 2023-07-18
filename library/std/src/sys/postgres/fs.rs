@@ -31,6 +31,8 @@ pub struct FileTimes();
 impl FileTimes {
     pub fn set_accessed(&mut self, _t: SystemTime) {}
     pub fn set_modified(&mut self, _t: SystemTime) {}
+    #[cfg(any(target_os = "macos", target_os = "ios", target_os = "watchos"))]
+    pub fn set_created(&mut self, t: SystemTime) {}
 }
 
 pub struct ReadDir(!);
