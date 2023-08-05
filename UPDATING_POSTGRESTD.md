@@ -13,6 +13,9 @@ Then, the rough steps are as follows:
    3. `git subtree push -P library ~/work/postgrestd "$NEWVERSION-library"` (push the subtree. This will take 1h-2h, so find something else to do while it runs)
 3. `cd ~/work/postgrestd`
    1. `git subtree pull -P library . "$NEWVERSION-library"`
+
+      Note: If `git subtree pull ...` tells you that you're "Already up to date." in this step despite changing nothing, it may be because there were no commits which modified files under `library/` between `$OLDVERSION` and `$NEWVERSION`. This pretty much can only ever happen when for patch updates (for example, this happened between Rust 1.71.0 and 1.71.1).
+
    2. Resolve merge conflicts.
    3. Push and fix issues.
    4. Audit the new stdlib APIs and internals for changes and make sure nothing new is added that we should not have exposed from PL/Rust. There's no real guide to how to do that, though, just go through the changes and use your best judgement. (Note: This is usually very time consuming). In particular keep an eye out for:
