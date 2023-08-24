@@ -88,6 +88,7 @@ pub unsafe fn init(argc: isize, argv: *const *const u8, sigpipe: u8) {
             // The poll on Darwin doesn't set POLLNVAL for closed fds.
             target_os = "macos",
             target_os = "ios",
+            target_os = "tvos",
             target_os = "watchos",
             target_os = "redox",
             target_os = "l4re",
@@ -164,12 +165,7 @@ pub unsafe fn init(argc: isize, argv: *const *const u8, sigpipe: u8) {
     }
 
     unsafe fn reset_sigpipe(#[allow(unused_variables)] sigpipe: u8) {
-        #[cfg(not(any(
-            target_os = "emscripten",
-            target_os = "fuchsia",
-            target_os = "horizon",
-            target_os = "vita"
-        )))]
+        #[cfg(not(any(target_os = "emscripten", target_os = "fuchsia", target_os = "horizon")))]
         {
             // We don't want to add this as a public type to std, nor do we
             // want to `include!` a file from the compiler (which would break
@@ -207,7 +203,6 @@ pub unsafe fn init(argc: isize, argv: *const *const u8, sigpipe: u8) {
     target_os = "emscripten",
     target_os = "fuchsia",
     target_os = "horizon",
-    target_os = "vita"
 )))]
 static UNIX_SIGPIPE_ATTR_SPECIFIED: crate::sync::atomic::AtomicBool =
     crate::sync::atomic::AtomicBool::new(false);
@@ -217,7 +212,6 @@ static UNIX_SIGPIPE_ATTR_SPECIFIED: crate::sync::atomic::AtomicBool =
     target_os = "emscripten",
     target_os = "fuchsia",
     target_os = "horizon",
-    target_os = "vita",
 )))]
 pub(crate) fn unix_sigpipe_attr_specified() -> bool {
     UNIX_SIGPIPE_ATTR_SPECIFIED.load(crate::sync::atomic::Ordering::Relaxed)
@@ -395,7 +389,7 @@ cfg_if::cfg_if! {
     } else if #[cfg(target_os = "macos")] {
         #[link(name = "System")]
         extern "C" {}
-    } else if #[cfg(any(target_os = "ios", target_os = "watchos"))] {
+    } else if #[cfg(any(target_os = "ios", target_os = "tvos", target_os = "watchos"))] {
         #[link(name = "System")]
         #[link(name = "objc")]
         #[link(name = "Security", kind = "framework")]
@@ -407,6 +401,9 @@ cfg_if::cfg_if! {
         extern "C" {}
     } else if #[cfg(all(target_os = "linux", target_env = "uclibc"))] {
         #[link(name = "dl")]
+        extern "C" {}
+    } else if #[cfg(target_os = "vita")] {
+        #[link(name = "pthread", kind = "static", modifiers = "-bundle")]
         extern "C" {}
     }
 }

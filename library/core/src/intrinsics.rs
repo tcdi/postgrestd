@@ -1057,7 +1057,24 @@ extern "rust-intrinsic" {
     #[rustc_const_unstable(feature = "const_type_id", issue = "77125")]
     #[rustc_safe_intrinsic]
     #[rustc_nounwind]
+    #[cfg(bootstrap)]
     pub fn type_id<T: ?Sized + 'static>() -> u64;
+
+    /// Gets an identifier which is globally unique to the specified type. This
+    /// function will return the same value for a type regardless of whichever
+    /// crate it is invoked in.
+    ///
+    /// Note that, unlike most intrinsics, this is safe to call;
+    /// it does not require an `unsafe` block.
+    /// Therefore, implementations must not require the user to uphold
+    /// any safety invariants.
+    ///
+    /// The stabilized version of this intrinsic is [`core::any::TypeId::of`].
+    #[rustc_const_unstable(feature = "const_type_id", issue = "77125")]
+    #[rustc_safe_intrinsic]
+    #[rustc_nounwind]
+    #[cfg(not(bootstrap))]
+    pub fn type_id<T: ?Sized + 'static>() -> u128;
 
     /// A guard for unsafe functions that cannot ever be executed if `T` is uninhabited:
     /// This will statically either panic, or do nothing.
@@ -1385,7 +1402,6 @@ extern "rust-intrinsic" {
     ///
     /// This is not expected to ever be exposed directly to users, rather it
     /// may eventually be exposed through some more-constrained API.
-    #[cfg(not(bootstrap))]
     #[rustc_const_stable(feature = "const_transmute", since = "1.56.0")]
     #[rustc_nounwind]
     pub fn transmute_unchecked<Src, Dst>(src: Src) -> Dst;
@@ -1425,18 +1441,10 @@ extern "rust-intrinsic" {
     /// returned value will result in undefined behavior.
     ///
     /// The stabilized version of this intrinsic is [`pointer::offset`].
-    #[cfg(not(bootstrap))]
     #[must_use = "returns a new pointer rather than modifying its argument"]
     #[rustc_const_stable(feature = "const_ptr_offset", since = "1.61.0")]
     #[rustc_nounwind]
     pub fn offset<Ptr, Delta>(dst: Ptr, offset: Delta) -> Ptr;
-
-    /// The bootstrap version of this is more restricted.
-    #[cfg(bootstrap)]
-    #[must_use = "returns a new pointer rather than modifying its argument"]
-    #[rustc_const_stable(feature = "const_ptr_offset", since = "1.61.0")]
-    #[rustc_nounwind]
-    pub fn offset<T>(dst: *const T, offset: isize) -> *const T;
 
     /// Calculates the offset from a pointer, potentially wrapping.
     ///
@@ -2270,7 +2278,6 @@ extern "rust-intrinsic" {
     /// This intrinsic can *only* be called where the pointer is a local without
     /// projections (`write_via_move(ptr, x)`, not `write_via_move(*ptr, x)`) so
     /// that it trivially obeys runtime-MIR rules about derefs in operands.
-    #[cfg(not(bootstrap))]
     #[rustc_const_unstable(feature = "const_ptr_write", issue = "86302")]
     #[rustc_nounwind]
     pub fn write_via_move<T>(ptr: *mut T, value: T);
@@ -2650,7 +2657,7 @@ pub(crate) fn is_nonoverlapping<T>(src: *const T, dst: *const T, count: usize) -
 #[stable(feature = "rust1", since = "1.0.0")]
 #[rustc_allowed_through_unstable_modules]
 #[rustc_const_stable(feature = "const_intrinsic_copy", since = "1.63.0")]
-#[inline]
+#[inline(always)]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 pub const unsafe fn copy_nonoverlapping<T>(src: *const T, dst: *mut T, count: usize) {
     extern "rust-intrinsic" {
@@ -2741,7 +2748,7 @@ pub const unsafe fn copy_nonoverlapping<T>(src: *const T, dst: *mut T, count: us
 #[stable(feature = "rust1", since = "1.0.0")]
 #[rustc_allowed_through_unstable_modules]
 #[rustc_const_stable(feature = "const_intrinsic_copy", since = "1.63.0")]
-#[inline]
+#[inline(always)]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 pub const unsafe fn copy<T>(src: *const T, dst: *mut T, count: usize) {
     extern "rust-intrinsic" {
@@ -2814,7 +2821,7 @@ pub const unsafe fn copy<T>(src: *const T, dst: *mut T, count: usize) {
 #[stable(feature = "rust1", since = "1.0.0")]
 #[rustc_allowed_through_unstable_modules]
 #[rustc_const_unstable(feature = "const_ptr_write", issue = "86302")]
-#[inline]
+#[inline(always)]
 #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
 pub const unsafe fn write_bytes<T>(dst: *mut T, val: u8, count: usize) {
     extern "rust-intrinsic" {
@@ -2830,26 +2837,5 @@ pub const unsafe fn write_bytes<T>(dst: *mut T, val: u8, count: usize) {
             [T](dst: *mut T) => is_aligned_and_not_null(dst)
         );
         write_bytes(dst, val, count)
-    }
-}
-
-/// Polyfill for bootstrap
-#[cfg(bootstrap)]
-pub const unsafe fn transmute_unchecked<Src, Dst>(src: Src) -> Dst {
-    use crate::mem::*;
-    // SAFETY: It's a transmute -- the caller promised it's fine.
-    unsafe { transmute_copy(&ManuallyDrop::new(src)) }
-}
-
-/// Polyfill for bootstrap
-#[cfg(bootstrap)]
-pub const unsafe fn write_via_move<T>(ptr: *mut T, value: T) {
-    use crate::mem::*;
-    // SAFETY: the caller must guarantee that `dst` is valid for writes.
-    // `dst` cannot overlap `src` because the caller has mutable access
-    // to `dst` while `src` is owned by this function.
-    unsafe {
-        copy_nonoverlapping::<T>(&value, ptr, 1);
-        forget(value);
     }
 }

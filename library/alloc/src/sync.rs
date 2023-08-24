@@ -33,7 +33,7 @@ use core::sync::atomic::Ordering::{Acquire, Relaxed, Release};
 #[cfg(not(no_global_oom_handling))]
 use crate::alloc::handle_alloc_error;
 #[cfg(not(no_global_oom_handling))]
-use crate::alloc::{box_free, WriteCloneIntoRaw};
+use crate::alloc::WriteCloneIntoRaw;
 use crate::alloc::{AllocError, Allocator, Global, Layout};
 use crate::borrow::{Cow, ToOwned};
 use crate::boxed::Box;
@@ -1267,7 +1267,7 @@ impl<T: ?Sized> Arc<T> {
     }
 
     /// Returns `true` if the two `Arc`s point to the same allocation in a vein similar to
-    /// [`ptr::eq`]. See [that function][`ptr::eq`] for caveats when comparing `dyn Trait` pointers.
+    /// [`ptr::eq`]. This function ignores the metadata of  `dyn Trait` pointers.
     ///
     /// # Examples
     ///
@@ -1287,7 +1287,7 @@ impl<T: ?Sized> Arc<T> {
     #[must_use]
     #[stable(feature = "ptr_eq", since = "1.17.0")]
     pub fn ptr_eq(this: &Self, other: &Self) -> bool {
-        this.ptr.as_ptr() == other.ptr.as_ptr()
+        this.ptr.as_ptr() as *const () == other.ptr.as_ptr() as *const ()
     }
 }
 
@@ -1360,23 +1360,21 @@ impl<T: ?Sized> Arc<T> {
     }
 
     #[cfg(not(no_global_oom_handling))]
-    fn from_box(v: Box<T>) -> Arc<T> {
+    fn from_box(src: Box<T>) -> Arc<T> {
         unsafe {
-            let (box_unique, alloc) = Box::into_unique(v);
-            let bptr = box_unique.as_ptr();
-
-            let value_size = size_of_val(&*bptr);
-            let ptr = Self::allocate_for_ptr(bptr);
+            let value_size = size_of_val(&*src);
+            let ptr = Self::allocate_for_ptr(&*src);
 
             // Copy value as bytes
             ptr::copy_nonoverlapping(
-                bptr as *const T as *const u8,
+                &*src as *const T as *const u8,
                 &mut (*ptr).data as *mut _ as *mut u8,
                 value_size,
             );
 
             // Free the allocation without dropping its contents
-            box_free(box_unique, alloc);
+            let src = Box::from_raw(Box::into_raw(src) as *mut mem::ManuallyDrop<T>);
+            drop(src);
 
             Self::from_ptr(ptr)
         }
@@ -2256,8 +2254,8 @@ impl<T: ?Sized> Weak<T> {
     }
 
     /// Returns `true` if the two `Weak`s point to the same allocation similar to [`ptr::eq`], or if
-    /// both don't point to any allocation (because they were created with `Weak::new()`). See [that
-    /// function][`ptr::eq`] for caveats when comparing `dyn Trait` pointers.
+    /// both don't point to any allocation (because they were created with `Weak::new()`). However,
+    /// this function ignores the metadata of  `dyn Trait` pointers.
     ///
     /// # Notes
     ///
@@ -2300,7 +2298,7 @@ impl<T: ?Sized> Weak<T> {
     #[must_use]
     #[stable(feature = "weak_ptr_eq", since = "1.39.0")]
     pub fn ptr_eq(&self, other: &Self) -> bool {
-        self.ptr.as_ptr() == other.ptr.as_ptr()
+        ptr::eq(self.ptr.as_ptr() as *const (), other.ptr.as_ptr() as *const ())
     }
 }
 

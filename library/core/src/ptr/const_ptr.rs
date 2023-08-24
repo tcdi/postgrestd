@@ -104,6 +104,7 @@ impl<T: ?Sized> *const T {
     /// refactored.
     #[stable(feature = "ptr_const_cast", since = "1.65.0")]
     #[rustc_const_stable(feature = "ptr_const_cast", since = "1.65.0")]
+    #[rustc_diagnostic_item = "ptr_cast_mut"]
     #[inline(always)]
     pub const fn cast_mut(self) -> *mut T {
         self as _
@@ -916,16 +917,8 @@ impl<T: ?Sized> *const T {
     where
         T: Sized,
     {
-        #[cfg(bootstrap)]
         // SAFETY: the caller must uphold the safety contract for `offset`.
-        unsafe {
-            self.offset(count as isize)
-        }
-        #[cfg(not(bootstrap))]
-        // SAFETY: the caller must uphold the safety contract for `offset`.
-        unsafe {
-            intrinsics::offset(self, count)
-        }
+        unsafe { intrinsics::offset(self, count) }
     }
 
     /// Calculates the offset from a pointer in bytes (convenience for `.byte_offset(count as isize)`).

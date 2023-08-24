@@ -55,7 +55,7 @@ pub use self::impl_linux::peer_cred;
 #[cfg(not(target_family = "postgres"))]
 pub use self::impl_bsd::peer_cred;
 
-#[cfg(any(target_os = "macos", target_os = "ios", target_os = "watchos"))]
+#[cfg(any(target_os = "macos", target_os = "ios", target_os = "tvos", target_os = "watchos"))]
 #[cfg(not(target_family = "postgres"))]
 pub use self::impl_mac::peer_cred;
 
@@ -124,7 +124,7 @@ pub mod impl_bsd {
     }
 }
 
-#[cfg(any(target_os = "macos", target_os = "ios", target_os = "watchos"))]
+#[cfg(any(target_os = "macos", target_os = "ios", target_os = "tvos", target_os = "watchos"))]
 #[cfg(not(target_family = "postgres"))]
 pub mod impl_mac {
     use super::UCred;
