@@ -152,11 +152,21 @@ impl Buf {
 
 impl Slice {
     #[inline]
+    pub fn as_os_str_bytes(&self) -> &[u8] {
+        self.inner.as_bytes()
+    }
+
+    #[inline]
+    pub unsafe fn from_os_str_bytes_unchecked(s: &[u8]) -> &Slice {
+        mem::transmute(Wtf8::from_bytes_unchecked(s))
+    }
+
+    #[inline]
     pub fn from_str(s: &str) -> &Slice {
         unsafe { mem::transmute(Wtf8::from_str(s)) }
     }
 
-    pub fn to_str(&self) -> Option<&str> {
+    pub fn to_str(&self) -> Result<&str, crate::str::Utf8Error> {
         self.inner.as_str()
     }
 
