@@ -308,22 +308,6 @@ impl fmt::Debug for Command {
     }
 }
 
-impl Clone for ExitStatus {
-    fn clone(&self) -> ExitStatus {
-        *self
-    }
-}
-
-impl Copy for ExitStatus {}
-
-impl PartialEq for ExitStatus {
-    fn eq(&self, other: &ExitStatus) -> bool {
-        self.0 == other.0
-    }
-}
-
-impl Eq for ExitStatus {}
-
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct ExitStatusError(ExitStatus);
 
@@ -386,13 +370,9 @@ impl<'a> fmt::Debug for CommandArgs<'a> {
         f.debug_list().finish()
     }
 }
-pub struct ExitStatus(c_int);
 
-impl fmt::Debug for ExitStatus {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("unix_wait_status").field(&self.0).finish()
-    }
-}
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
+pub struct ExitStatus(c_int);
 
 impl ExitStatus {
     pub fn new(status: c_int) -> ExitStatus {
