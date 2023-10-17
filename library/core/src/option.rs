@@ -1125,6 +1125,7 @@ impl<T> Option<T> {
     /// ```
     #[inline]
     #[stable(feature = "rust1", since = "1.0.0")]
+    #[must_use = "if you don't need the returned value, use `if let` instead"]
     pub fn map_or<U, F>(self, default: U, f: F) -> U
     where
         F: FnOnce(T) -> U,
@@ -1695,6 +1696,41 @@ impl<T> Option<T> {
     pub const fn take(&mut self) -> Option<T> {
         // FIXME replace `mem::replace` by `mem::take` when the latter is const ready
         mem::replace(self, None)
+    }
+
+    /// Takes the value out of the option, but only if the predicate evaluates to
+    /// `true` on a mutable reference to the value.
+    ///
+    /// In other words, replaces `self` with `None` if the predicate returns `true`.
+    /// This method operates similar to [`Option::take`] but conditional.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// #![feature(option_take_if)]
+    ///
+    /// let mut x = Some(42);
+    ///
+    /// let prev = x.take_if(|v| if *v == 42 {
+    ///     *v += 1;
+    ///     false
+    /// } else {
+    ///     false
+    /// });
+    /// assert_eq!(x, Some(43));
+    /// assert_eq!(prev, None);
+    ///
+    /// let prev = x.take_if(|v| *v == 43);
+    /// assert_eq!(x, None);
+    /// assert_eq!(prev, Some(43));
+    /// ```
+    #[inline]
+    #[unstable(feature = "option_take_if", issue = "98934")]
+    pub fn take_if<P>(&mut self, predicate: P) -> Option<T>
+    where
+        P: FnOnce(&mut T) -> bool,
+    {
+        if self.as_mut().map_or(false, predicate) { self.take() } else { None }
     }
 
     /// Replaces the actual value in the option by the value given in parameter,

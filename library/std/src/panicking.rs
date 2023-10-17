@@ -235,6 +235,7 @@ where
     *hook = Hook::Custom(Box::new(move |info| hook_fn(&prev, info)));
 }
 
+/// The default panic handler.
 #[cfg(not(target_family = "postgres"))]
 fn default_hook(info: &PanicInfo<'_>) {
     // If this is a double panic, make sure that we print a backtrace
@@ -259,7 +260,7 @@ fn default_hook(info: &PanicInfo<'_>) {
     let name = thread.as_ref().and_then(|t| t.name()).unwrap_or("<unnamed>");
 
     let write = |err: &mut dyn crate::io::Write| {
-        let _ = writeln!(err, "thread '{name}' panicked at '{msg}', {location}");
+        let _ = writeln!(err, "thread '{name}' panicked at {location}:\n{msg}");
 
         static FIRST_PANIC: AtomicBool = AtomicBool::new(true);
 
@@ -274,7 +275,8 @@ fn default_hook(info: &PanicInfo<'_>) {
                 if FIRST_PANIC.swap(false, Ordering::SeqCst) {
                     let _ = writeln!(
                         err,
-                        "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+                        "note: run with `RUST_BACKTRACE=1` environment variable to display a \
+                             backtrace"
                     );
                 }
             }

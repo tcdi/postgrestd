@@ -142,8 +142,37 @@ impl StdError for JoinPathsError {
 pub fn current_exe() -> io::Result<PathBuf> {
     unsupported()
 }
+
 pub struct Env {
     iter: vec::IntoIter<(OsString, OsString)>,
+}
+
+// FIXME(https://github.com/rust-lang/rust/issues/114583): Remove this when <OsStr as Debug>::fmt matches <str as Debug>::fmt.
+pub struct EnvStrDebug<'a> {
+    slice: &'a [(OsString, OsString)],
+}
+
+impl fmt::Debug for EnvStrDebug<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Self { slice } = self;
+        f.debug_list()
+            .entries(slice.iter().map(|(a, b)| (a.to_str().unwrap(), b.to_str().unwrap())))
+            .finish()
+    }
+}
+
+impl Env {
+    pub fn str_debug(&self) -> impl fmt::Debug + '_ {
+        let Self { iter } = self;
+        EnvStrDebug { slice: iter.as_slice() }
+    }
+}
+
+impl fmt::Debug for Env {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Self { iter } = self;
+        f.debug_list().entries(iter.as_slice()).finish()
+    }
 }
 
 impl !Send for Env {}
@@ -196,16 +225,23 @@ pub fn env() -> Env {
 }
 
 pub fn getenv(k: &OsStr) -> Option<OsString> {
-    let s = run_with_cstr(k.as_bytes(), |k| unsafe {
+    // environment variables with a nul byte can't be set, so their value is
+    // always None as well
+    run_with_cstr(k.as_bytes(), |k| {
         let _guard = env_read_lock();
-        Ok(libc::getenv(k.as_ptr()) as *const libc::c_char)
+        let v = unsafe { libc::getenv(k.as_ptr()) } as *const libc::c_char;
+
+        if v.is_null() {
+            Ok(None)
+        } else {
+            // SAFETY: `v` cannot be mutated while executing this line since we've a read lock
+            let bytes = unsafe { CStr::from_ptr(v) }.to_bytes().to_vec();
+
+            Ok(Some(OsStringExt::from_vec(bytes)))
+        }
     })
-    .ok()?;
-    if s.is_null() {
-        None
-    } else {
-        Some(OsStringExt::from_vec(unsafe { CStr::from_ptr(s) }.to_bytes().to_vec()))
-    }
+    .ok()
+    .flatten()
 }
 
 pub fn setenv(k: &OsStr, v: &OsStr) -> io::Result<()> {
@@ -222,6 +258,11 @@ pub fn unsetenv(n: &OsStr) -> io::Result<()> {
         let _guard = env_write_lock();
         cvt(libc::unsetenv(nbuf.as_ptr())).map(drop)
     })
+}
+
+#[allow(dead_code)]
+pub fn page_size() -> usize {
+    unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize }
 }
 
 pub fn temp_dir() -> PathBuf {

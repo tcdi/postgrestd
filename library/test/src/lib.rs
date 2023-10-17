@@ -21,6 +21,7 @@
 #![feature(process_exitcode_internals)]
 #![feature(panic_can_unwind)]
 #![feature(test)]
+#![cfg_attr(not(bootstrap), allow(internal_features))]
 
 // Public reexports
 pub use self::bench::{black_box, Bencher};
@@ -183,8 +184,7 @@ pub fn test_main_static_abort(tests: &[&TestDescAndFn]) {
 
         let test = tests
             .into_iter()
-            .filter(|test| test.desc.name.as_slice() == name)
-            .next()
+            .find(|test| test.desc.name.as_slice() == name)
             .unwrap_or_else(|| panic!("couldn't find a test with the provided name '{name}'"));
         let TestDescAndFn { desc, testfn } = test;
         match testfn.into_runnable() {
